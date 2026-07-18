@@ -49,7 +49,7 @@
 * **重要红线**：凡是修改或新增前端页面上的任何文案、词条或说明，**必须同时**更新中文（`zh-CN.json`）和英文（`en.json`）的翻译包，并推荐运行自动翻译脚本以同步其余语言：
   ```bash
   export OPENAI_API_KEY="your-key"
-  npm run translate:locales -- --locales=ja,ko,es,fr,de
+  bun run translate:locales -- --locales=ja,ko,es,fr,de
   ```
 
 ### 4. SEO、组件 ID 与无障碍规范
@@ -65,13 +65,13 @@
 在提代码更改并交付部署之前，**必须**依次运行并确认以下所有检查全部通过：
 
 ### 1. 运行完整单元测试
-项目内置了 **18** 项全面的单元测试，覆盖了数据源合并、优雅降级、ICS 文本转义、SWR 异步刷新、直播保活以及特定动态路由 API 校验。
+项目内置了 **21** 项全面的单元测试，覆盖了数据源合并、优雅降级、ICS 文本转义、SWR 异步刷新、直播保活以及特定动态路由 API 校验。
 ```bash
-npm test
+bun test
 ```
 
 ### 2. 服务端语法/静态分析预校验
-利用 Node.js 静态分析引擎快速验证关键边缘逻辑文件的语法正确性：
+利用 Node.js 静态分析引擎快速验证关键边缘逻辑文件的语法正确性（需本地安装 Node.js）：
 ```bash
 node --check server/routes/spacex.ics.js
 node --check server/utils/spacex.js
@@ -81,7 +81,7 @@ node --check server/utils/kv.js
 ---
 
 ## ☁️ 本地调试与部署说明
-* **本地开发**：`npm run dev`（服务跑在 `http://localhost:3000`）。
-* **生产打包**：`npm run build`
-* **边缘部署**：结合 `npx wrangler deploy` 或通过 Nuxt Hub 平台绑定 GitHub 自动集成构建。
+* **本地开发**：`bun run dev`（服务跑在 `http://localhost:3000`）。
+* **生产打包**：`bun run build`
+* **边缘部署**：结合 `bunx wrangler deploy` 或通过 Nuxt Hub 平台绑定 GitHub 自动集成构建。
 * **生产子域名**：线上主域名已稳定绑定为 `spacex-calendar.mou7s.com`。

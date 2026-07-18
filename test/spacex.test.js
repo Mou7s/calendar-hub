@@ -613,7 +613,7 @@ test("loadLaunchData gracefully degrades when timings API fails", async () => {
 
 test("getCachedData returns stale data and triggers background revalidation when ctx is available", async () => {
   const staleData = {
-    refreshedAt: new Date(Date.now() - 600 * 1000).toISOString(), // 10 minutes ago (stale)
+    refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
     missions: [{ id: "mock-stale", title: "Stale Mission", launchWindow: { open: null, close: null } }],
   };
 
@@ -682,7 +682,7 @@ test("getCachedData returns stale data and triggers background revalidation when
 
 test("getCachedData falls back to stale data on sync fetch failure when ctx is absent", async () => {
   const staleData = {
-    refreshedAt: new Date(Date.now() - 600 * 1000).toISOString(), // 10 minutes ago (stale)
+    refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
     missions: [{ id: "mock-stale", title: "Stale Mission", launchWindow: { open: null, close: null } }],
   };
 

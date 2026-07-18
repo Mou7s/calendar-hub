@@ -52,6 +52,7 @@ export async function enrichWithStableVersions(env, freshData) {
         sequence: 0,
       };
     });
+    freshData.hasChanges = true;
     return freshData;
   }
 
@@ -59,6 +60,7 @@ export async function enrichWithStableVersions(env, freshData) {
     const storedHistory = (await kv.get(HISTORY_METADATA_KEY)) || {};
     const updatedHistory = {};
     const now = new Date().toISOString();
+    let hasChanges = false;
 
     freshData.missions = freshData.missions.map((mission) => {
       const id = String(mission.correlationId || mission.id);
@@ -82,7 +84,10 @@ export async function enrichWithStableVersions(env, freshData) {
         } else {
           lastModified = now;
           sequence = (previous.sequence ?? 0) + 1;
+          hasChanges = true;
         }
+      } else {
+        hasChanges = true;
       }
 
       updatedHistory[id] = {
@@ -100,7 +105,16 @@ export async function enrichWithStableVersions(env, freshData) {
       };
     });
 
-    await kv.set(HISTORY_METADATA_KEY, updatedHistory);
+    // 检查是否有任务被删除，若有，也判定为数据有变更
+    if (Object.keys(storedHistory).length !== Object.keys(updatedHistory).length) {
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      await kv.set(HISTORY_METADATA_KEY, updatedHistory);
+    }
+    
+    freshData.hasChanges = hasChanges;
   } catch (error) {
     console.error("Error processing stable versions:", error);
     // Fallback in case of KV errors
@@ -113,6 +127,7 @@ export async function enrichWithStableVersions(env, freshData) {
         sequence: 0,
       };
     });
+    freshData.hasChanges = true;
   }
 
   return freshData;
@@ -144,7 +159,28 @@ export async function getCachedData(
   // 任务列表（spacex_launches_data）经常变动，采用 5分钟 CACHE_TTL
   // 具体的详情翻译卡片属于静态数据，变动极慢，采用 24小时 (86400秒) 的超长缓存 TTL，最大化降低首屏 API 延迟与 AI 消耗！
   const isDetailsKey = cacheKey.startsWith("spacex_mission_details_");
-  const currentTTL = isDetailsKey ? 86400 : CACHE_TTL;
+  let currentTTL = isDetailsKey ? 86400 : CACHE_TTL;
+
+  // 优化：针对任务列表实施动态 TTL 策略以节省 KV 资源额度。
+  // 若当前没有进行中的直播任务，且下一次发射时间尚远（大于3小时）或已发射完毕（过去大于3小时），
+  // 则将更新频次降低至 30 分钟 (1800 秒)；否则（临近发射期）维持 5 分钟 (300 秒) 以保障时效性。
+  if (!isDetailsKey && cacheKey === "spacex_launches_data" && cached) {
+    const missions = cached.missions || [];
+    const hasLiveMission = missions.some(m => m.isLive === true);
+
+    let timeToNextLaunchMs = Infinity;
+    if (cached.nextLaunch && cached.nextLaunch.launchAt) {
+      const launchTime = Date.parse(cached.nextLaunch.launchAt);
+      if (!Number.isNaN(launchTime)) {
+        timeToNextLaunchMs = launchTime - nowMs;
+      }
+    }
+
+    const THREE_HOURS_MS = 3 * 3600 * 1000;
+    if (!hasLiveMission && (timeToNextLaunchMs > THREE_HOURS_MS || timeToNextLaunchMs < -THREE_HOURS_MS)) {
+      currentTTL = 1800; // 30 minutes
+    }
+  }
 
   if (cached) {
     const refreshedAtMs = cached.refreshedAt ? Date.parse(cached.refreshedAt) : 0;
@@ -168,7 +204,8 @@ export async function getCachedData(
             }
             
             // 后台静默预翻译触发，缓存即将发射任务的多语言详情，保障客户端 0ms 秒回
-            if (env.AI && freshData.missions) {
+            // 优化：仅在发射任务元数据发生变更时，才触发 35 次的 KV 读取检测，日常大幅减少 KV 读写消耗！
+            if (env.AI && freshData.missions && freshData.hasChanges) {
               await preTranslateUpcomingMissions(event, env, freshData.missions);
             }
           } else {

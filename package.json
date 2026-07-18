@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "test": "node --test",
-    "translate:locales": "node scripts/translate-locales.js"
+    "dev": "bun --bun nuxt dev",
+    "build": "bun --bun nuxt build",
+    "test": "bun test",
+    "translate:locales": "bun scripts/translate-locales.js"
   },
   "dependencies": {
     "@nuxt/image": "^2.0.0",
