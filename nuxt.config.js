@@ -55,7 +55,14 @@ export default defineNuxtConfig({
 
   // Nitro 服务器引擎编译与部署相关的底层配置
   nitro: {
-    preset: 'cloudflare-pages' // 部署预设：适配 Cloudflare Pages 边缘托管环境，自动打包为极速的 Worker 格式
+    preset: 'cloudflare-pages', // 部署预设：适配 Cloudflare Pages 边缘托管环境，自动打包为极速的 Worker 格式
+    cloudflare: {
+      // Local dev must not load the production Workers AI binding.
+      // It always requires a remote Wrangler session and can block behind a proxy.
+      dev: {
+        configPath: 'wrangler.dev.toml'
+      }
+    }
   },
 
   // 系统升级与向下兼容的基准日期
