@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "bun@1.2.2",
   "scripts": {
     "dev": "bun --bun nuxt dev --host",
     "build": "bun --bun nuxt build",
