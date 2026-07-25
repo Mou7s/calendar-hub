@@ -6,7 +6,7 @@
   "packageManager": "bun@1.2.2",
   "scripts": {
     "dev": "bun --bun nuxt dev --host",
-    "build": "bun install && bun --bun nuxt build",
+    "build": "bun install && nuxt build",
     "test": "bun test",
     "translate:locales": "bun scripts/translate-locales.js"
   },
