@@ -32,6 +32,7 @@ export default defineNuxtConfig({
     // 系统支持的多语言列表及其翻译映射文件
     locales: [
       { code: "zh-CN", file: "zh-CN.json", name: "简体中文" },
+      { code: "zh", file: "zh-CN.json", name: "简体中文" },
       { code: "en", file: "en.json", name: "English" },
       { code: "ja", file: "ja.json", name: "日本語" },
       { code: "ko", file: "ko.json", name: "한국어" },

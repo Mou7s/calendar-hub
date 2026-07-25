@@ -44,16 +44,16 @@
                 </span>
               </button>
 
-              <!-- 右侧独立订阅按钮 -->
-              <button
-                type="button"
-                class="px-2 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2"
+              <!-- 右侧独立订阅按钮（直接跳转 webcal 协议） -->
+              <a
+                :href="getWebcalUrl('spacex')"
+                class="px-2 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
                 :title="t('subscribe.subscribeLink')"
-                @click.stop="openSubscribeModal('spacex')"
+                @click.stop
               >
                 <UIcon name="i-heroicons-rss-16-solid" class="w-3.5 h-3.5" />
                 <span>{{ t('subscribe.buttonShort') || '订阅' }}</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -598,14 +598,18 @@ const activeSubscribeIcsUrl = computed(() => {
 })
 
 const activeSubscribeWebcalUrl = computed(() => {
-  const p = subscribeProvider.value
+  return getWebcalUrl(subscribeProvider.value)
+})
+
+const getWebcalUrl = (providerId = 'spacex') => {
+  const p = providerId
   const path = p === 'spacex' || p === 'all' ? '/spacex.ics' : `/launches.ics?provider=${p}`
   if (import.meta.client) {
     const origin = window.location.origin.replace(/^https?:\/\//, '')
     return `webcal://${origin}${path}`
   }
   return `webcal://spacex-calendar.mou7s.com${path}`
-})
+}
 
 const copyIcsUrl = () => {
   if (import.meta.client && activeSubscribeIcsUrl.value) {
