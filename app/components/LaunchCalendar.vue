@@ -22,26 +22,39 @@
             {{ t('calendar.sidebar.calendars') }}
           </label>
 
-          <div class="space-y-1">
-            <!-- SpaceX Layer Item (Apple/iCloud Calendar Checkbox Style) -->
-            <button
-              type="button"
-              class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors cursor-pointer text-left group"
-              @click="toggleSpaceXLayer"
-            >
-              <div
-                class="w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0"
-                :class="isSpaceXActive ? 'bg-white text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+          <div class="space-y-1.5">
+            <!-- SpaceX Layer Item (Apple/iCloud Calendar Checkbox Style with Subscribe Action) -->
+            <div class="w-full flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors group">
+              <button
+                type="button"
+                class="flex-1 flex items-center gap-2.5 cursor-pointer text-left min-w-0"
+                @click="toggleSpaceXLayer"
               >
-                <UIcon name="i-heroicons-check-16-solid" class="w-3.5 h-3.5 stroke-[3]" />
-              </div>
-              <span
-                class="text-xs font-semibold tracking-wide transition-colors truncate"
-                :class="isSpaceXActive ? 'text-white font-bold' : 'text-[#737373] line-through'"
+                <div
+                  class="w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0"
+                  :class="isSpaceXActive ? 'bg-white text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+                >
+                  <UIcon name="i-heroicons-check-16-solid" class="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+                <span
+                  class="text-xs font-semibold tracking-wide transition-colors truncate"
+                  :class="isSpaceXActive ? 'text-white font-bold' : 'text-[#737373] line-through'"
+                >
+                  {{ t('calendar.filterSpaceX') }}
+                </span>
+              </button>
+
+              <!-- 右侧独立订阅按钮 -->
+              <button
+                type="button"
+                class="px-2 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2"
+                :title="t('subscribe.subscribeLink')"
+                @click.stop="openSubscribeModal('spacex')"
               >
-                {{ t('calendar.filterSpaceX') }}
-              </span>
-            </button>
+                <UIcon name="i-heroicons-rss-16-solid" class="w-3.5 h-3.5" />
+                <span>{{ t('subscribe.buttonShort') || '订阅' }}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -402,6 +415,84 @@
         </NuxtLink>
       </div>
     </div>
+
+    <!-- 订阅 Modal 弹窗 (暗黑极简苹果风) -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div
+          v-if="showSubscribeModal"
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md select-text"
+          @click.self="showSubscribeModal = false"
+        >
+          <div
+            class="relative w-full max-w-md bg-[#1c1c1e] border border-[#2c2c2e] rounded-3xl p-6 shadow-2xl text-white space-y-5"
+          >
+            <!-- 头部说明与关闭按钮 -->
+            <div class="flex items-start justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="p-2 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                    <UIcon name="i-heroicons-rss-16-solid" class="w-5 h-5" />
+                  </span>
+                  <h3 class="text-base font-bold tracking-tight text-white">
+                    {{ t('subscribe.title') }}
+                  </h3>
+                </div>
+                <p class="text-xs text-[#a1a1aa] leading-relaxed pt-1">
+                  {{ t('subscribe.copy') }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="p-1.5 text-[#71717a] hover:text-white rounded-lg transition-colors cursor-pointer shrink-0"
+                @click="showSubscribeModal = false"
+              >
+                <UIcon name="i-heroicons-x-mark-20-solid" class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- 核心一键订阅按钮 -->
+            <a
+              :href="activeSubscribeWebcalUrl"
+              class="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
+            >
+              <UIcon name="i-heroicons-calendar-days-20-solid" class="w-4 h-4" />
+              <span>{{ t('subscribe.subscribeLink') }}</span>
+            </a>
+
+            <!-- 复制 ICS 链接 -->
+            <div class="space-y-2 pt-3 border-t border-[#2c2c2e]">
+              <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a1a1aa] block">
+                ICS 订阅链接 (Google / Web 端)
+              </label>
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  readonly
+                  :value="activeSubscribeIcsUrl"
+                  class="flex-1 bg-[#121212] border border-[#2c2c2e] rounded-xl px-3 py-2 text-xs font-mono text-[#e4e4e7] focus:outline-none select-all"
+                />
+                <button
+                  type="button"
+                  class="px-3 py-2 text-xs font-bold rounded-xl bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                  @click="copyIcsUrl"
+                >
+                  <UIcon :name="isCopied ? 'i-heroicons-check-20-solid' : 'i-heroicons-clipboard-document-20-solid'" class="w-4 h-4 text-blue-400" />
+                  <span>{{ isCopied ? t('subscribe.copied') : t('subscribe.copyBtn') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -484,6 +575,44 @@ const currentDayFocus = computed(() => {
 
 const toggleSpaceXLayer = () => {
   isSpaceXActive.value = !isSpaceXActive.value
+}
+
+// ─── Subscribe Modal State & Actions ───
+const showSubscribeModal = ref(false)
+const subscribeProvider = ref('spacex')
+const isCopied = ref(false)
+
+const openSubscribeModal = (providerId = 'spacex') => {
+  subscribeProvider.value = providerId
+  showSubscribeModal.value = true
+  isCopied.value = false
+}
+
+const activeSubscribeIcsUrl = computed(() => {
+  const p = subscribeProvider.value
+  const path = p === 'spacex' || p === 'all' ? '/spacex.ics' : `/launches.ics?provider=${p}`
+  if (import.meta.client) {
+    return `${window.location.origin}${path}`
+  }
+  return `https://spacex-calendar.mou7s.com${path}`
+})
+
+const activeSubscribeWebcalUrl = computed(() => {
+  const p = subscribeProvider.value
+  const path = p === 'spacex' || p === 'all' ? '/spacex.ics' : `/launches.ics?provider=${p}`
+  if (import.meta.client) {
+    const origin = window.location.origin.replace(/^https?:\/\//, '')
+    return `webcal://${origin}${path}`
+  }
+  return `webcal://spacex-calendar.mou7s.com${path}`
+})
+
+const copyIcsUrl = () => {
+  if (import.meta.client && activeSubscribeIcsUrl.value) {
+    navigator.clipboard.writeText(activeSubscribeIcsUrl.value)
+    isCopied.value = true
+    setTimeout(() => { isCopied.value = false }, 2000)
+  }
 }
 
 const getProviderColor = (providerId) => {
