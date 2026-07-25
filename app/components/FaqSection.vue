@@ -23,10 +23,13 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { t, locale } = useI18n()
 
-defineProps<{
-  items: { label: string; content: string }[]
-}>()
+defineProps({
+  items: {
+    type: Array,
+    required: true
+  }
+})
 </script>

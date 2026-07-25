@@ -1,30 +1,64 @@
 <template>
-  <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b border-neutral-200 dark:border-neutral-800/80 pb-6 mb-8">
-    <div class="brand flex gap-3 items-baseline">
-      <span class="text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white font-mono">SPACEX</span>
-      <span class="text-[10px] tracking-[0.3em] text-neutral-500 dark:text-neutral-400 font-bold uppercase">CALENDAR</span>
+  <header class="flex items-center justify-between gap-4 border-b border-neutral-200/80 dark:border-neutral-800/80 pb-3 mb-3 shrink-0">
+    <div class="brand flex items-baseline gap-2 cursor-pointer select-none">
+      <span class="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white font-mono">CALENDAR</span>
+      <span class="text-[9px] sm:text-[10px] tracking-[0.25em] text-neutral-500 dark:text-neutral-400 font-bold uppercase">HUB</span>
     </div>
-    <div class="flex items-center gap-4 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 hidden lg:block mr-2">{{ t('header.copy') }}</p>
+
+    <!-- Actions & Controls -->
+    <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
       
+      <!-- Provider Selector Dropdown -->
+      <USelectMenu
+        v-if="providers && providers.length > 0"
+        :model-value="activeProvider"
+        :items="providerOptions"
+        value-key="value"
+        label-key="label"
+        icon="i-heroicons-funnel"
+        size="xs"
+        color="neutral"
+        variant="subtle"
+        class="w-32 sm:w-40"
+        @update:model-value="$emit('select-provider', $event)"
+      />
+
+      <!-- Subscribe Button -->
+      <UButton
+        icon="i-heroicons-rss"
+        color="primary"
+        variant="solid"
+        size="xs"
+        class="rounded-full font-bold px-3 sm:px-4 py-1.5 shadow-md shadow-primary-500/20"
+        @click="$emit('open-subscribe')"
+      >
+        <span class="hidden sm:inline">{{ t('subscribe.buttonLabel') }}</span>
+        <span class="sm:hidden">{{ t('subscribe.buttonShort') }}</span>
+      </UButton>
+
       <!-- Language Selector -->
-      <USelect
+      <USelectMenu
         v-model="activeLocaleModel"
         :items="localeItems"
-        size="sm"
+        value-key="value"
+        label-key="label"
+        icon="i-heroicons-language"
+        size="xs"
         color="neutral"
         variant="subtle"
         aria-label="Change language"
-        class="min-w-[120px]"
+        class="w-24 sm:w-32"
       />
 
       <!-- Theme Toggle -->
       <UButton
+        ref="themeBtnRef"
         :icon="colorMode.value === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'"
         color="neutral"
         variant="subtle"
+        size="xs"
         class="rounded-full"
-        @click="toggleTheme"
+        @click="toggleTheme($event)"
         :aria-label="t('header.themeToggleAria')"
       />
 
@@ -33,7 +67,8 @@
         icon="i-simple-icons-github"
         color="neutral"
         variant="outline"
-        class="rounded-full font-semibold uppercase tracking-wider text-[10px]"
+        size="xs"
+        class="rounded-full font-semibold uppercase tracking-wider text-[10px] hidden md:inline-flex"
         to="https://github.com/Mou7s/spacex-calendar"
         target="_blank"
         aria-label="GitHub Repository"
@@ -44,11 +79,25 @@
   </header>
 </template>
 
-<script setup lang="ts">
-import { computed, nextTick } from 'vue'
+<script setup>
+import { ref, computed, nextTick } from 'vue'
+
+const props = defineProps({
+  providers: {
+    type: Array,
+    default: () => []
+  },
+  activeProvider: {
+    type: String,
+    default: 'all'
+  }
+})
+
+const emit = defineEmits(['select-provider', 'open-subscribe'])
 
 const { t, locale, locales, setLocale } = useI18n()
 const colorMode = useColorMode()
+const themeBtnRef = ref(null)
 
 const activeLocaleModel = computed({
   get: () => locale.value,
@@ -60,8 +109,26 @@ const localeItems = computed(() => locales.value.map(lang => ({
   label: typeof lang === 'string' ? lang : lang.name
 })))
 
-const toggleTheme = (event: MouseEvent) => {
-  const isAppearanceTransition = (document as any).startViewTransition
+const providerOptions = computed(() => {
+  const map = {
+    all: t('calendar.filterAll') || '全部 Launch',
+    spacex: t('calendar.filterSpaceX') || 'SpaceX',
+    rocketlab: t('calendar.filterRocketLab') || 'Rocket Lab',
+    nasa: t('calendar.filterNasa') || 'NASA',
+    casc: t('calendar.filterCasc') || 'CASC 中国航天',
+    'blue-origin': t('calendar.filterBlueOrigin') || 'Blue Origin',
+    ula: t('calendar.filterUla') || 'ULA',
+    esa: t('calendar.filterEsa') || 'ESA',
+    other: t('calendar.filterOther') || '其他航天'
+  }
+  return (props.providers || []).map(p => ({
+    value: p.id,
+    label: map[p.id] || p.name
+  }))
+})
+
+const toggleTheme = (event) => {
+  const isAppearanceTransition = document.startViewTransition
     && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   if (!isAppearanceTransition) {
@@ -69,31 +136,37 @@ const toggleTheme = (event: MouseEvent) => {
     return
   }
 
-  const x = event.clientX ?? window.innerWidth / 2
-  const y = event.clientY ?? window.innerHeight / 2
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  )
+  let x = event?.clientX
+  let y = event?.clientY
+
+  const btnEl = themeBtnRef.value?.$el || themeBtnRef.value
+  if (btnEl && typeof btnEl.getBoundingClientRect === 'function') {
+    const rect = btnEl.getBoundingClientRect()
+    x = rect.left + rect.width / 2
+    y = rect.top + rect.height / 2
+  }
+
+  const xp = ((x / window.innerWidth) * 100).toFixed(2)
+  const yp = ((y / window.innerHeight) * 100).toFixed(2)
 
   document.documentElement.classList.add('view-transitioning')
 
-  const transition = (document as any).startViewTransition(async () => {
+  const transition = document.startViewTransition(async () => {
     colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
     await nextTick()
   })
 
   transition.ready.then(() => {
     const clipPath = [
-      `circle(0px at ${x}px ${y}px)`,
-      `circle(${endRadius}px at ${x}px ${y}px)`,
+      `circle(0px at ${xp}% ${yp}%)`,
+      `circle(150vmax at ${xp}% ${yp}%)`,
     ]
     document.documentElement.animate(
       {
         clipPath: clipPath,
       },
       {
-        duration: 400,
+        duration: 450,
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
         pseudoElement: '::view-transition-new(root)',
       },

@@ -1,13 +1,7 @@
 import { ref, computed } from 'vue'
 
-/** Timezone option for the selector buttons */
-export interface TimezoneOption {
-  key: string
-  tz: string | null
-}
-
 /** Static timezone presets */
-export const TIMEZONE_OPTIONS: TimezoneOption[] = [
+export const TIMEZONE_OPTIONS = [
   { key: 'local', tz: null },
   { key: 'utc',   tz: 'UTC' },
   { key: 'et',    tz: 'America/New_York' },
@@ -18,7 +12,7 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
 export function useTimezone() {
   const { t, locale } = useI18n()
 
-  const activeTimezone = ref<string | null>(null)
+  const activeTimezone = ref(null)
 
   const activeTimezoneDisplay = computed(() => {
     if (activeTimezone.value) {
@@ -30,13 +24,13 @@ export function useTimezone() {
     return 'UTC'
   })
 
-  const setTimezone = (tz: string | null) => {
+  const setTimezone = (tz) => {
     activeTimezone.value = tz
   }
 
   // DateTime formatting helpers
-  const getDateTimeFormatter = (withZone = true, timeZoneOverride?: string | null) => {
-    const options: Intl.DateTimeFormatOptions = {
+  const getDateTimeFormatter = (withZone = true, timeZoneOverride) => {
+    const options = {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
@@ -55,26 +49,26 @@ export function useTimezone() {
     return new Intl.DateTimeFormat(locale.value, options)
   }
 
-  const formatDateTime = (iso: string, withZone = true) => {
+  const formatDateTime = (iso, withZone = true) => {
     if (!iso) return t('mission.tbd')
     return getDateTimeFormatter(withZone).format(new Date(iso))
   }
 
-  const formatDateTimeUtc = (iso: string) => {
+  const formatDateTimeUtc = (iso) => {
     if (!iso) return t('mission.tbd')
     return getDateTimeFormatter(true, 'UTC').format(new Date(iso))
   }
 
-  const formatEventMonth = (iso: string) => {
+  const formatEventMonth = (iso) => {
     const dateObj = new Date(iso)
     return new Intl.DateTimeFormat(locale.value, { month: 'short', timeZone: 'UTC' }).format(dateObj)
   }
 
-  const formatEventDay = (iso: string) => {
+  const formatEventDay = (iso) => {
     return new Date(iso).getUTCDate()
   }
 
-  const formatEventTime = (iso: string) => {
+  const formatEventTime = (iso) => {
     return new Intl.DateTimeFormat(locale.value, {
       hour: 'numeric',
       minute: '2-digit',
@@ -82,13 +76,13 @@ export function useTimezone() {
     }).format(new Date(iso))
   }
 
-  const titleCase = (value: string) => {
+  const titleCase = (value) => {
     return value
       ? value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
       : t('mission.unspecified')
   }
 
-  const formatMonthPillLabel = (item: any) => {
+  const formatMonthPillLabel = (item) => {
     if (item.isoMonth) {
       return new Intl.DateTimeFormat(locale.value, {
         month: 'short',

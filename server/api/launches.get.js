@@ -1,10 +1,10 @@
 import { defineEventHandler, setHeader, createError } from 'h3'
 import { getCachedData } from '../utils/kv.js'
-import { loadLaunchData } from '../utils/spacex.js'
+import { loadGlobalLaunches } from '../utils/launches.js'
 
 export default defineEventHandler(async (event) => {
   try {
-    const data = await getCachedData(event, "spacex_launches_data", loadLaunchData);
+    const data = await getCachedData(event, "spacex_launches_data", loadGlobalLaunches);
     
     setHeader(event, "Cache-Control", "public, max-age=300");
     setHeader(event, "Content-Type", "application/json; charset=utf-8");
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 502,
       statusMessage: "Bad Gateway",
-      message: "Unable to load SpaceX launch data right now.",
+      message: "Unable to load launch data right now.",
       data: error.message || String(error)
     });
   }

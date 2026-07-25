@@ -18,10 +18,22 @@
             {{ t('subscribe.subscribeLink') }}
           </UButton>
           <div class="flex flex-col gap-2">
-            <code
-              class="text-[11px] bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800/80 rounded-2xl p-3 text-neutral-800 dark:text-neutral-300 overflow-x-auto block font-mono">
-              {{ icsLink }}
-            </code>
+            <div class="flex items-center gap-2">
+              <code
+                class="text-[11px] bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800/80 rounded-2xl p-3 text-neutral-800 dark:text-neutral-300 overflow-x-auto flex-1 font-mono">
+                {{ icsLink }}
+              </code>
+              <UButton
+                size="sm"
+                color="neutral"
+                variant="subtle"
+                class="rounded-xl px-3 py-2 shrink-0 font-bold"
+                icon="i-heroicons-clipboard-document"
+                @click="copyIcsLink"
+              >
+                {{ copied ? t('subscribe.copied') : t('subscribe.copyBtn') }}
+              </UButton>
+            </div>
           </div>
         </div>
       </div>
@@ -29,11 +41,21 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
+import { ref } from 'vue'
 const { t } = useI18n()
 
-defineProps<{
-  webcalLink: string
-  icsLink: string
-}>()
+const props = defineProps({
+  webcalLink: { type: String, default: '' },
+  icsLink: { type: String, default: '' }
+})
+
+const copied = ref(false)
+const copyIcsLink = () => {
+  if (import.meta.client && props.icsLink) {
+    navigator.clipboard.writeText(props.icsLink)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  }
+}
 </script>

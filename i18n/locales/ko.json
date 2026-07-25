@@ -13,7 +13,11 @@
     "eyebrow": "ICS 구독",
     "title": "온라인 캘린더 구독",
     "copy": "기기에서 이 캘린더를 구독하려면 아래 링크를 사용하세요. 캘린더 클라이언트는 SpaceX의 공식 발사 일정과 실시간으로 자동으로 동기화됩니다.",
-    "subscribeLink": "캘린더 구독"
+    "subscribeLink": "온라인 달력 구독",
+    "copied": "복사됨",
+    "copyBtn": "복사",
+    "buttonLabel": "달력 구독",
+    "buttonShort": "구독"
   },
   "hero": {
     "eyebrow": "실시간 캘린더 피드",
@@ -48,8 +52,18 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "캘린더",
+      "subscriptions": "구독",
+      "language": "언어"
+    },
     "eyebrow": "발사 캘린더",
     "title": "월별 미션 보기",
+    "viewDay": "일",
+    "viewWeek": "주",
+    "viewMonth": "월",
+    "today": "오늘",
+    "moreEvents": "+{count}개 더보기...",
     "previousMonthAria": "이전 달 보기",
     "nextMonthAria": "다음 달 보기",
     "noLaunches": "이 달에는 날짜가 있는 발사가 아직 없습니다.",
@@ -125,7 +139,8 @@
     "clickToShrink": "클릭하여 축소",
     "clickToZoom": "클릭하여 원본 크기로 보기",
     "viewOriginal": "새 탭에서 원본 이미지 열기",
-    "infographicLabel": "{title} 미션 도해"
+    "infographicLabel": "{title} 미션 도해",
+    "viewOfficialDetails": "공식 상세 보기"
   },
   "countdown": {
     "awaitingTime": "시간 대기 중",
@@ -140,7 +155,8 @@
   },
   "status": {
     "upcoming": "예정",
-    "live": "라이브"
+    "live": "라이브",
+    "liveNow": "LIVE 생중계"
   },
   "faq": {
     "title": "자주 묻는 질문 및 가이드",

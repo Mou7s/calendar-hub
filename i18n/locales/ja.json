@@ -13,7 +13,11 @@
     "eyebrow": "ICS 購読",
     "title": "オンラインカレンダーを購読",
     "copy": "以下のリンクを使用して、お使いのデバイスでこのカレンダーを購読できます。カレンダーのクライアントは、SpaceXの公式打ち上げスケジュールとリアルタイムで自動同期されます。",
-    "subscribeLink": "カレンダーを購読"
+    "subscribeLink": "オンラインカレンダーを購読",
+    "copied": "コピーしました",
+    "copyBtn": "コピー",
+    "buttonLabel": "カレンダーを購読",
+    "buttonShort": "購読"
   },
   "hero": {
     "eyebrow": "ライブカレンダーフィード",
@@ -48,8 +52,18 @@
     }
   },
   "calendar": {
-    "eyebrow": "打ち上げカレンダー",
-    "title": "月別にミッションを見る",
+    "sidebar": {
+      "calendars": "カレンダー",
+      "subscriptions": "購読",
+      "language": "言語"
+    },
+    "eyebrow": "ローンチカレンダー",
+    "title": "月別にミッションを閲覧",
+    "viewDay": "日",
+    "viewWeek": "週",
+    "viewMonth": "月",
+    "today": "今日",
+    "moreEvents": "+{count} 件...",
     "previousMonthAria": "前の月を表示",
     "nextMonthAria": "次の月を表示",
     "noLaunches": "この月には日付付きの打ち上げがまだありません。",
@@ -125,7 +139,8 @@
     "clickToShrink": "クリックして縮小",
     "clickToZoom": "クリックして原寸大で表示",
     "viewOriginal": "新しいタブで原画を開く",
-    "infographicLabel": "{title} ミッション図解"
+    "infographicLabel": "{title} ミッション図解",
+    "viewOfficialDetails": "公式詳細を見る"
   },
   "countdown": {
     "awaitingTime": "時刻待ち",
@@ -140,7 +155,8 @@
   },
   "status": {
     "upcoming": "予定",
-    "live": "ライブ"
+    "live": "ライブ",
+    "liveNow": "LIVE 配信中"
   },
   "faq": {
     "title": "よくある質問とガイド",

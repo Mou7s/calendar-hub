@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Calendrier des lancements SpaceX",
-    "description": "Abonnez-vous à un calendrier ICS en ligne pour suivre les prochains lancements SpaceX."
+    "title": "Calendrier des Lancement SpaceX",
+    "description": "Abonnez-vous à un calendrier ICS en ligne et suivez les prochains lancements de SpaceX."
   },
   "header": {
     "copy": "Abonnez-vous à un calendrier ICS en ligne pour suivre les prochains lancements SpaceX.",
@@ -13,7 +13,11 @@
     "eyebrow": "Abonnement ICS",
     "title": "S'abonner au calendrier",
     "copy": "Utilisez les liens ci-dessous pour vous abonner à ce calendrier sur votre appareil. Votre calendrier se synchronisera automatiquement et en temps réel avec le programme de lancement officiel de SpaceX.",
-    "subscribeLink": "S'abonner"
+    "subscribeLink": "S'abonner au calendrier",
+    "copied": "Copié",
+    "copyBtn": "Copier",
+    "buttonLabel": "S'abonner au calendrier",
+    "buttonShort": "S'abonner"
   },
   "hero": {
     "eyebrow": "Flux de calendrier en direct",
@@ -48,8 +52,18 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "Calendriers",
+      "subscriptions": "Abonnements",
+      "language": "Langue"
+    },
     "eyebrow": "Calendrier des lancements",
     "title": "Parcourir les missions par mois",
+    "viewDay": "Jour",
+    "viewWeek": "Semaine",
+    "viewMonth": "Mois",
+    "today": "Aujourd'hui",
+    "moreEvents": "+{count} de plus...",
     "previousMonthAria": "Voir le mois précédent",
     "nextMonthAria": "Voir le mois suivant",
     "noLaunches": "Aucun lancement daté n'est disponible pour ce mois.",
@@ -125,22 +139,24 @@
     "clickToShrink": "Cliquez pour rétrécir",
     "clickToZoom": "Cliquez pour agrandir",
     "viewOriginal": "Voir l'original",
-    "infographicLabel": "Infographie de {title}"
+    "infographicLabel": "Infographie de la mission {title}",
+    "viewOfficialDetails": "Voir les détails officiels"
   },
   "countdown": {
-    "awaitingTime": "Heure en attente",
+    "awaitingTime": "En attente de l'heure",
     "windowOpen": "Fenêtre ouverte",
     "format": "{days}j {hours}h {minutes}m {seconds}s",
     "units": {
       "days": "Jours",
       "hours": "Heures",
-      "minutes": "Min",
-      "seconds": "Sec"
+      "minutes": "Mins",
+      "seconds": "Secs"
     }
   },
   "status": {
     "upcoming": "À venir",
-    "live": "En direct"
+    "live": "En direct",
+    "liveNow": "EN DIRECT MAINTENANT"
   },
   "faq": {
     "title": "Foire Aux Questions et Guides",

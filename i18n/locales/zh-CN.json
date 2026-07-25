@@ -13,7 +13,11 @@
     "eyebrow": "ICS 订阅",
     "title": "订阅在线日历",
     "copy": "使用下方的链接在您的设备上订阅此日历。日历客户端将自动与 SpaceX 官方实时发射计划保持同步更新。",
-    "subscribeLink": "订阅在线日历"
+    "subscribeLink": "订阅在线日历",
+    "copied": "已复制",
+    "copyBtn": "复制",
+    "buttonLabel": "订阅在线日历",
+    "buttonShort": "订阅"
   },
   "hero": {
     "eyebrow": "实时日历源",
@@ -48,8 +52,27 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "日历图层",
+      "subscriptions": "订阅项目",
+      "language": "语言"
+    },
     "eyebrow": "发射日历",
     "title": "按月查看任务",
+    "viewDay": "日",
+    "viewWeek": "周",
+    "viewMonth": "月",
+    "today": "今天",
+    "moreEvents": "+{count} 更多...",
+    "filterAll": "全部机构",
+    "filterSpaceX": "SpaceX",
+    "filterRocketLab": "Rocket Lab",
+    "filterNasa": "NASA",
+    "filterCasc": "CASC 中国航天",
+    "filterBlueOrigin": "蓝色起源",
+    "filterUla": "ULA 联合发射",
+    "filterEsa": "欧洲空间局",
+    "filterOther": "其他机构",
     "previousMonthAria": "查看上个月",
     "nextMonthAria": "查看下个月",
     "noLaunches": "这个月还没有带日期的发射任务。",
@@ -125,7 +148,8 @@
     "clickToShrink": "点击缩小",
     "clickToZoom": "点击原图大小",
     "viewOriginal": "在新标签页打开原图",
-    "infographicLabel": "{title} 任务图解"
+    "infographicLabel": "{title} 任务图解",
+    "viewOfficialDetails": "查看官方详情"
   },
   "countdown": {
     "awaitingTime": "等待时间",
@@ -140,7 +164,8 @@
   },
   "status": {
     "upcoming": "即将进行",
-    "live": "直播中"
+    "live": "直播中",
+    "liveNow": "LIVE 现在直播"
   },
   "timezone": {
     "local": "本地",

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --bun nuxt dev",
+    "dev": "bun --bun nuxt dev --host",
     "build": "bun --bun nuxt build",
     "test": "bun test",
     "translate:locales": "bun scripts/translate-locales.js"

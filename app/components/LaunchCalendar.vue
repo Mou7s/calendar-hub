@@ -1,180 +1,622 @@
 <template>
-  <section class="mb-8" aria-live="polite">
-    <UCard
-      class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-3xl backdrop-blur-md">
-      <div class="flex flex-col lg:flex-row gap-8">
-        <!-- Calendar Navigation & Mini Grid -->
-        <div class="w-full lg:w-[320px] flex flex-col gap-5 shrink-0">
-          <div class="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-800/50 pb-3">
-            <div>
-              <p class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-0.5">
-                {{ t('calendar.eyebrow') }}</p>
-              <h3 class="text-base font-bold text-neutral-900 dark:text-white uppercase">{{ t('calendar.title') }}</h3>
+  <div class="h-full w-full flex min-h-0 overflow-hidden bg-[#121212] text-[#ffffff] font-sans select-none">
+    
+    <!-- 1. Left Sidebar (纯粹 iCloud 黑白灰侧边栏 - 移除左侧卡片) -->
+    <aside
+      class="w-60 flex-shrink-0 bg-[#171717] border-r border-[#262626] flex flex-col justify-between p-4 min-h-0 overflow-y-auto hidden md:flex"
+    >
+      <div class="space-y-6">
+        <!-- Top App Title -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
+              <UIcon name="i-heroicons-calendar" class="w-4.5 h-4.5" />
             </div>
-
-            <div class="flex items-center gap-1.5">
-              <UButton icon="i-heroicons-chevron-left" size="xs" color="neutral" variant="outline" class="rounded-lg"
-                :disabled="activeMonthIndex === 0"
-                @click="$emit('update:activeMonthIndex', Math.max(0, activeMonthIndex - 1))"
-                aria-label="Previous month" />
-              <strong
-                class="text-[10px] uppercase tracking-wider text-neutral-900 dark:text-white min-w-[70px] text-center font-bold font-mono">
-                {{ activeMonthLabel }}
-              </strong>
-              <UButton icon="i-heroicons-chevron-right" size="xs" color="neutral" variant="outline" class="rounded-lg"
-                :disabled="activeMonthIndex === monthKeys.length - 1"
-                @click="$emit('update:activeMonthIndex', Math.min(monthKeys.length - 1, activeMonthIndex + 1))"
-                aria-label="Next month" />
-            </div>
+            <span class="text-lg font-extrabold tracking-wider text-white font-mono">CALENDAR</span>
           </div>
+        </div>
 
-          <!-- Mini Grid -->
-          <div class="grid grid-cols-7 gap-1 text-center text-xs">
-            <div v-for="dayLabel in weekdays" :key="dayLabel"
-              class="text-[10px] text-neutral-500 dark:text-neutral-400 font-bold uppercase py-1">
-              {{ dayLabel }}
-            </div>
+        <!-- Calendars Layer Checklist Section -->
+        <div class="space-y-2 pt-2 border-t border-[#262626]">
+          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#737373] px-1 block">
+            {{ t('calendar.sidebar.calendars') }}
+          </label>
 
-            <!-- Grid Days -->
-            <button v-for="day in gridDays" :key="day.isoDate" type="button"
-              class="h-9 w-9 rounded-xl flex items-center justify-center relative transition-all duration-150 cursor-pointer"
-              :class="{
-                'text-neutral-600': !day.isCurrentMonth,
-                'text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800': day.isCurrentMonth,
-                'bg-primary-500 text-neutral-950 font-bold': day.isoDate === todayIso,
-                'ring-2 ring-neutral-900 dark:ring-white font-bold': day.isoDate === selectedDateIso,
-                'ring-1 ring-neutral-500': day.isoDate === focusedDateIso && day.isoDate !== selectedDateIso
-              }" :disabled="!day.hasEvents" @click="day.hasEvents ? $emit('focus-date', day.isoDate) : null">
-              <span class="text-xs">{{ day.dayNumber }}</span>
-              <!-- Launch Dot -->
-              <span v-if="day.hasEvents"
-                class="absolute bottom-1 w-1 h-1 rounded-full bg-primary-500 dark:bg-primary-400"></span>
+          <div class="space-y-1">
+            <!-- SpaceX Layer Item (Apple/iCloud Calendar Checkbox Style) -->
+            <button
+              type="button"
+              class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors cursor-pointer text-left group"
+              @click="toggleSpaceXLayer"
+            >
+              <div
+                class="w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0"
+                :class="isSpaceXActive ? 'bg-white text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+              >
+                <UIcon name="i-heroicons-check-16-solid" class="w-3.5 h-3.5 stroke-[3]" />
+              </div>
+              <span
+                class="text-xs font-semibold tracking-wide transition-colors truncate"
+                :class="isSpaceXActive ? 'text-white font-bold' : 'text-[#737373] line-through'"
+              >
+                {{ t('calendar.filterSpaceX') }}
+              </span>
             </button>
           </div>
         </div>
 
-        <!-- Calendar Events List -->
-        <div
-          class="flex-1 border-t lg:border-t-0 lg:border-l border-neutral-200 dark:border-neutral-800/80 pt-6 lg:pt-0 lg:pl-8 max-h-[380px] overflow-y-auto pr-2">
-          <div class="flex flex-col gap-2.5">
-            <p v-if="!monthMissions.length" class="text-neutral-500 dark:text-neutral-400 text-sm py-4">{{
-              t('calendar.noLaunches') }}</p>
-
-            <UButton v-for="mission in monthMissions" :key="mission.key" :id="`mission-card-${mission.key}`"
-              color="neutral" variant="ghost"
-              class="flex items-center gap-4 text-left p-4 rounded-2xl w-full border border-neutral-200/60 dark:border-neutral-800/20"
-              :class="{
-                'bg-neutral-100 dark:bg-neutral-800/40 border-neutral-300 dark:border-neutral-700/60 shadow-md': mission.key === selectedMissionKey
-              }" @click="$emit('select-mission', mission)">
-              <div
-                class="flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-center min-w-[50px] leading-none shrink-0">
-                <span
-                  class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-semibold">{{
-                    formatEventMonth(mission.launchAt) }}</span>
-                <strong class="text-lg font-bold text-neutral-900 dark:text-white mt-1">{{
-                  formatEventDay(mission.launchAt) }}</strong>
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <div class="font-bold text-sm truncate text-neutral-900 dark:text-white uppercase">{{ mission.title }}
-                </div>
-                <div class="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1 flex items-center gap-2">
-                  <span v-if="mission.calendarGroup === 'history'"
-                    class="text-primary-600 dark:text-primary-400 font-bold uppercase">
-                    {{ t(`history.status.${mission.success === true ? 'success' : mission.success === false ? 'failure'
-                      : 'unknown'}`) }}
-                  </span>
-                  <span v-else-if="mission.isLive" class="text-red-400 font-bold uppercase tracking-wider">
-                    {{ t('mission.live') }}
-                  </span>
-                  <span v-else-if="mission.launchAt">
-                    {{ formatEventTime(mission.launchAt) }}
-                  </span>
-                  <span v-else>
-                    {{ t('calendar.untimed') }}
-                  </span>
-
-                  <span>•</span>
-                  <span>{{ te(`mission.types.${mission.missionType?.toLowerCase()}`) ?
-                    t(`mission.types.${mission.missionType?.toLowerCase()}`) : titleCase(mission.missionType) }}</span>
-                </div>
-              </div>
-            </UButton>
-          </div>
+        <!-- Language Select in Sidebar -->
+        <div class="space-y-2 pt-2 border-t border-[#262626]">
+          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#737373] px-1 block">
+            {{ t('calendar.sidebar.language') }}
+          </label>
+          <USelectMenu
+            v-model="activeLocaleCode"
+            :items="languageOptions"
+            value-key="value"
+            label-key="label"
+            icon="i-heroicons-language"
+            size="sm"
+            color="neutral"
+            variant="subtle"
+            class="w-full"
+            aria-label="Select Language"
+          />
         </div>
       </div>
-    </UCard>
-  </section>
+    </aside>
+
+    <!-- 2. Right Main Calendar Area (主界面) -->
+    <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#181818]">
+      
+      <!-- Top Header Toolbar (黑白灰极简工具栏) -->
+      <header class="h-14 border-b border-[#262626] px-4 flex items-center justify-between shrink-0 bg-[#141414]">
+        <!-- Left: Month Title + Lunar Year -->
+        <div class="flex items-center gap-3">
+          <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none">
+            <span>{{ monthTitleEnglish }}</span>
+            <span class="text-xs font-medium text-[#737373] hidden sm:inline">{{ lunarYearLabel }}</span>
+          </h1>
+        </div>
+
+        <!-- Center: Day / Week / Month Switcher (Apple Style Segmented Slider) -->
+        <div class="relative hidden sm:flex items-center bg-[#262626] p-0.5 rounded-lg text-xs font-semibold select-none border border-[#333333]">
+          <!-- Active Sliding Background -->
+          <div
+            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-2px)] bg-[#404040] rounded-md shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            :style="{
+              left: activeCalendarView === 'day' ? '2px' : activeCalendarView === 'week' ? 'calc(33.333% + 1px)' : 'calc(66.666% + 0px)'
+            }"
+          ></div>
+
+          <button
+            type="button"
+            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            :class="activeCalendarView === 'day' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            @click="activeCalendarView = 'day'"
+          >
+            {{ t('calendar.viewDay') }}
+          </button>
+
+          <button
+            type="button"
+            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            :class="activeCalendarView === 'week' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            @click="activeCalendarView = 'week'"
+          >
+            {{ t('calendar.viewWeek') }}
+          </button>
+
+          <button
+            type="button"
+            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            :class="activeCalendarView === 'month' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            @click="activeCalendarView = 'month'"
+          >
+            {{ t('calendar.viewMonth') }}
+          </button>
+        </div>
+
+        <!-- Right: Controls < Today > -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center text-white text-sm font-semibold gap-1">
+            <button
+              type="button"
+              class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
+              :disabled="activeMonthIndex <= 0"
+              @click="$emit('update:activeMonthIndex', activeMonthIndex - 1)"
+            >
+              <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
+            </button>
+            
+            <button
+              type="button"
+              class="px-2.5 py-1 hover:bg-[#262626] rounded-lg transition-colors font-bold text-white"
+              @click="jumpToToday"
+            >
+              {{ t('calendar.today') }}
+            </button>
+
+            <button
+              type="button"
+              class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
+              :disabled="activeMonthIndex >= monthKeys.length - 1"
+              @click="$emit('update:activeMonthIndex', activeMonthIndex + 1)"
+            >
+              <UIcon name="i-heroicons-chevron-right" class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Weekday Header Row (Mon Tue Wed Thu Fri Sat Sun - 多语言自适应) -->
+      <div class="grid grid-cols-7 border-b border-[#262626] bg-[#141414] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider">
+        <div
+          v-for="(dayName, idx) in weekdayHeaders"
+          :key="idx"
+          :class="idx >= 5 ? 'text-white font-extrabold' : 'text-[#737373]'"
+        >
+          {{ dayName }}
+        </div>
+      </div>
+
+      <!-- Main Dynamic Calendar View Switcher with Smooth Animations -->
+      <Transition name="view-fade" mode="out-in">
+        <!-- 1. Month View (月视图：7 Cols x 6 Rows) -->
+        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[#262626] gap-[1px]">
+          <div
+            v-for="day in gridDays"
+            :key="day.isoDate"
+            class="h-full min-h-0 p-1.5 flex flex-col justify-between overflow-hidden transition-colors"
+            :class="{
+              'bg-[#141414]/80 text-[#525252]': !day.isCurrentMonth,
+              'bg-[#1b1b1b] text-[#ffffff]': day.isCurrentMonth
+            }"
+          >
+            <!-- Cell Header: Date Number + Lunar Term -->
+            <div class="h-6 flex items-center justify-between shrink-0 mb-1">
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center transition-all shrink-0"
+                  :class="{
+                    'bg-white text-black font-black shadow-md shadow-white/20': day.isoDate === todayIso,
+                    'text-white': day.isoDate !== todayIso && day.isCurrentMonth,
+                    'text-[#525252]': !day.isCurrentMonth
+                  }"
+                >
+                  {{ day.dayNumber }}
+                </span>
+
+                <span class="text-[10px] text-[#737373] font-normal truncate max-w-[60px] leading-none">
+                  {{ getLunarText(day.isoDate) }}
+                </span>
+              </div>
+
+              <span v-if="isSpaceXActive && day.events.length > 0" class="text-[9px] font-bold text-[#737373] leading-none">
+                {{ day.events.length }}
+              </span>
+            </div>
+
+            <!-- Events List inside Cell -->
+            <div v-if="isSpaceXActive" class="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto scrollbar-none">
+              <button
+                v-for="event in day.events.slice(0, 3)"
+                :key="event.id || event.slug"
+                type="button"
+                class="w-full text-left px-1.5 py-0.5 rounded-none text-[10px] font-semibold truncate transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                :class="[
+                  getEventStyleClass(event),
+                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[#303030] text-white font-bold' : ''
+                ]"
+                @click="handleEventClick(event, $event)"
+              >
+                <span
+                  v-if="!event.isLive"
+                  class="w-1.5 h-1.5 rounded-full shrink-0"
+                  :style="{ backgroundColor: getProviderColor(event.provider) }"
+                ></span>
+                <span v-else class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+
+                <span class="truncate font-semibold flex-1">{{ event.title }}</span>
+                <span class="text-[9px] opacity-60 shrink-0 font-mono">{{ formatTimeShort(event.launchAt) }}</span>
+              </button>
+
+              <button
+                v-if="day.events.length > 3"
+                type="button"
+                class="text-[9px] font-bold text-white hover:underline px-1 text-left shrink-0"
+                @click="handleEventClick(day.events[3], $event)"
+              >
+                {{ t('calendar.moreEvents', { count: day.events.length - 3 }) }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Week View (周视图：单周 7 列放大视角) -->
+        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 grid grid-cols-7 min-h-0 overflow-hidden bg-[#262626] gap-[1px]">
+          <div
+            v-for="day in currentWeekDays"
+            :key="day.isoDate"
+            class="h-full min-h-0 p-2.5 flex flex-col justify-between overflow-hidden transition-colors bg-[#1b1b1b]"
+          >
+            <!-- Week Cell Header -->
+            <div class="h-7 flex items-center justify-between shrink-0 mb-2 border-b border-[#262626] pb-2">
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="w-5.5 h-5.5 rounded-full text-xs font-bold flex items-center justify-center transition-all shrink-0"
+                  :class="day.isoDate === todayIso ? 'bg-white text-black font-black shadow-md shadow-white/20' : 'text-white'"
+                >
+                  {{ day.dayNumber }}
+                </span>
+                <span class="text-[10px] text-[#737373] font-normal truncate max-w-[60px] leading-none">
+                  {{ getLunarText(day.isoDate) }}
+                </span>
+              </div>
+              <span v-if="isSpaceXActive && day.events.length > 0" class="text-[9px] font-bold text-[#737373] leading-none">
+                {{ day.events.length }}
+              </span>
+            </div>
+
+            <!-- Week View Event Cards List -->
+            <div v-if="isSpaceXActive" class="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto scrollbar-none">
+              <button
+                v-for="event in day.events"
+                :key="event.id || event.slug"
+                type="button"
+                class="w-full text-left p-2 rounded-none text-xs font-semibold transition-all flex flex-col gap-1 cursor-pointer shrink-0 border-b border-[#333333] hover:border-white/40"
+                :class="[
+                  getEventStyleClass(event),
+                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[#303030] text-white font-bold' : ''
+                ]"
+                @click="handleEventClick(event, $event)"
+              >
+                <div class="flex items-center justify-between gap-1">
+                  <span v-if="!event.isLive" class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
+                  <span v-else class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                  <span class="text-[10px] opacity-75 font-mono">{{ formatTimeShort(event.launchAt) }}</span>
+                </div>
+                <span class="truncate font-bold text-xs leading-snug">{{ event.title }}</span>
+                <span v-if="event.vehicle" class="text-[9px] opacity-60 font-mono truncate">{{ event.vehicle }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Day View (日视图：单日集中流视界) -->
+        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-y-auto p-6 bg-[#161616] space-y-4 scrollbar-none">
+          <div class="flex items-center justify-between border-b border-[#262626] pb-4 shrink-0">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shadow-white/20">
+                {{ currentDayFocus?.dayNumber }}
+              </span>
+              <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+                <span>{{ currentDayFocus?.isoDate }}</span>
+                <span class="text-xs text-[#737373] font-normal">({{ getLunarText(currentDayFocus?.isoDate) }})</span>
+              </h2>
+            </div>
+            <span class="text-xs font-mono text-[#737373]">
+              {{ isSpaceXActive && currentDayFocus?.events ? currentDayFocus.events.length : 0 }} {{ t('overview.launches') }}
+            </span>
+          </div>
+
+          <!-- Day Events Timeline Stream -->
+          <div v-if="isSpaceXActive && currentDayFocus?.events?.length" class="space-y-3">
+            <div
+              v-for="event in currentDayFocus.events"
+              :key="event.id || event.slug"
+              class="bg-[#212121] border-b border-[#333333] hover:border-[#525252] p-4 rounded-none transition-all flex flex-col md:flex-row justify-between gap-4 cursor-pointer group"
+              :class="selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[#2b2b2b]' : ''"
+              @click="handleEventClick(event, $event)"
+            >
+              <div class="space-y-1.5 flex-1">
+                <div class="flex items-center gap-2">
+                  <span v-if="event.isLive" class="px-2 py-0.5 rounded text-[9px] font-black bg-red-500 text-white uppercase animate-pulse">● LIVE</span>
+                  <span class="text-xs font-mono text-[#a3a3a3] uppercase font-bold">{{ event.providerName || 'SPACEX' }}</span>
+                </div>
+                <h3 class="text-base font-black text-white group-hover:text-primary-400 transition-colors uppercase font-mono">
+                  {{ event.title }}
+                </h3>
+                <div class="flex flex-wrap gap-4 text-xs text-[#a3a3a3] pt-1">
+                  <span v-if="event.vehicle" class="flex items-center gap-1"><UIcon name="i-heroicons-rocket-launch" class="w-3.5 h-3.5" /> {{ event.vehicle }}</span>
+                  <span v-if="event.launchSite" class="flex items-center gap-1"><UIcon name="i-heroicons-map-pin" class="w-3.5 h-3.5" /> {{ event.launchSite }}</span>
+                </div>
+              </div>
+              <div class="flex flex-col items-start md:items-end justify-center shrink-0">
+                <span class="text-sm font-bold text-white font-mono bg-[#2b2b2b] px-3 py-1 rounded-lg border border-[#383838]">
+                  {{ formatTimeShort(event.launchAt) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty Day State -->
+          <div v-else class="py-16 text-center text-[#737373] space-y-2">
+            <UIcon name="i-heroicons-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
+            <p class="text-sm font-semibold">{{ t('calendar.noLaunches') }}</p>
+          </div>
+        </div>
+      </Transition>
+    </main>
+
+    <!-- 3. Minimalist Event Detail Floating Card (极简气泡卡片 - 消除嵌套圆角框，专注内容) -->
+    <div
+      v-if="popoverEvent"
+      class="fixed z-50 w-[300px] bg-[#161616] text-white border border-[#262626] rounded-xl shadow-2xl p-4 space-y-3 font-sans animate-fadeIn"
+      :style="popoverStyle"
+      @click.stop
+    >
+      <!-- Top Row: Provider Text & Close Button -->
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-bold tracking-widest text-[#a3a3a3] uppercase">
+          {{ popoverEvent.providerName || popoverEvent.provider || 'SPACEX' }}
+        </span>
+        <button
+          type="button"
+          class="text-[#737373] hover:text-white p-1 rounded transition-colors"
+          @click.stop="popoverEvent = null"
+          aria-label="Close Floating Card"
+        >
+          <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+        </button>
+      </div>
+
+      <!-- Title & Live Badge -->
+      <div>
+        <div v-if="popoverEvent.isLive" class="flex items-center gap-1.5 text-[10px] font-bold text-[#ef4444] uppercase tracking-wider mb-1 font-mono">
+          <span class="w-2 h-2 rounded-full bg-[#ef4444] animate-ping"></span>
+          <span>{{ t('status.liveNow') }}</span>
+        </div>
+        <h3 class="text-base font-black text-white uppercase font-mono leading-snug">
+          {{ popoverEvent.title }}
+        </h3>
+      </div>
+
+      <!-- Direct Details Content (移除深色嵌套内盒) -->
+      <div class="space-y-2 text-xs text-[#d4d4d4] pt-2 border-t border-[#262626]">
+        <div class="flex items-center gap-2.5">
+          <UIcon name="i-heroicons-clock" class="w-4 h-4 text-[#737373] shrink-0" />
+          <span class="font-bold text-white font-mono">{{ formatFullDateTime(popoverEvent.launchAt) }}</span>
+        </div>
+
+        <div v-if="popoverEvent.vehicle" class="flex items-center gap-2.5">
+          <UIcon name="i-heroicons-rocket-launch" class="w-4 h-4 text-[#737373] shrink-0" />
+          <span class="truncate text-[#e5e5e5]">{{ t('mission.vehicle') }}: <strong class="text-white">{{ popoverEvent.vehicle }}</strong></span>
+        </div>
+
+        <div v-if="popoverEvent.launchSite" class="flex items-start gap-2.5">
+          <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
+          <span class="leading-relaxed text-[#e5e5e5]">{{ t('mission.launchSite') }}: <strong class="text-white">{{ popoverEvent.launchSite }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Clean Action Button -->
+      <div v-if="popoverEvent.missionUrl" class="pt-1">
+        <NuxtLink
+          :to="popoverEvent.missionUrl"
+          target="_blank"
+          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-[#262626] hover:bg-[#333333] border border-[#333333] rounded-lg transition-colors"
+        >
+          <span>{{ t('mission.viewOfficialDetails') }}</span>
+          <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5 text-[#a3a3a3]" />
+        </NuxtLink>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useLunar } from '~/composables/useLunar'
 
-const { t, tm, rt, te } = useI18n()
+const { getLunarText } = useLunar()
+const { t, locale, locales, setLocale } = useI18n()
 
-const weekdays = computed(() => {
-  const days = tm('calendar.weekdayShort')
-  return Array.isArray(days) ? days.map(day => rt(day)) : []
-})
-
-defineProps({
-  gridDays: {
-    type: Array,
-    required: true
-  },
-  monthMissions: {
-    type: Array,
-    required: true
-  },
-  monthKeys: {
-    type: Array,
-    required: true
-  },
-  activeMonthIndex: {
-    type: Number,
-    required: true
-  },
-  activeMonthLabel: {
-    type: String,
-    required: true
-  },
-  todayIso: {
-    type: String,
-    required: true
-  },
-  selectedDateIso: {
-    type: String,
-    default: null
-  },
-  focusedDateIso: {
-    type: String,
-    default: null
-  },
-  selectedMissionKey: {
-    type: String,
-    default: null
-  },
-  formatEventMonth: {
-    type: Function,
-    required: true
-  },
-  formatEventDay: {
-    type: Function,
-    required: true
-  },
-  formatEventTime: {
-    type: Function,
-    required: true
-  },
-  titleCase: {
-    type: Function,
-    required: true
+const activeLocaleCode = computed({
+  get: () => locale.value,
+  set: (val) => {
+    if (val && typeof setLocale === 'function') {
+      setLocale(val)
+    }
   }
 })
 
-defineEmits([
+const languageOptions = computed(() => {
+  if (Array.isArray(locales?.value)) {
+    return locales.value.map(l => {
+      if (typeof l === 'string') return { value: l, label: l }
+      return { value: l.code, label: l.name }
+    })
+  }
+  return [
+    { value: 'zh-CN', label: '简体中文' },
+    { value: 'en', label: 'English' },
+    { value: 'ja', label: '日本語' },
+    { value: 'ko', label: '한국어' },
+    { value: 'es', label: 'Español' },
+    { value: 'fr', label: 'Français' },
+    { value: 'de', label: 'Deutsch' }
+  ]
+})
+
+const props = defineProps({
+  gridDays: { type: Array, required: true },
+  monthKeys: { type: Array, required: true },
+  activeMonthIndex: { type: Number, required: true },
+  todayIso: { type: String, required: true },
+  selectedDateIso: { type: String, default: null }
+})
+
+const emit = defineEmits([
   'update:activeMonthIndex',
-  'focus-date',
   'select-mission'
 ])
+
+// Provider Color Mapping (黑白灰调色板 Monochrome Palette)
+const providerList = [
+  { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#ffffff' },
+  { id: 'rocketlab', nameKey: 'calendar.filterRocketLab', defaultName: 'Rocket Lab', color: '#e5e5e5' },
+  { id: 'nasa', nameKey: 'calendar.filterNasa', defaultName: 'NASA', color: '#d4d4d4' },
+  { id: 'casc', nameKey: 'calendar.filterCasc', defaultName: 'CASC', color: '#a3a3a3' },
+  { id: 'blue-origin', nameKey: 'calendar.filterBlueOrigin', defaultName: 'Blue Origin', color: '#737373' },
+  { id: 'other', nameKey: 'calendar.filterOther', defaultName: 'Others', color: '#525252' }
+]
+
+const isSpaceXActive = ref(true)
+const activeCalendarView = ref('month') // 'day' | 'week' | 'month'
+
+const currentWeekDays = computed(() => {
+  if (!props.gridDays || props.gridDays.length === 0) return []
+  const targetIso = props.selectedDateIso || props.todayIso
+  const foundIndex = props.gridDays.findIndex(d => d.isoDate === targetIso)
+  if (foundIndex >= 0) {
+    const startOfWeekIndex = Math.floor(foundIndex / 7) * 7
+    return props.gridDays.slice(startOfWeekIndex, startOfWeekIndex + 7)
+  }
+  return props.gridDays.slice(7, 14)
+})
+
+const currentDayFocus = computed(() => {
+  if (!props.gridDays || props.gridDays.length === 0) return null
+  const targetIso = props.selectedDateIso || props.todayIso
+  return props.gridDays.find(d => d.isoDate === targetIso) || props.gridDays[0]
+})
+
+const toggleSpaceXLayer = () => {
+  isSpaceXActive.value = !isSpaceXActive.value
+}
+
+const getProviderColor = (providerId) => {
+  const item = providerList.find(p => p.id === providerId)
+  return item ? item.color : '#e5e5e5'
+}
+
+// 单击直接同时完成：高亮选中 + 在节点旁打开浮窗 + 调起任务详情
+const selectedMission = ref(null)
+const popoverEvent = ref(null)
+const popoverStyle = ref({ top: '100px', left: '100px' })
+
+const handleEventClick = (event, domEvent) => {
+  if (domEvent) {
+    domEvent.stopPropagation()
+  }
+
+  selectedMission.value = event
+
+  // 计算弹窗精准附着在被点击的事件按钮右侧/下方
+  if (domEvent && domEvent.currentTarget) {
+    const rect = domEvent.currentTarget.getBoundingClientRect()
+    let left = rect.right + 12
+    let top = rect.top - 10
+
+    // 防止浮窗超出右侧屏幕边界
+    if (left + 320 > window.innerWidth) {
+      left = Math.max(10, rect.left - 325)
+    }
+
+    // 防止浮窗超出底部屏幕边界
+    if (top + 280 > window.innerHeight) {
+      top = Math.max(10, window.innerHeight - 290)
+    }
+
+    popoverStyle.value = {
+      left: `${left}px`,
+      top: `${top}px`
+    }
+  }
+
+  // 延迟微秒确保 click 事件冒泡周期完成
+  setTimeout(() => {
+    popoverEvent.value = event
+  }, 10)
+
+  emit('select-mission', event)
+}
+
+// 点击卡片外部区域自动收起气泡浮窗
+const handleGlobalClick = (e) => {
+  if (popoverEvent.value) {
+    popoverEvent.value = null
+  }
+}
+
+onMounted(() => {
+  if (import.meta.client) {
+    window.addEventListener('click', handleGlobalClick)
+  }
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('click', handleGlobalClick)
+  }
+})
+
+const weekdayHeaders = computed(() => {
+  const shortList = t('calendar.weekdayShort')
+  if (Array.isArray(shortList) && shortList.length === 7) {
+    return [shortList[1], shortList[2], shortList[3], shortList[4], shortList[5], shortList[6], shortList[0]]
+  }
+  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+})
+
+const monthTitleEnglish = computed(() => {
+  const monthKey = props.monthKeys[props.activeMonthIndex]
+  if (!monthKey) return 'July 2026'
+  const d = new Date(`${monthKey}-01T00:00:00.000Z`)
+  try {
+    return d.toLocaleString(locale.value || 'en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  } catch (e) {
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  }
+})
+
+const lunarYearLabel = computed(() => {
+  return '丙午年'
+})
+
+const formatTimeShort = (isoString) => {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
+const formatFullDateTime = (isoString) => {
+  if (!isoString) return t('calendar.untimed')
+  const d = new Date(isoString)
+  return d.toLocaleString(locale.value || [], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+const jumpToToday = () => {
+  if (!props.todayIso) return
+  const todayMonthKey = props.todayIso.slice(0, 7)
+  const idx = props.monthKeys.indexOf(todayMonthKey)
+  if (idx >= 0) {
+    emit('update:activeMonthIndex', idx)
+  }
+}
+
+const getEventStyleClass = (event) => {
+  if (event.isLive) {
+    return 'bg-white text-black font-extrabold shadow-md shadow-white/20'
+  }
+  return 'bg-[#262626] hover:bg-[#333333] text-[#ffffff]'
+}
 </script>
+
+<style scoped>
+.view-fade-enter-active,
+.view-fade-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.view-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.985) translateY(2px);
+}
+
+.view-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.01) translateY(-2px);
+}
+</style>

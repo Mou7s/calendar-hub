@@ -13,7 +13,11 @@
     "eyebrow": "ICS-Abonnement",
     "title": "Online-Kalender abonnieren",
     "copy": "Verwende die folgenden Links, um diesen Kalender auf deinem Gerät zu abonnieren. Dein Kalender-Client wird automatisch und in Echtzeit mit dem offiziellen SpaceX-Startplan synchronisiert.",
-    "subscribeLink": "Kalender abonnieren"
+    "subscribeLink": "Kalender abonnieren",
+    "copied": "Kopiert",
+    "copyBtn": "Kopieren",
+    "buttonLabel": "Kalender abonnieren",
+    "buttonShort": "Abonnieren"
   },
   "hero": {
     "eyebrow": "Live-Kalenderfeed",
@@ -48,8 +52,18 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "Kalender",
+      "subscriptions": "Abonnements",
+      "language": "Sprache"
+    },
     "eyebrow": "Startkalender",
     "title": "Missionen nach Monat durchsuchen",
+    "viewDay": "Tag",
+    "viewWeek": "Woche",
+    "viewMonth": "Monat",
+    "today": "Heute",
+    "moreEvents": "+{count} mehr...",
     "previousMonthAria": "Vorherigen Monat anzeigen",
     "nextMonthAria": "Nächsten Monat anzeigen",
     "noLaunches": "Für diesen Monat sind noch keine datierten Starts verfügbar.",
@@ -125,7 +139,8 @@
     "clickToShrink": "Klicken zum Verkleinern",
     "clickToZoom": "Klicken zum Vergrößern",
     "viewOriginal": "Original anzeigen",
-    "infographicLabel": "{title} Infografik"
+    "infographicLabel": "{title} Infografik",
+    "viewOfficialDetails": "Offizielle Details anzeigen"
   },
   "countdown": {
     "awaitingTime": "Warten auf Zeit",
@@ -140,7 +155,8 @@
   },
   "status": {
     "upcoming": "Bevorstehend",
-    "live": "Live"
+    "live": "Live",
+    "liveNow": "LIVE JETZT"
   },
   "faq": {
     "title": "Häufig gestellte Fragen & Anleitungen",

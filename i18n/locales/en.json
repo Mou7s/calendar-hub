@@ -13,7 +13,11 @@
     "eyebrow": "ICS Subscription",
     "title": "Subscribe to Online Calendar",
     "copy": "Use the links below to subscribe to this calendar on your device. Your calendar client will keep automatically syncing with SpaceX's official launch schedule in real-time.",
-    "subscribeLink": "Subscribe to Calendar"
+    "subscribeLink": "Subscribe to Calendar",
+    "copied": "Copied",
+    "copyBtn": "Copy",
+    "buttonLabel": "Subscribe Calendar",
+    "buttonShort": "Subscribe"
   },
   "hero": {
     "eyebrow": "Live Calendar Feed",
@@ -48,8 +52,27 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "Calendars",
+      "subscriptions": "Subscriptions",
+      "language": "Language"
+    },
     "eyebrow": "Launch calendar",
     "title": "Browse missions by month",
+    "viewDay": "Day",
+    "viewWeek": "Week",
+    "viewMonth": "Month",
+    "today": "Today",
+    "moreEvents": "+{count} more...",
+    "filterAll": "All Providers",
+    "filterSpaceX": "SpaceX",
+    "filterRocketLab": "Rocket Lab",
+    "filterNasa": "NASA",
+    "filterCasc": "CASC (China)",
+    "filterBlueOrigin": "Blue Origin",
+    "filterUla": "ULA",
+    "filterEsa": "ESA",
+    "filterOther": "Others",
     "previousMonthAria": "View previous month",
     "nextMonthAria": "View next month",
     "noLaunches": "No dated launches are available for this month yet.",
@@ -125,7 +148,8 @@
     "clickToShrink": "Click to Shrink",
     "clickToZoom": "Click to Zoom",
     "viewOriginal": "View Original",
-    "infographicLabel": "{title} Infographic"
+    "infographicLabel": "{title} Infographic",
+    "viewOfficialDetails": "View Official Details"
   },
   "countdown": {
     "awaitingTime": "Awaiting time",
@@ -140,7 +164,8 @@
   },
   "status": {
     "upcoming": "Upcoming",
-    "live": "Live"
+    "live": "Live",
+    "liveNow": "LIVE NOW"
   },
   "timezone": {
     "local": "Local",

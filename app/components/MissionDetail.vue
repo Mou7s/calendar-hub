@@ -251,22 +251,18 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { t, locale, te } = useI18n()
 
-defineProps<{
-  selectedMission: any
-  loadingDetails: boolean
-  details: any
-  isInfographicOpen: boolean
-  isZoomed: boolean
-  missionWindowCopy: string
-  titleCase: (value: string) => string
-}>()
+defineProps({
+  selectedMission: { type: Object, default: null },
+  loadingDetails: { type: Boolean, default: false },
+  details: { type: Object, default: null },
+  isInfographicOpen: { type: Boolean, default: false },
+  isZoomed: { type: Boolean, default: false },
+  missionWindowCopy: { type: String, default: '' },
+  titleCase: { type: Function, required: true }
+})
 
-defineEmits<{
-  'close': []
-  'update:isInfographicOpen': [value: boolean]
-  'update:isZoomed': [value: boolean]
-}>()
+defineEmits(['close', 'update:isInfographicOpen', 'update:isZoomed'])
 </script>

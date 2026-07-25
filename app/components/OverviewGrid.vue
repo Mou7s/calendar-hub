@@ -69,21 +69,19 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { t, locale } = useI18n()
 
-defineProps<{
-  monthSummary: any[]
-  timedWindowsCount: number
-  liveCount: number
-  missionsCount: number
-  activeTimezone: string | null
-  activeTimezoneDisplay: string
-  timezoneOptions: { key: string; tz: string | null }[]
-  formatMonthPillLabel: (item: any) => string
-}>()
+defineProps({
+  monthSummary: { type: Array, default: () => [] },
+  timedWindowsCount: { type: Number, default: 0 },
+  liveCount: { type: Number, default: 0 },
+  missionsCount: { type: Number, default: 0 },
+  activeTimezone: { type: String, default: null },
+  activeTimezoneDisplay: { type: String, default: '' },
+  timezoneOptions: { type: Array, default: () => [] },
+  formatMonthPillLabel: { type: Function, required: true }
+})
 
-defineEmits<{
-  'set-timezone': [tz: string | null]
-}>()
+defineEmits(['set-timezone'])
 </script>

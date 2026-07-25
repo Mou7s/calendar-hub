@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Calendario de lanzamientos de SpaceX",
-    "description": "Suscríbete a un calendario ICS en línea y sigue los próximos lanzamientos de SpaceX."
+    "title": "Calendario de Lanzamientos de SpaceX",
+    "description": "Suscríbete a un calendario ICS en línea y mantente al día con los próximos lanzamientos de SpaceX."
   },
   "header": {
     "copy": "Suscríbete a un calendario ICS en línea y sigue los próximos lanzamientos de SpaceX.",
@@ -13,7 +13,11 @@
     "eyebrow": "Suscripción ICS",
     "title": "Suscribirse al calendario",
     "copy": "Usa los siguientes enlaces para suscribirte a este calendario en tu dispositivo. Tu cliente de calendario se mantendrá sincronizado automáticamente con el programa de lanzamiento oficial de SpaceX en tiempo real.",
-    "subscribeLink": "Suscribirse"
+    "subscribeLink": "Suscribirse al calendario",
+    "copied": "Copiado",
+    "copyBtn": "Copiar",
+    "buttonLabel": "Suscribirse al calendario",
+    "buttonShort": "Suscribirse"
   },
   "hero": {
     "eyebrow": "Feed de calendario en vivo",
@@ -48,8 +52,18 @@
     }
   },
   "calendar": {
+    "sidebar": {
+      "calendars": "Calendarios",
+      "subscriptions": "Suscripciones",
+      "language": "Idioma"
+    },
     "eyebrow": "Calendario de lanzamientos",
     "title": "Ver misiones por mes",
+    "viewDay": "Día",
+    "viewWeek": "Semana",
+    "viewMonth": "Mes",
+    "today": "Hoy",
+    "moreEvents": "+{count} más...",
     "previousMonthAria": "Ver mes anterior",
     "nextMonthAria": "Ver mes siguiente",
     "noLaunches": "No hay lanzamientos con fecha para este mes.",
@@ -125,7 +139,8 @@
     "clickToShrink": "Haz clic para reducir",
     "clickToZoom": "Haz clic para ampliar",
     "viewOriginal": "Ver Original",
-    "infographicLabel": "Infografía de {title}"
+    "infographicLabel": "Infografía de la misión {title}",
+    "viewOfficialDetails": "Ver detalles oficiales"
   },
   "countdown": {
     "awaitingTime": "Esperando hora",
@@ -134,13 +149,14 @@
     "units": {
       "days": "Días",
       "hours": "Horas",
-      "minutes": "Min",
-      "seconds": "Seg"
+      "minutes": "Mins",
+      "seconds": "Segs"
     }
   },
   "status": {
     "upcoming": "Próximo",
-    "live": "En vivo"
+    "live": "En vivo",
+    "liveNow": "EN VIVO AHORA"
   },
   "faq": {
     "title": "Preguntas Frecuentes y Guías",

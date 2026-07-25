@@ -26,26 +26,28 @@ const worker = {
       context: {
         cloudflare: {
           env,
-          context: ctx
+          context: ctx,
         },
-        params: {}
+        params: {},
       },
       node: {
         req: {
-          url: url.pathname
+          url: url.pathname,
         },
         res: {
-          setHeader() {}
-        }
-      }
+          setHeader() {},
+        },
+      },
     };
-    
+
     try {
       if (url.pathname === "/spacex.ics") {
         const response = await spacexIcsRoute(mockEvent);
         return new Response(response, {
           status: 200,
-          headers: new Headers({ "content-type": "text/calendar; charset=utf-8" })
+          headers: new Headers({
+            "content-type": "text/calendar; charset=utf-8",
+          }),
         });
       }
 
@@ -53,7 +55,9 @@ const worker = {
         const response = await calendarIcsRoute(mockEvent);
         return new Response(response, {
           status: 200,
-          headers: new Headers({ "content-type": "text/calendar; charset=utf-8" })
+          headers: new Headers({
+            "content-type": "text/calendar; charset=utf-8",
+          }),
         });
       }
 
@@ -61,7 +65,9 @@ const worker = {
         const response = await launchesApi(mockEvent);
         return new Response(JSON.stringify(response), {
           status: 200,
-          headers: new Headers({ "content-type": "application/json; charset=utf-8" })
+          headers: new Headers({
+            "content-type": "application/json; charset=utf-8",
+          }),
         });
       }
 
@@ -69,39 +75,50 @@ const worker = {
         const response = await historyApi(mockEvent);
         return new Response(JSON.stringify(response), {
           status: 200,
-          headers: new Headers({ "content-type": "application/json; charset=utf-8" })
+          headers: new Headers({
+            "content-type": "application/json; charset=utf-8",
+          }),
         });
       }
 
-      const detailsMatch = url.pathname.match(/^\/api\/launches\/([a-z0-9-]+)$/i);
+      const detailsMatch = url.pathname.match(
+        /^\/api\/launches\/([a-z0-9-]+)$/i,
+      );
       if (detailsMatch) {
         mockEvent.context.params = { slug: detailsMatch[1] };
         const response = await detailsApi(mockEvent);
         return new Response(JSON.stringify(response), {
           status: 200,
-          headers: new Headers({ "content-type": "application/json; charset=utf-8" })
+          headers: new Headers({
+            "content-type": "application/json; charset=utf-8",
+          }),
         });
       }
 
       if (url.pathname === "/") {
         return new Response("<html>ok</html>", {
           status: 200,
-          headers: new Headers({ "content-type": "text/html; charset=utf-8" })
+          headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
         });
       }
 
       return new Response("Not Found", { status: 404 });
     } catch (error) {
       console.error("DEBUG ERROR IN MOCK WORKER FETCH:", error);
-      return new Response(JSON.stringify({
-        error: error.message || "Internal Server Error",
-        detail: error.data || String(error)
-      }), {
-        status: error.statusCode || 502,
-        headers: new Headers({ "content-type": "application/json; charset=utf-8" })
-      });
+      return new Response(
+        JSON.stringify({
+          error: error.message || "Internal Server Error",
+          detail: error.data || String(error),
+        }),
+        {
+          status: error.statusCode || 502,
+          headers: new Headers({
+            "content-type": "application/json; charset=utf-8",
+          }),
+        },
+      );
     }
-  }
+  },
 };
 
 const sampleTiles = [
@@ -232,8 +249,14 @@ const sampleMissionDetails = {
     timeHeader: "Hr/Min/Sec",
     descriptionHeader: "Event",
     timelineEntries: [
-      { time: "00:38:00", description: "SpaceX Launch Director verifies go for propellant load" },
-      { time: "00:01:00", description: "Command flight computer to begin final prelaunch checks" },
+      {
+        time: "00:38:00",
+        description: "SpaceX Launch Director verifies go for propellant load",
+      },
+      {
+        time: "00:01:00",
+        description: "Command flight computer to begin final prelaunch checks",
+      },
     ],
   },
   postLaunchTimeline: {
@@ -241,9 +264,7 @@ const sampleMissionDetails = {
     disclaimer: "All Times Approximate",
     timeHeader: "Hr/Min/Sec",
     descriptionHeader: "Event",
-    timelineEntries: [
-      { time: "00:01:10", description: "Max Q" },
-    ],
+    timelineEntries: [{ time: "00:01:10", description: "Max Q" }],
   },
   astronauts: [],
   webcasts: [
@@ -307,11 +328,16 @@ function createFetchStubWithDetails(detailsResponse = sampleMissionDetails) {
   };
 }
 
-function createFetchStubWithHistory(historyResponse = [olderHistoryTile, sampleHistoryResponse]) {
+function createFetchStubWithHistory(
+  historyResponse = [olderHistoryTile, sampleHistoryResponse],
+) {
   const launchFetch = createFetchStub();
 
   return async (url, init = {}) => {
-    if (String(url).includes("launches-page-tiles") && !String(url).includes("upcoming")) {
+    if (
+      String(url).includes("launches-page-tiles") &&
+      !String(url).includes("upcoming")
+    ) {
       return new Response(JSON.stringify(historyResponse), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -323,11 +349,17 @@ function createFetchStubWithHistory(historyResponse = [olderHistoryTile, sampleH
 }
 
 test("loadLaunchData merges SpaceX tiles and timing feeds", async () => {
-  const data = await loadLaunchData(createFetchStub(), new Date("2026-04-01T00:00:00.000Z"));
+  const data = await loadLaunchData(
+    createFetchStub(),
+    new Date("2026-04-01T00:00:00.000Z"),
+  );
 
   assert.equal(data.missions.length, 2);
   assert.equal(data.nextLaunch.title, "Starlink Mission");
-  assert.equal(data.missions[0].missionUrl, "https://www.spacex.com/launches/starlink-1/");
+  assert.equal(
+    data.missions[0].missionUrl,
+    "https://www.spacex.com/launches/starlink-1/",
+  );
   assert.equal(data.missions[1].launchWindow.close, "2026-04-20T07:22:00.000Z");
 });
 
@@ -375,14 +407,17 @@ test("loadLaunchData filters launches that are already in the past", async () =>
         {
           status: 200,
           headers: { "content-type": "application/json" },
-        }
+        },
       );
     }
 
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
-  const data = await loadLaunchData(fetchStub, new Date("2026-05-24T12:00:00.000Z"));
+  const data = await loadLaunchData(
+    fetchStub,
+    new Date("2026-05-24T12:00:00.000Z"),
+  );
 
   assert.equal(data.missions.length, 1);
   assert.equal(data.nextLaunch.title, "Future Mission");
@@ -390,7 +425,10 @@ test("loadLaunchData filters launches that are already in the past", async () =>
 });
 
 test("buildCalendarFeed emits valid VEVENT entries with DTEND when available", async () => {
-  const data = await loadLaunchData(createFetchStub(), new Date("2026-04-01T00:00:00.000Z"));
+  const data = await loadLaunchData(
+    createFetchStub(),
+    new Date("2026-04-01T00:00:00.000Z"),
+  );
   const calendar = buildCalendarFeed(data);
 
   assert.match(calendar, /BEGIN:VCALENDAR/);
@@ -403,24 +441,45 @@ test("buildCalendarFeed emits valid VEVENT entries with DTEND when available", a
 });
 
 test("loadMissionDetails normalizes SpaceX mission detail pages", async () => {
-  const data = await loadMissionDetails("starlink-1", createFetchStubWithDetails());
+  const data = await loadMissionDetails(
+    "starlink-1",
+    createFetchStubWithDetails(),
+  );
 
   assert.equal(data.details.slug, "starlink-1");
   assert.equal(data.details.title, "Starlink Mission");
-  assert.equal(data.details.media.imageDesktop.url, "https://example.com/detail-large.jpg");
-  assert.equal(data.details.media.infographicDesktop.url, "https://example.com/infographic.webp");
-  assert.equal(data.details.paragraphs[0].links[0].href, "https://www.starlink.com/");
-  assert.match(data.details.paragraphs[0].text, /Starlink \(https:\/\/www\.starlink\.com\/\)/);
+  assert.equal(
+    data.details.media.imageDesktop.url,
+    "https://example.com/detail-large.jpg",
+  );
+  assert.equal(
+    data.details.media.infographicDesktop.url,
+    "https://example.com/infographic.webp",
+  );
+  assert.equal(
+    data.details.paragraphs[0].links[0].href,
+    "https://www.starlink.com/",
+  );
+  assert.match(
+    data.details.paragraphs[0].text,
+    /Starlink \(https:\/\/www\.starlink\.com\/\)/,
+  );
   assert.match(data.details.summary, /28th flight/);
   assert.equal(data.details.timelines.preLaunch.entries.length, 2);
-  assert.equal(data.details.timelines.postLaunch.disclaimer, "All Times Approximate");
-  assert.equal(data.details.webcasts[0].url, "https://x.com/SpaceX/status/2055306091710275636");
+  assert.equal(
+    data.details.timelines.postLaunch.disclaimer,
+    "All Times Approximate",
+  );
+  assert.equal(
+    data.details.webcasts[0].url,
+    "https://x.com/SpaceX/status/2055306091710275636",
+  );
 });
 
 test("loadMissionDetails rejects unsafe slugs", async () => {
   await assert.rejects(
     () => loadMissionDetails("../secret", createFetchStubWithDetails()),
-    /Invalid mission slug/
+    /Invalid mission slug/,
   );
 });
 
@@ -435,16 +494,16 @@ test("loadHistoryLaunchData normalizes recent launch history", async () => {
   assert.equal(data.missions[0].launchAt, "2025-09-03T07:56:00.000Z");
   assert.equal(data.missions[0].status, "final");
   assert.equal(data.missions[0].success, true);
-  assert.equal(data.missions[0].missionUrl, "https://www.spacex.com/launches/sl-10-22/");
+  assert.equal(
+    data.missions[0].missionUrl,
+    "https://www.spacex.com/launches/sl-10-22/",
+  );
   assert.equal(data.missions[1].id, "history-older");
   assert.equal(data.missions[1].image, "https://example.com/older.jpg");
 });
 
 test("escapeIcsText escapes newlines commas and semicolons", () => {
-  assert.equal(
-    escapeIcsText("Line 1\nA,B;C"),
-    "Line 1\\nA\\,B\\;C"
-  );
+  assert.equal(escapeIcsText("Line 1\nA,B;C"), "Line 1\\nA\\,B\\;C");
 });
 
 test("worker serves calendar route with text/calendar", async () => {
@@ -454,11 +513,14 @@ test("worker serves calendar route with text/calendar", async () => {
   try {
     const response = await worker.fetch(
       new Request("https://calendar.example.com/spacex.ics"),
-      { ASSETS: { fetch: () => new Response("not used") } }
+      { ASSETS: { fetch: () => new Response("not used") } },
     );
 
     assert.equal(response.status, 200);
-    assert.equal(response.headers.get("content-type"), "text/calendar; charset=utf-8");
+    assert.equal(
+      response.headers.get("content-type"),
+      "text/calendar; charset=utf-8",
+    );
     assert.match(await response.text(), /BEGIN:VCALENDAR/);
   } finally {
     globalThis.fetch = originalFetch;
@@ -472,12 +534,15 @@ test("worker serves history launch route as JSON", async () => {
   try {
     const response = await worker.fetch(
       new Request("https://calendar.example.com/api/history-launches"),
-      { ASSETS: { fetch: () => new Response("not used") } }
+      { ASSETS: { fetch: () => new Response("not used") } },
     );
     const payload = await response.json();
 
     assert.equal(response.status, 200);
-    assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
+    assert.equal(
+      response.headers.get("content-type"),
+      "application/json; charset=utf-8",
+    );
     assert.equal(payload.missions.length, 2);
     assert.equal(payload.missions[0].title, "Starlink Mission");
     assert.equal(payload.missions[0].launchAt, "2025-09-03T07:56:00.000Z");
@@ -493,12 +558,15 @@ test("worker serves mission details by slug as JSON", async () => {
   try {
     const response = await worker.fetch(
       new Request("https://calendar.example.com/api/launches/starlink-1"),
-      { ASSETS: { fetch: () => new Response("not used") } }
+      { ASSETS: { fetch: () => new Response("not used") } },
     );
     const payload = await response.json();
 
     assert.equal(response.status, 200);
-    assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
+    assert.equal(
+      response.headers.get("content-type"),
+      "application/json; charset=utf-8",
+    );
     assert.equal(payload.details.slug, "starlink-1");
     assert.equal(payload.details.timelines.preLaunch.title, "Countdown");
     assert.match(payload.details.summary, /A Shortfall of Gravitas/);
@@ -510,7 +578,10 @@ test("worker serves mission details by slug as JSON", async () => {
 test("worker returns 502 when history launch route fails", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
-    if (String(url).includes("launches-page-tiles") && !String(url).includes("upcoming")) {
+    if (
+      String(url).includes("launches-page-tiles") &&
+      !String(url).includes("upcoming")
+    ) {
       return new Response("nope", { status: 503 });
     }
 
@@ -520,19 +591,25 @@ test("worker returns 502 when history launch route fails", async () => {
   try {
     const response = await worker.fetch(
       new Request("https://calendar.example.com/api/history-launches"),
-      { ASSETS: { fetch: () => new Response("not used") } }
+      { ASSETS: { fetch: () => new Response("not used") } },
     );
     const payload = await response.json();
 
     assert.equal(response.status, 502);
-    assert.equal(payload.error, "Unable to load SpaceX launch history right now.");
+    assert.equal(
+      payload.error,
+      "Unable to load SpaceX launch history right now.",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
 test("calendar feed remains limited to upcoming launches", async () => {
-  const data = await loadLaunchData(createFetchStubWithHistory(), new Date("2026-04-01T00:00:00.000Z"));
+  const data = await loadLaunchData(
+    createFetchStubWithHistory(),
+    new Date("2026-04-01T00:00:00.000Z"),
+  );
   const history = await loadHistoryLaunchData(createFetchStubWithHistory());
   const calendar = buildCalendarFeed(data);
 
@@ -543,15 +620,18 @@ test("calendar feed remains limited to upcoming launches", async () => {
 });
 
 test("worker falls back to static assets for root route", async () => {
-  const response = await worker.fetch(new Request("https://calendar.example.com/"), {
-    ASSETS: {
-      fetch: () =>
-        new Response("<html>ok</html>", {
-          status: 200,
-          headers: { "content-type": "text/html; charset=utf-8" },
-        }),
+  const response = await worker.fetch(
+    new Request("https://calendar.example.com/"),
+    {
+      ASSETS: {
+        fetch: () =>
+          new Response("<html>ok</html>", {
+            status: 200,
+            headers: { "content-type": "text/html; charset=utf-8" },
+          }),
+      },
     },
-  });
+  );
 
   assert.equal(response.status, 200);
   assert.equal(await response.text(), "<html>ok</html>");
@@ -614,7 +694,13 @@ test("loadLaunchData gracefully degrades when timings API fails", async () => {
 test("getCachedData returns stale data and triggers background revalidation when ctx is available", async () => {
   const staleData = {
     refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
-    missions: [{ id: "mock-stale", title: "Stale Mission", launchWindow: { open: null, close: null } }],
+    missions: [
+      {
+        id: "mock-stale",
+        title: "Stale Mission",
+        launchWindow: { open: null, close: null },
+      },
+    ],
   };
 
   let kvPutCalled = false;
@@ -655,7 +741,7 @@ test("getCachedData returns stale data and triggers background revalidation when
     const response = await worker.fetch(
       new Request("https://calendar.example.com/api/launches"),
       { SPACEX_KV: mockKv },
-      mockCtx
+      mockCtx,
     );
 
     assert.equal(response.status, 200);
@@ -683,7 +769,13 @@ test("getCachedData returns stale data and triggers background revalidation when
 test("getCachedData falls back to stale data on sync fetch failure when ctx is absent", async () => {
   const staleData = {
     refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
-    missions: [{ id: "mock-stale", title: "Stale Mission", launchWindow: { open: null, close: null } }],
+    missions: [
+      {
+        id: "mock-stale",
+        title: "Stale Mission",
+        launchWindow: { open: null, close: null },
+      },
+    ],
   };
 
   const mockKv = {
@@ -704,7 +796,7 @@ test("getCachedData falls back to stale data on sync fetch failure when ctx is a
     // Call without ctx to force synchronous revalidation
     const response = await worker.fetch(
       new Request("https://calendar.example.com/api/launches"),
-      { SPACEX_KV: mockKv }
+      { SPACEX_KV: mockKv },
     );
 
     assert.equal(response.status, 200);
@@ -757,14 +849,17 @@ test("loadLaunchData preserves currently live-streaming missions even if launchA
         {
           status: 200,
           headers: { "content-type": "application/json" },
-        }
+        },
       );
     }
 
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
-  const data = await loadLaunchData(fetchStub, new Date("2026-05-24T12:00:00.000Z"));
+  const data = await loadLaunchData(
+    fetchStub,
+    new Date("2026-05-24T12:00:00.000Z"),
+  );
 
   assert.equal(data.missions.length, 1);
   assert.equal(data.missions[0].title, "Live Past Mission");
@@ -777,21 +872,23 @@ test("translateMissionDetails executes structured translation and handles fallba
     timelines: {
       preLaunch: {
         disclaimer: "Countdown is approximate.",
-        entries: [{ description: "Go for propellant load" }]
+        entries: [{ description: "Go for propellant load" }],
       },
       postLaunch: {
         disclaimer: "All times approximate.",
-        entries: [{ description: "Max Q" }]
-      }
-    }
+        entries: [{ description: "Max Q" }],
+      },
+    },
   };
 
   // Mock AI runner
   const mockAi = {
     async run(model, payload) {
       assert.equal(model, "@cf/meta/llama-3.2-3b-instruct");
-      const userMessage = payload.messages.find(m => m.role === "user").content;
-      
+      const userMessage = payload.messages.find(
+        (m) => m.role === "user",
+      ).content;
+
       let isJson = false;
       let parsedUserMessage;
       try {
@@ -803,8 +900,11 @@ test("translateMissionDetails executes structured translation and handles fallba
 
       if (isJson) {
         // Ensure summary is NOT present in the timeline translation call (context isolation check)
-        assert.ok(!parsedUserMessage.summary, "Summary context must be isolated from timeline translation");
-        
+        assert.ok(
+          !parsedUserMessage.summary,
+          "Summary context must be isolated from timeline translation",
+        );
+
         // Return a valid translated JSON response
         return {
           result: {
@@ -812,38 +912,50 @@ test("translateMissionDetails executes structured translation and handles fallba
               preDisclaimer: "倒计时仅供参考。",
               preEntry_0: "确认推进剂加注",
               postDisclaimer: "所有时间均为大约估计",
-              postEntry_0: "最大动力学压力"
-            })
-          }
+              postEntry_0: "最大动力学压力",
+            }),
+          },
         };
       } else {
         // Plain text translation
         return {
           result: {
-            response: `${userMessage} (translated)`
-          }
+            response: `${userMessage} (translated)`,
+          },
         };
       }
-    }
+    },
   };
 
   await translateMissionDetails(mockAi, details, "chinese");
 
   assert.equal(details.summary, "SpaceX is targeting launch. (translated)"); // translateText fallback because details.summary is translated separately using translateText
   assert.equal(details.timelines.preLaunch.disclaimer, "倒计时仅供参考。");
-  assert.equal(details.timelines.preLaunch.entries[0].description, "确认推进剂加注");
+  assert.equal(
+    details.timelines.preLaunch.entries[0].description,
+    "确认推进剂加注",
+  );
   assert.equal(details.timelines.postLaunch.disclaimer, "所有时间均为大约估计");
-  assert.equal(details.timelines.postLaunch.entries[0].description, "最大动力学压力");
+  assert.equal(
+    details.timelines.postLaunch.entries[0].description,
+    "最大动力学压力",
+  );
 });
 
 test("getStandardTranslation maps standard SpaceX timeline terms across all languages", () => {
-  const resultZh = getStandardTranslation("Max Q (moment of peak mechanical stress on the rocket)", "chinese");
+  const resultZh = getStandardTranslation(
+    "Max Q (moment of peak mechanical stress on the rocket)",
+    "chinese",
+  );
   assert.equal(resultZh, "最大动力学压力 (Max Q)");
 
   const resultJa = getStandardTranslation("Falcon 9 liftoff", "japanese");
   assert.equal(resultJa, "ファルコン9打上げ");
 
-  const resultKo = getStandardTranslation("Starlink satellites deploy", "korean");
+  const resultKo = getStandardTranslation(
+    "Starlink satellites deploy",
+    "korean",
+  );
   assert.equal(resultKo, "스타링크 위성 배치");
 
   const resultEs = getStandardTranslation("1st stage landing", "spanish");
@@ -852,10 +964,16 @@ test("getStandardTranslation maps standard SpaceX timeline terms across all lang
   const resultFr = getStandardTranslation("Fairing separation", "french");
   assert.equal(resultFr, "Séparation de la coiffe");
 
-  const resultDe = getStandardTranslation("1st and 2nd stages separate", "german");
+  const resultDe = getStandardTranslation(
+    "1st and 2nd stages separate",
+    "german",
+  );
   assert.equal(resultDe, "Stufentrennung von 1. und 2. Stufe");
 
-  const noMatch = getStandardTranslation("Random custom event description here", "chinese");
+  const noMatch = getStandardTranslation(
+    "Random custom event description here",
+    "chinese",
+  );
   assert.equal(noMatch, null);
 });
 
@@ -863,13 +981,21 @@ test("translateText and translateMissionDetails replace phonetic Raptor translat
   // Test translateText with phonetic Raptor
   const mockAiText = {
     async run() {
-      return { result: { response: "拉普托 3 发动机点火" } }
-    }
+      return { result: { response: "拉普托 3 发动机点火" } };
+    },
   };
-  const result1 = await translateText(mockAiText, "Raptor 3 engine ignition", "chinese");
+  const result1 = await translateText(
+    mockAiText,
+    "Raptor 3 engine ignition",
+    "chinese",
+  );
   assert.equal(result1, "猛禽 3 发动机点火");
 
-  const result2 = await translateText(mockAiText, "Raptor 3 engine ignition", "english");
+  const result2 = await translateText(
+    mockAiText,
+    "Raptor 3 engine ignition",
+    "english",
+  );
   assert.equal(result2, "拉普托 3 发动机点火"); // No replace for english
 
   // Test translateMissionDetails with phonetic Raptor
@@ -878,24 +1004,21 @@ test("translateText and translateMissionDetails replace phonetic Raptor translat
       return {
         result: {
           response: JSON.stringify({
-            preDisclaimer: "拉普特 3 发动机测试。"
-          })
-        }
-      }
-    }
+            preDisclaimer: "拉普特 3 发动机测试。",
+          }),
+        },
+      };
+    },
   };
   const details = {
     summary: "",
     timelines: {
       preLaunch: {
         disclaimer: "Raptor 3 engine test.",
-        entries: []
-      }
-    }
+        entries: [],
+      },
+    },
   };
   await translateMissionDetails(mockAiDetails, details, "chinese");
   assert.equal(details.timelines.preLaunch.disclaimer, "猛禽 3 发动机测试。");
 });
-
-
-

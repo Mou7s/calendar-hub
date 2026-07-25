@@ -1,27 +1,19 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import type { Ref } from 'vue'
-
-interface CountdownValues {
-  days: string
-  hours: string
-  minutes: string
-  seconds: string
-}
 
 /**
  * Reactive countdown timer that ticks every second toward a target ISO date.
  *
  * @param targetIso – A reactive ref to the target ISO datetime string (e.g. nextLaunch.launchAt)
  */
-export function useCountdown(targetIso: Ref<string | null | undefined>) {
-  const countdown = ref<CountdownValues>({
+export function useCountdown(targetIso) {
+  const countdown = ref({
     days: '00',
     hours: '00',
     minutes: '00',
     seconds: '00',
   })
 
-  let timerId: ReturnType<typeof setInterval> | null = null
+  let timerId = null
 
   const update = () => {
     const target = targetIso.value
