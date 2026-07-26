@@ -7,22 +7,6 @@
 
     <!-- Actions & Controls -->
     <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-      
-      <!-- Provider Selector Dropdown -->
-      <USelectMenu
-        v-if="providers && providers.length > 0"
-        :model-value="activeProvider"
-        :items="providerOptions"
-        value-key="value"
-        label-key="label"
-        icon="i-heroicons-funnel"
-        size="xs"
-        color="neutral"
-        variant="subtle"
-        class="w-32 sm:w-40"
-        @update:model-value="$emit('select-provider', $event)"
-      />
-
       <!-- Subscribe Button -->
       <UButton
         icon="i-heroicons-rss"
@@ -82,18 +66,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 
-const props = defineProps({
-  providers: {
-    type: Array,
-    default: () => []
-  },
-  activeProvider: {
-    type: String,
-    default: 'all'
-  }
-})
-
-const emit = defineEmits(['select-provider', 'open-subscribe'])
+const emit = defineEmits(['open-subscribe'])
 
 const { t, locale, locales, setLocale } = useI18n()
 const colorMode = useColorMode()
@@ -108,24 +81,6 @@ const localeItems = computed(() => locales.value.map(lang => ({
   value: typeof lang === 'string' ? lang : lang.code,
   label: typeof lang === 'string' ? lang : lang.name
 })))
-
-const providerOptions = computed(() => {
-  const map = {
-    all: t('calendar.filterAll') || '全部 Launch',
-    spacex: t('calendar.filterSpaceX') || 'SpaceX',
-    rocketlab: t('calendar.filterRocketLab') || 'Rocket Lab',
-    nasa: t('calendar.filterNasa') || 'NASA',
-    casc: t('calendar.filterCasc') || 'CASC 中国航天',
-    'blue-origin': t('calendar.filterBlueOrigin') || 'Blue Origin',
-    ula: t('calendar.filterUla') || 'ULA',
-    esa: t('calendar.filterEsa') || 'ESA',
-    other: t('calendar.filterOther') || '其他航天'
-  }
-  return (props.providers || []).map(p => ({
-    value: p.id,
-    label: map[p.id] || p.name
-  }))
-})
 
 const toggleTheme = (event) => {
   const isAppearanceTransition = document.startViewTransition

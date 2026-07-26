@@ -32,7 +32,6 @@ export default defineNuxtConfig({
     // 系统支持的多语言列表及其翻译映射文件
     locales: [
       { code: "zh-CN", file: "zh-CN.json", name: "简体中文" },
-      { code: "zh", file: "zh-CN.json", name: "简体中文" },
       { code: "en", file: "en.json", name: "English" },
       { code: "ja", file: "ja.json", name: "日本語" },
       { code: "ko", file: "ko.json", name: "한국어" },
@@ -63,6 +62,24 @@ export default defineNuxtConfig({
 
   // Vite 构建与优化配置
   vite: {
+    plugins: [
+      {
+        name: "fix-absolute-url-middleware",
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url && (req.url.startsWith("http://") || req.url.startsWith("https://"))) {
+              try {
+                const parsed = new URL(req.url);
+                req.url = parsed.pathname + parsed.search + parsed.hash;
+              } catch (e) {
+                // ignore
+              }
+            }
+            next();
+          });
+        },
+      },
+    ],
     optimizeDeps: {
       include: ["@vue/devtools-core", "@vue/devtools-kit"],
     },

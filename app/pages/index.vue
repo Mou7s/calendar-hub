@@ -29,7 +29,7 @@ const { data: historyPayload } = await useFetch("/api/history-launches");
 const nextLaunch = computed(() => upcomingPayload.value?.nextLaunch);
 
 const computedTitle = computed(() => {
-  return `Calendar Hub | 在线日历订阅中心`;
+  return t('meta.title');
 });
 
 // ─── Provider Filter ───

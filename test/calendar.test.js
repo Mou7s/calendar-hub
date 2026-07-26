@@ -6,6 +6,7 @@ import historyApi from "../server/api/history-launches.get.js";
 import detailsApi from "../server/api/launches/[slug].get.js";
 import spacexIcsRoute from "../server/routes/spacex.ics.js";
 import calendarIcsRoute from "../server/routes/calendar.ics.js";
+import fixUrlMiddleware from "../server/middleware/fix-url.js";
 
 import {
   buildCalendarFeed,
@@ -362,7 +363,6 @@ test("loadLaunchData merges SpaceX tiles and timing feeds", async () => {
   );
   assert.equal(data.missions[1].launchWindow.close, "2026-04-20T07:22:00.000Z");
 });
-
 test("loadLaunchData filters launches that are already in the past", async () => {
   const pastTile = {
     ...sampleTiles[0],
@@ -1021,4 +1021,18 @@ test("translateText and translateMissionDetails replace phonetic Raptor translat
   };
   await translateMissionDetails(mockAiDetails, details, "chinese");
   assert.equal(details.timelines.preLaunch.disclaimer, "猛禽 3 发动机测试。");
+});
+
+test("fixUrlMiddleware normalizes absolute request URLs into relative paths", () => {
+  const event1 = { node: { req: { url: "http://localhost/" } } };
+  fixUrlMiddleware(event1);
+  assert.equal(event1.node.req.url, "/");
+
+  const event2 = { node: { req: { url: "http://localhost:3000/spacex.ics?foo=bar#hash" } } };
+  fixUrlMiddleware(event2);
+  assert.equal(event2.node.req.url, "/spacex.ics?foo=bar#hash");
+
+  const event3 = { node: { req: { url: "/normal/path" } } };
+  fixUrlMiddleware(event3);
+  assert.equal(event3.node.req.url, "/normal/path");
 });

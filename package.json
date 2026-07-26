@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "bun@1.2.2",
   "scripts": {
-    "dev": "bun --bun nuxt dev --host",
+    "dev": "node node_modules/nuxt/bin/nuxt.mjs dev --host",
     "build": "bun install && nuxt build",
     "test": "bun test",
     "translate:locales": "bun scripts/translate-locales.js"
@@ -23,6 +23,7 @@
     "@iconify-json/lucide": "^1.2.114",
     "@iconify-json/simple-icons": "^1.2.86",
     "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.3",
     "wrangler": "^4.94.0"
   }
 }
