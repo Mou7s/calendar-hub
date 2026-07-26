@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "SpaceX 발사 캘린더",
-    "description": "온라인 ICS 캘린더를 구독하고 예정된 SpaceX 발사 일정을 확인하세요."
+    "title": "Calendar Hub | Webcal 캘린더 구독",
+    "description": "발사 일정, 레이스 및 다양한 주제의 캘린더를 Webcal 또는 ICS 링크로 구독하세요."
   },
   "header": {
-    "copy": "온라인 ICS 캘린더를 구독하고 예정된 SpaceX 발사 일정을 확인하세요.",
+    "copy": "공개 캘린더를 구독하고 관심 있는 일정을 자동으로 동기화하세요.",
     "github": "GitHub",
     "githubAriaLabel": "GitHub에서 프로젝트 보기",
     "themeToggleAria": "다크/라이트 모드 전환"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "ICS 구독",
     "title": "온라인 캘린더 구독",
-    "copy": "기기에서 이 캘린더를 구독하려면 아래 링크를 사용하세요. 캘린더 클라이언트는 SpaceX의 공식 발사 일정과 실시간으로 자동으로 동기화됩니다.",
+    "copy": "기기에서 이 캘린더를 구독하려면 아래 링크를 사용하세요. 캘린더가 자동으로 동기화됩니다.",
     "subscribeLink": "온라인 달력 구독",
     "copied": "복사됨",
     "copyBtn": "복사",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "실시간 캘린더 피드",
     "loadingTitle": "발사 캘린더 불러오는 중",
-    "loadingDescription": "SpaceX 웹사이트 피드에서 현재 미션 목록과 발사 시간을 가져오고 있습니다.",
+    "loadingDescription": "선택한 캘린더 피드에서 최신 이벤트를 가져오고 있습니다.",
     "noMissionsTitle": "예정된 미션 없음",
     "noMissionsDescription": "실시간 미션 피드에서 예정된 발사를 반환하지 않았습니다.",
     "unavailableTitle": "발사 데이터를 사용할 수 없음",
-    "unavailableDescription": "지금은 SpaceX 미션 피드에 연결할 수 없습니다.",
+    "unavailableDescription": "지금은 선택한 캘린더 피드에 연결할 수 없습니다.",
     "meta": {
       "nextLaunch": "다음 발사",
       "countdown": "카운트다운"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle}이(가) {launchSite}에서 발사되며 {returnSite}에서 회수될 예정입니다."
   },
   "overview": {
-    "cadenceEyebrow": "발사 간격",
-    "cadenceTitle": "예정된 발사 흐름",
+    "cadenceEyebrow": "일정 개요",
+    "cadenceTitle": "예정된 이벤트",
     "statusEyebrow": "상태",
-    "statusTitle": "발사 추적",
-    "noLaunchWindows": "아직 표시할 발사 시간이 없습니다.",
-    "launches": "회 발사",
+    "statusTitle": "이벤트 추적",
+    "noLaunchWindows": "아직 표시할 이벤트 시간이 없습니다.",
+    "launches": "이벤트",
     "tracker": {
-      "missionsLoaded": "불러온 미션",
-      "timedWindows": "시간이 있는 미션",
+      "missionsLoaded": "불러온 이벤트",
+      "timedWindows": "시간이 있는 이벤트",
       "liveNow": "현재 라이브",
       "viewerTimezone": "현재 시간대"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "구독",
       "language": "언어"
     },
-    "eyebrow": "발사 캘린더",
-    "title": "월별 미션 보기",
+    "eyebrow": "Calendar Hub",
+    "title": "월별 캘린더 및 이벤트 보기",
     "viewDay": "일",
     "viewWeek": "주",
     "viewMonth": "월",
     "today": "오늘",
+    "filterF1": "F1",
     "moreEvents": "+{count}개 더보기...",
     "previousMonthAria": "이전 달 보기",
     "nextMonthAria": "다음 달 보기",

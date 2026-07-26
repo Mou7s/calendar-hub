@@ -1,6 +1,6 @@
-name = "spacex-calendar"
-pages_build_output_dir = "dist"
-compatibility_date = "2026-07-25"
+name = "calendarhub-worker"
+workers_dev = true
+compatibility_date = "2026-07-21"
 compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]

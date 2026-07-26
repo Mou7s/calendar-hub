@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "Calendrier des Lancement SpaceX",
-    "description": "Abonnez-vous à un calendrier ICS en ligne et suivez les prochains lancements de SpaceX."
+    "title": "Calendar Hub | Abonnements de calendriers Webcal",
+    "description": "Abonnez-vous aux calendriers de lancements, courses et autres événements via des liens Webcal ou ICS."
   },
   "header": {
-    "copy": "Abonnez-vous à un calendrier ICS en ligne pour suivre les prochains lancements SpaceX.",
+    "copy": "Abonnez-vous à des calendriers publics et gardez vos programmes favoris synchronisés.",
     "github": "GitHub",
     "githubAriaLabel": "Voir le projet sur GitHub",
     "themeToggleAria": "Basculer mode sombre/clair"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "Abonnement ICS",
     "title": "S'abonner au calendrier",
-    "copy": "Utilisez les liens ci-dessous pour vous abonner à ce calendrier sur votre appareil. Votre calendrier se synchronisera automatiquement et en temps réel avec le programme de lancement officiel de SpaceX.",
+    "copy": "Utilisez les liens ci-dessous pour vous abonner à ce calendrier sur votre appareil. Votre calendrier restera automatiquement synchronisé.",
     "subscribeLink": "S'abonner au calendrier",
     "copied": "Copié",
     "copyBtn": "Copier",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "Flux de calendrier en direct",
     "loadingTitle": "Chargement du calendrier des lancements",
-    "loadingDescription": "Récupération des missions et fenêtres de lancement depuis les flux du site SpaceX.",
+    "loadingDescription": "Récupération des derniers événements depuis les flux de calendrier sélectionnés.",
     "noMissionsTitle": "Aucune mission à venir",
     "noMissionsDescription": "Le flux en direct n'a renvoyé aucun lancement à venir.",
     "unavailableTitle": "Données de lancement indisponibles",
-    "unavailableDescription": "L'app ne peut pas joindre les flux de missions SpaceX pour le moment.",
+    "unavailableDescription": "L'app ne peut pas joindre les flux de calendrier sélectionnés pour le moment.",
     "meta": {
       "nextLaunch": "Prochain lancement",
       "countdown": "Compte à rebours"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle} depuis {launchSite}, avec récupération à {returnSite}."
   },
   "overview": {
-    "cadenceEyebrow": "Cadence de vol",
-    "cadenceTitle": "Rythme des prochains lancements",
+    "cadenceEyebrow": "Vue d'ensemble",
+    "cadenceTitle": "Événements à venir",
     "statusEyebrow": "Statut",
-    "statusTitle": "Suivi des lancements",
-    "noLaunchWindows": "Aucune fenêtre de lancement n'est encore disponible.",
-    "launches": "Lancements",
+    "statusTitle": "Suivi des événements",
+    "noLaunchWindows": "Aucun horaire d'événement n'est encore disponible.",
+    "launches": "Événements",
     "tracker": {
-      "missionsLoaded": "Missions chargées",
-      "timedWindows": "Fenêtres horaires",
+      "missionsLoaded": "Événements chargés",
+      "timedWindows": "Événements avec horaire",
       "liveNow": "En direct",
       "viewerTimezone": "Fuseau horaire"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "Abonnements",
       "language": "Langue"
     },
-    "eyebrow": "Calendrier des lancements",
-    "title": "Parcourir les missions par mois",
+    "eyebrow": "Calendar Hub",
+    "title": "Parcourir les calendriers et événements par mois",
     "viewDay": "Jour",
     "viewWeek": "Semaine",
     "viewMonth": "Mois",
     "today": "Aujourd'hui",
+    "filterF1": "F1",
     "moreEvents": "+{count} de plus...",
     "previousMonthAria": "Voir le mois précédent",
     "nextMonthAria": "Voir le mois suivant",

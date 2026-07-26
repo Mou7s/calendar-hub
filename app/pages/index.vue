@@ -8,7 +8,10 @@
         :active-month-index="activeMonthIndex"
         :today-iso="todayIso"
         :selected-date-iso="selectedDateIso"
+        :calendar-layers="calendarLayers"
+        :active-calendar-ids="activeCalendarIds"
         @update:active-month-index="activeMonthIndex = $event"
+        @update:active-calendar-ids="activeCalendarIds = $event"
         @select-mission="selectMission"
       />
     </main>
@@ -19,11 +22,12 @@
 import { ref, computed, watch } from "vue";
 import { useHead, useFetch, useSeoMeta } from "#app";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ─── Data Fetching ───
 const { data: upcomingPayload } = await useFetch("/api/launches");
 const { data: historyPayload } = await useFetch("/api/history-launches");
+const { data: f1Payload } = await useFetch("/api/calendar/f1");
 
 // ─── SEO & Data ───
 const nextLaunch = computed(() => upcomingPayload.value?.nextLaunch);
@@ -32,15 +36,25 @@ const computedTitle = computed(() => {
   return t('meta.title');
 });
 
-// ─── Provider Filter ───
-const selectedProvider = ref("all");
+// ─── Calendar Layers ───
+const activeCalendarIds = ref(["spacex", "f1"]);
+const calendarLayers = computed(() => [
+  {
+    id: "spacex",
+    name: t("calendar.filterSpaceX"),
+    color: "#ffffff",
+    icsPath: "/spacex.ics",
+  },
+  {
+    id: "f1",
+    name: t("calendar.filterF1"),
+    color: "#ef4444",
+    icsPath: "/ics/f1.ics",
+  },
+]);
 
 // ─── Subscription Links ───
-const currentIcsPath = computed(() => {
-  return selectedProvider.value === "all"
-    ? "/spacex.ics"
-    : `/launches.ics?provider=${selectedProvider.value}`;
-});
+const currentIcsPath = computed(() => "/spacex.ics");
 
 const webcalSubscriptionLink = computed(() => {
   const path = currentIcsPath.value;
@@ -48,32 +62,44 @@ const webcalSubscriptionLink = computed(() => {
     const httpUrl = new URL(path, window.location.href);
     return `webcal://${httpUrl.host}${httpUrl.pathname}${httpUrl.search}`;
   }
-  return `webcal://spacex-calendar.mou7s.com${path}`;
+  return `webcal://calendarhub.mou7s.com${path}`;
 });
 
 // ─── Calendar Integration (Upcoming & History) ───
 const sortedCalendarMissions = computed(() => {
   let upcoming = (upcomingPayload.value?.missions || []).map((m) => ({
     ...m,
+    calendarId: "spacex",
     calendarGroup: "upcoming",
     key: `upcoming:${m.slug || m.id}`,
   }));
   let history = (historyPayload.value?.missions || []).map((m) => ({
     ...m,
+    calendarId: "spacex",
     provider: "spacex",
     providerName: "SpaceX",
     calendarGroup: "history",
     key: `history:${m.slug || m.id}`,
   }));
 
-  if (selectedProvider.value !== "all") {
-    upcoming = upcoming.filter(
-      (m) => m.provider === selectedProvider.value,
-    );
-    history = history.filter((m) => m.provider === selectedProvider.value);
-  }
+  const f1 = (f1Payload.value?.missions || []).map((m) => {
+    const isChinese = locale.value === "zh-CN";
+    return {
+      ...m,
+      calendarId: "f1",
+      provider: "f1",
+      providerName: "F1",
+      title: isChinese ? (m.titleZh || m.title) : (m.titleEn || m.title),
+      shortTitle: isChinese
+        ? (m.shortTitleZh || m.shortTitle || m.titleZh || m.title)
+        : (m.shortTitleEn || m.shortTitle || m.titleEn || m.title),
+      calendarGroup: "upcoming",
+      key: `f1:${m.id}`,
+    };
+  });
 
-  return [...upcoming, ...history]
+  return [...upcoming, ...history, ...f1]
+    .filter((m) => activeCalendarIds.value.includes(m.calendarId))
     .filter((m) => m.launchAt)
     .sort((a, b) => {
       return Date.parse(b.launchAt) - Date.parse(a.launchAt); // Newest first
@@ -209,39 +235,39 @@ useHead(() => ({
         "@graph": [
           {
             "@type": "WebSite",
-            "@id": "https://spacex-calendar.mou7s.com/#website",
-            url: "https://spacex-calendar.mou7s.com/",
+            "@id": "https://calendarhub.mou7s.com/#website",
+            url: "https://calendarhub.mou7s.com/",
             name: t("meta.title"),
             description: t("meta.description"),
             publisher: {
               "@type": "Organization",
-              name: "SpaceX Calendar Team",
+              name: "Calendar Hub Team",
             },
             hasPart: [
               {
                 "@type": "WebPage",
-                "@id": "https://spacex-calendar.mou7s.com/#subscribe",
+                "@id": "https://calendarhub.mou7s.com/#subscribe",
                 name: t("subscribe.title"),
-                url: "https://spacex-calendar.mou7s.com/#subscribe",
+                url: "https://calendarhub.mou7s.com/#subscribe",
               },
               {
                 "@type": "WebPage",
-                "@id": "https://spacex-calendar.mou7s.com/#calendar",
+                "@id": "https://calendarhub.mou7s.com/#calendar",
                 name: t("calendar.title"),
-                url: "https://spacex-calendar.mou7s.com/#calendar",
+                url: "https://calendarhub.mou7s.com/#calendar",
               },
               {
                 "@type": "WebPage",
-                "@id": "https://spacex-calendar.mou7s.com/#faq",
+                "@id": "https://calendarhub.mou7s.com/#faq",
                 name: t("faq.title"),
-                url: "https://spacex-calendar.mou7s.com/#faq",
+                url: "https://calendarhub.mou7s.com/#faq",
               },
             ],
           },
           {
             "@type": "SoftwareApplication",
-            "@id": "https://spacex-calendar.mou7s.com/#software",
-            name: "SpaceX Calendar PWA",
+            "@id": "https://calendarhub.mou7s.com/#software",
+            name: "Calendar Hub PWA",
             operatingSystem: "All",
             applicationCategory: "UtilitiesApplication",
             offers: {
@@ -252,7 +278,7 @@ useHead(() => ({
           },
           {
             "@type": "FAQPage",
-            "@id": "https://spacex-calendar.mou7s.com/#faq-page",
+            "@id": "https://calendarhub.mou7s.com/#faq-page",
             mainEntity: [1, 2, 3, 4].map((num) => ({
               "@type": "Question",
               name: getFaqQuestion(num),

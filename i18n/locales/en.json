@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "SpaceX Launch Calendar",
-    "description": "Subscribe to an online ICS calendar and keep up with upcoming SpaceX launches."
+    "title": "Calendar Hub | Multi-Calendar Webcal Subscriptions",
+    "description": "Subscribe to public calendars for launches, races, and other events through Webcal or ICS links."
   },
   "header": {
-    "copy": "Subscribe to an online ICS calendar and keep up with upcoming SpaceX launches.",
+    "copy": "Subscribe to public calendars and keep your favorite schedules in sync.",
     "github": "GitHub",
     "githubAriaLabel": "View project on GitHub",
     "themeToggleAria": "Toggle dark/light mode"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "ICS Subscription",
     "title": "Subscribe to Online Calendar",
-    "copy": "Use the links below to subscribe to this calendar on your device. Your calendar client will keep automatically syncing with SpaceX's official launch schedule in real-time.",
+    "copy": "Use the links below to subscribe to this calendar on your device. Your calendar client will keep it synced automatically.",
     "subscribeLink": "Subscribe to Calendar",
     "copied": "Copied",
     "copyBtn": "Copy",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "Live Calendar Feed",
     "loadingTitle": "Loading launch calendar",
-    "loadingDescription": "Fetching the current mission queue and launch windows from SpaceX website feeds.",
+    "loadingDescription": "Fetching the latest events from the selected calendar feeds.",
     "noMissionsTitle": "No upcoming missions",
     "noMissionsDescription": "The live mission feed did not return any upcoming launches.",
     "unavailableTitle": "Launch data unavailable",
-    "unavailableDescription": "The app could not reach the SpaceX mission feeds just now.",
+    "unavailableDescription": "The app could not reach the selected calendar feeds just now.",
     "meta": {
       "nextLaunch": "Next launch",
       "countdown": "Countdown"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle} from {launchSite} with recovery at {returnSite}."
   },
   "overview": {
-    "cadenceEyebrow": "Flight cadence",
-    "cadenceTitle": "Upcoming launch rhythm",
+    "cadenceEyebrow": "Schedule overview",
+    "cadenceTitle": "Upcoming schedule",
     "statusEyebrow": "Status",
-    "statusTitle": "Launch tracker",
-    "noLaunchWindows": "No launch windows are available yet.",
-    "launches": "Launches",
+    "statusTitle": "Event tracker",
+    "noLaunchWindows": "No event times are available yet.",
+    "launches": "Events",
     "tracker": {
-      "missionsLoaded": "Missions loaded",
-      "timedWindows": "Timed windows",
+      "missionsLoaded": "Events loaded",
+      "timedWindows": "Timed events",
       "liveNow": "Live now",
       "viewerTimezone": "Viewer timezone"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "Subscriptions",
       "language": "Language"
     },
-    "eyebrow": "Launch calendar",
-    "title": "Browse missions by month",
+    "eyebrow": "Calendar Hub",
+    "title": "Browse calendars and events by month",
     "viewDay": "Day",
     "viewWeek": "Week",
     "viewMonth": "Month",
     "today": "Today",
+    "filterF1": "F1",
     "moreEvents": "+{count} more...",
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",

@@ -53,7 +53,7 @@
         variant="outline"
         size="xs"
         class="rounded-full font-semibold uppercase tracking-wider text-[10px] hidden md:inline-flex"
-        to="https://github.com/Mou7s/spacex-calendar"
+        to="https://github.com/Mou7s/calendar-hub"
         target="_blank"
         aria-label="GitHub Repository"
       >

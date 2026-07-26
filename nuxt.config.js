@@ -4,7 +4,14 @@ export default defineNuxtConfig({
   // 全局 Head 配置：包含网站 favicon 图标关联
   app: {
     head: {
-      link: [{ rel: "icon", type: "image/png", href: "/icon-512.png?v=2" }],
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+        { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16.png?v=3" },
+        { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png?v=3" },
+        { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=3" },
+        { rel: "manifest", href: "/manifest.json" },
+      ],
+      meta: [{ name: "theme-color", content: "#080d1c" }],
     },
   },
   // 启用的 Nuxt 核心与第三方扩展模块列表
@@ -52,7 +59,7 @@ export default defineNuxtConfig({
 
   // Nitro 服务器引擎编译与部署相关的底层配置
   nitro: {
-    preset: "cloudflare-pages", // 部署预设：适配 Cloudflare Pages 边缘托管环境，自动打包为极速的 Worker 格式
+    preset: "cloudflare_module", // 以 Cloudflare Workers Module Worker 形式部署 Nuxt SSR 与 API
   },
 
   // 系统升级与向下兼容的基准日期F

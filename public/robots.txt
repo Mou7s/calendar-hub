@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://spacex-calendar.mou7s.com/sitemap.xml
+Sitemap: https://calendarhub.mou7s.com/sitemap.xml

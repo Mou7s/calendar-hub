@@ -114,7 +114,7 @@ export function buildGlobalCalendarFeed(data, providerFilter = 'all') {
         `STATUS:${mission.isLive ? 'CONFIRMED' : 'TENTATIVE'}`,
         'TRANSP:OPAQUE',
         `CATEGORIES:${escapeIcsText(mission.providerName || 'Rocket Launch')}`,
-        `URL:${mission.missionUrl || 'https://spacex-calendar.mou7s.com'}`,
+        `URL:${mission.missionUrl || 'https://calendarhub.mou7s.com'}`,
         'END:VEVENT'
       ];
 

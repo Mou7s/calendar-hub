@@ -6,7 +6,12 @@ import historyApi from "../server/api/history-launches.get.js";
 import detailsApi from "../server/api/launches/[slug].get.js";
 import spacexIcsRoute from "../server/routes/spacex.ics.js";
 import calendarIcsRoute from "../server/routes/calendar.ics.js";
+import topicIcsRoute from "../server/routes/ics/[topic].ics.js";
 import fixUrlMiddleware from "../server/middleware/fix-url.js";
+import {
+  buildTopicCalendarFeed,
+  getTopicCalendarData,
+} from "../server/utils/calendars.js";
 
 import {
   buildCalendarFeed,
@@ -1035,4 +1040,44 @@ test("fixUrlMiddleware normalizes absolute request URLs into relative paths", ()
   const event3 = { node: { req: { url: "/normal/path" } } };
   fixUrlMiddleware(event3);
   assert.equal(event3.node.req.url, "/normal/path");
+});
+
+test("F1 topic exposes the complete 2026 race and session schedule", async () => {
+  const data = await getTopicCalendarData("f1");
+  const raceEvents = data.missions.filter((mission) => mission.id.endsWith("-race"));
+  const sprintEvents = data.missions.filter((mission) => mission.id.endsWith("-sprint"));
+  const qualifyingEvents = data.missions.filter((mission) => mission.id.endsWith("-qualifying"));
+
+  assert.equal(raceEvents.length, 24);
+  assert.equal(sprintEvents.length, 6);
+  assert.equal(qualifyingEvents.length, 24);
+  assert.equal(data.missions.length, 54);
+  assert.equal(
+    data.missions.find((mission) => mission.id === "f1-2026-china-sprint").launchAt,
+    "2026-03-15T03:00:00.000Z",
+  );
+  assert.match(data.missions.find((mission) => mission.id === "f1-2026-hungary-race").titleEn, /Hungarian Grand Prix/);
+
+  const feed = buildTopicCalendarFeed("f1", data);
+  assert.equal((feed.match(/BEGIN:VEVENT/g) || []).length, 54);
+  assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
+  assert.match(feed, /UID:f1-2026-hungary-race@calendarhub\.local/);
+});
+
+test("F1 ICS route resolves the topic from an extension URL", async () => {
+  const headers = {};
+  const event = {
+    context: {
+      params: {},
+      cloudflare: { env: {}, context: {} },
+    },
+    node: {
+      req: { url: "/ics/f1.ics" },
+      res: { setHeader(name, value) { headers[name] = value; } },
+    },
+  };
+
+  const feed = await topicIcsRoute(event);
+  assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
+  assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
 });

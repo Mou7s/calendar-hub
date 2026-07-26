@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "spacex-calendar",
+      "name": "calendar-hub",
       "dependencies": {
         "@nuxt/image": "^2.0.0",
         "@nuxt/ui": "^4.8.0",

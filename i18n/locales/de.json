@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "SpaceX Startkalender",
-    "description": "Abonniere einen Online-ICS-Kalender und verfolge kommende SpaceX-Starts."
+    "title": "Calendar Hub | Kalender per Webcal abonnieren",
+    "description": "Abonniere Kalender für Starts, Rennen und andere Ereignisse über Webcal- oder ICS-Links."
   },
   "header": {
-    "copy": "Abonniere einen Online-ICS-Kalender und verfolge kommende SpaceX-Starts.",
+    "copy": "Abonniere öffentliche Kalender und halte deine wichtigsten Termine synchron.",
     "github": "GitHub",
     "githubAriaLabel": "Projekt auf GitHub ansehen",
     "themeToggleAria": "Dunkel-/Hellmodus umschalten"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "ICS-Abonnement",
     "title": "Online-Kalender abonnieren",
-    "copy": "Verwende die folgenden Links, um diesen Kalender auf deinem Gerät zu abonnieren. Dein Kalender-Client wird automatisch und in Echtzeit mit dem offiziellen SpaceX-Startplan synchronisiert.",
+    "copy": "Verwende die folgenden Links, um diesen Kalender auf deinem Gerät zu abonnieren. Dein Kalender-Client bleibt automatisch synchronisiert.",
     "subscribeLink": "Kalender abonnieren",
     "copied": "Kopiert",
     "copyBtn": "Kopieren",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "Live-Kalenderfeed",
     "loadingTitle": "Startkalender wird geladen",
-    "loadingDescription": "Aktuelle Missionen und Startfenster werden aus den SpaceX-Website-Feeds geladen.",
+    "loadingDescription": "Die neuesten Ereignisse werden aus den ausgewählten Kalenderfeeds geladen.",
     "noMissionsTitle": "Keine kommenden Missionen",
     "noMissionsDescription": "Der Live-Feed hat keine kommenden Starts zurückgegeben.",
     "unavailableTitle": "Startdaten nicht verfügbar",
-    "unavailableDescription": "Die SpaceX-Missionsfeeds sind momentan nicht erreichbar.",
+    "unavailableDescription": "Die ausgewählten Kalenderfeeds sind momentan nicht erreichbar.",
     "meta": {
       "nextLaunch": "Nächster Start",
       "countdown": "Countdown"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle} startet von {launchSite}, mit Bergung bei {returnSite}."
   },
   "overview": {
-    "cadenceEyebrow": "Startfrequenz",
-    "cadenceTitle": "Rhythmus kommender Starts",
+    "cadenceEyebrow": "Terminübersicht",
+    "cadenceTitle": "Kommende Termine",
     "statusEyebrow": "Status",
-    "statusTitle": "Startverfolgung",
-    "noLaunchWindows": "Es sind noch keine Startfenster verfügbar.",
-    "launches": "Starts",
+    "statusTitle": "Ereignis-Tracker",
+    "noLaunchWindows": "Noch keine Ereigniszeiten verfügbar.",
+    "launches": "Ereignisse",
     "tracker": {
-      "missionsLoaded": "Geladene Missionen",
-      "timedWindows": "Zeitfenster",
+      "missionsLoaded": "Geladene Ereignisse",
+      "timedWindows": "Ereignisse mit Zeit",
       "liveNow": "Jetzt live",
       "viewerTimezone": "Zeitzone"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "Abonnements",
       "language": "Sprache"
     },
-    "eyebrow": "Startkalender",
-    "title": "Missionen nach Monat durchsuchen",
+    "eyebrow": "Calendar Hub",
+    "title": "Kalender und Ereignisse nach Monat durchsuchen",
     "viewDay": "Tag",
     "viewWeek": "Woche",
     "viewMonth": "Monat",
     "today": "Heute",
+    "filterF1": "F1",
     "moreEvents": "+{count} mehr...",
     "previousMonthAria": "Vorherigen Monat anzeigen",
     "nextMonthAria": "Nächsten Monat anzeigen",

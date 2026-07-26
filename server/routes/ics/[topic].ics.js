@@ -4,7 +4,18 @@ import { getTopicCalendarData, buildTopicCalendarFeed, CALENDAR_TOPICS } from '.
 
 export default defineEventHandler(async (event) => {
   try {
-    let topic = getRouterParam(event, 'topic') || 'spacex'
+    let topic = getRouterParam(event, 'topic')
+
+    // Nitro 的带扩展名动态路由在部分本地/边缘请求适配器中不会填充 params，
+    // 从原始请求路径回退解析，避免 /ics/f1.ics 错误地回退成 SpaceX 日历。
+    if (!topic) {
+      const requestPath = String(event.node?.req?.url || '')
+      const pathname = requestPath.startsWith('http') ? new URL(requestPath).pathname : requestPath
+      const match = pathname.match(/^\/ics\/([^/?#]+?)(?:\.ics)?$/i)
+      topic = match?.[1]
+    }
+
+    topic = topic || 'spacex'
     // 清理后缀名为 .ics 的情况（例如 spacex.ics 提取出 spacex）
     topic = topic.replace(/\.ics$/i, '').toLowerCase()
 

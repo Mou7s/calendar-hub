@@ -1,7 +1,7 @@
 # AI 智能体开发守则 (AGENTS)
 
 ## 📌 项目概述
-本仓库包含一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Pages** 构建的现代化全栈 Web 应用。它能够将 SpaceX 官网的实时发射数据转换为符合 RFC 5545 标准的 **ICS 订阅日历**，同时提供一个具备极致视觉美感的多语言订阅落地页。
+本仓库包含一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 构建的现代化全栈 Web 应用。它能够将 SpaceX 官网的实时发射数据转换为符合 RFC 5545 标准的 **ICS 订阅日历**，同时提供一个具备极致视觉美感的多语言订阅落地页。
 
 ---
 
@@ -83,5 +83,6 @@ node --check server/utils/kv.js
 ## ☁️ 本地调试与部署说明
 * **本地开发**：`bun run dev`（服务跑在 `http://localhost:3000`）。
 * **生产打包**：`bun run build`
-* **边缘部署**：结合 `bunx wrangler deploy` 或通过 Nuxt Hub 平台绑定 GitHub 自动集成构建。
-* **生产子域名**：线上主域名已稳定绑定为 `spacex-calendar.mou7s.com`。
+* **Workers 预览**：`bun run preview:worker`
+* **Workers 部署**：`bun run deploy:worker`
+* **生产子域名**：线上唯一正式域名为 `calendarhub.mou7s.com`。

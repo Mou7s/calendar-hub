@@ -8,11 +8,12 @@
       <div class="space-y-6">
         <!-- Top App Title -->
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-baseline gap-2.5">
             <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
               <UIcon name="i-heroicons-calendar" class="w-4.5 h-4.5" />
             </div>
             <span class="text-lg font-extrabold tracking-wider text-white font-mono">CALENDAR</span>
+            <span class="text-[8px] tracking-[0.2em] text-[#737373] font-bold">HUB</span>
           </div>
         </div>
 
@@ -23,30 +24,34 @@
           </label>
 
           <div class="space-y-1.5">
-            <!-- SpaceX Layer Item (Apple/iCloud Calendar Checkbox Style with Subscribe Action) -->
-            <div class="w-full flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors group">
+            <div
+              v-for="layer in calendarLayers"
+              :key="layer.id"
+              class="w-full flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors group"
+            >
               <button
                 type="button"
                 class="flex-1 flex items-center gap-2.5 cursor-pointer text-left min-w-0"
-                @click="toggleSpaceXLayer"
+                :aria-pressed="isCalendarActive(layer.id)"
+                @click="toggleCalendarLayer(layer.id)"
               >
                 <div
                   class="w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0"
-                  :class="isSpaceXActive ? 'bg-white text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+                  :class="isCalendarActive(layer.id) ? 'text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+                  :style="isCalendarActive(layer.id) ? { backgroundColor: layer.color } : undefined"
                 >
                   <UIcon name="i-heroicons-check-16-solid" class="w-3.5 h-3.5 stroke-[3]" />
                 </div>
                 <span
                   class="text-xs font-semibold tracking-wide transition-colors truncate"
-                  :class="isSpaceXActive ? 'text-white font-bold' : 'text-[#737373] line-through'"
+                  :class="isCalendarActive(layer.id) ? 'text-white font-bold' : 'text-[#737373] line-through'"
                 >
-                  {{ t('calendar.filterSpaceX') }}
+                  {{ layer.name }}
                 </span>
               </button>
 
-              <!-- 右侧独立订阅按钮（直接跳转 webcal 协议） -->
               <a
-                :href="getWebcalUrl('spacex')"
+                :href="getWebcalUrl(layer.id)"
                 class="px-2 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
                 :title="t('subscribe.subscribeLink')"
                 @click.stop
@@ -188,6 +193,22 @@
             {{ t('calendar.viewMonth') }}
           </button>
         </div>
+
+        <!-- Mobile Calendar Layers -->
+        <div class="col-span-2 flex sm:hidden items-center gap-1.5 min-w-0">
+          <button
+            v-for="layer in calendarLayers"
+            :key="`mobile-${layer.id}`"
+            type="button"
+            class="flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition-colors cursor-pointer"
+            :class="isCalendarActive(layer.id) ? 'bg-[#262626] border-[#525252] text-white' : 'bg-transparent border-[#2c2c2c] text-[#737373]'"
+            :aria-pressed="isCalendarActive(layer.id)"
+            @click="toggleCalendarLayer(layer.id)"
+          >
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: layer.color }"></span>
+            <span class="truncate">{{ layer.name }}</span>
+          </button>
+        </div>
       </header>
 
       <!-- Weekday Header Row (Month View Only) -->
@@ -233,13 +254,13 @@
                 </span>
               </div>
 
-              <span v-if="isSpaceXActive && day.events.length > 0" class="text-[8px] sm:text-[9px] font-bold text-[#737373] leading-none">
+              <span v-if="day.events.length > 0" class="text-[8px] sm:text-[9px] font-bold text-[#737373] leading-none">
                 {{ day.events.length }}
               </span>
             </div>
 
             <!-- Events List inside Cell -->
-            <div v-if="isSpaceXActive" class="flex-1 flex flex-col gap-0.5 sm:gap-1 min-h-0 overflow-y-auto scrollbar-none">
+            <div v-if="day.events.length > 0" class="flex-1 flex flex-col gap-0.5 sm:gap-1 min-h-0 overflow-y-auto scrollbar-none">
               <button
                 v-for="event in day.events.slice(0, 3)"
                 :key="event.id || event.slug"
@@ -364,12 +385,12 @@
                 </div>
 
                 <!-- Events positioned absolutely inside day column -->
-                <template v-if="isSpaceXActive && day.events">
+                <template v-if="day.events?.length">
                   <button
                     v-for="event in day.events"
                     :key="event.id || event.slug"
                     type="button"
-                    class="absolute z-20 text-left px-1.5 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[#383838] hover:border-white hover:z-30 shadow-lg group overflow-hidden"
+                    class="absolute z-20 min-w-0 text-left px-1.5 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[#383838] hover:border-white hover:z-30 shadow-lg group overflow-hidden"
                     :class="[
                       getEventStyleClass(event),
                       selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'ring-2 ring-white z-30 font-bold' : ''
@@ -378,7 +399,7 @@
                     @click="handleEventClick(event, $event)"
                   >
                     <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
-                      <span v-if="!event.isLive" class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                      <span v-if="!event.isLive" class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
                       <span v-else class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
                       <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
                     </div>
@@ -406,12 +427,12 @@
               </h2>
             </div>
             <span class="text-xs font-mono text-[#737373]">
-              {{ isSpaceXActive && currentDayFocus?.events ? currentDayFocus.events.length : 0 }} {{ t('overview.launches') }}
+              {{ currentDayFocus?.events?.length || 0 }} {{ t('overview.launches') }}
             </span>
           </div>
 
           <!-- Day Events Timeline Stream -->
-          <div v-if="isSpaceXActive && currentDayFocus?.events?.length" class="space-y-3">
+          <div v-if="currentDayFocus?.events?.length" class="space-y-3">
             <div
               v-for="event in currentDayFocus.events"
               :key="event.id || event.slug"
@@ -635,17 +656,21 @@ const props = defineProps({
   monthKeys: { type: Array, required: true },
   activeMonthIndex: { type: Number, required: true },
   todayIso: { type: String, required: true },
-  selectedDateIso: { type: String, default: null }
+  selectedDateIso: { type: String, default: null },
+  calendarLayers: { type: Array, default: () => [] },
+  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1'] }
 })
 
 const emit = defineEmits([
   'update:activeMonthIndex',
+  'update:active-calendar-ids',
   'select-mission'
 ])
 
 // Provider Color Mapping (黑白灰调色板 Monochrome Palette)
 const providerList = [
   { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#ffffff' },
+  { id: 'f1', nameKey: 'calendar.filterF1', defaultName: 'F1', color: '#ef4444' },
   { id: 'rocketlab', nameKey: 'calendar.filterRocketLab', defaultName: 'Rocket Lab', color: '#e5e5e5' },
   { id: 'nasa', nameKey: 'calendar.filterNasa', defaultName: 'NASA', color: '#d4d4d4' },
   { id: 'casc', nameKey: 'calendar.filterCasc', defaultName: 'CASC', color: '#a3a3a3' },
@@ -653,7 +678,6 @@ const providerList = [
   { id: 'other', nameKey: 'calendar.filterOther', defaultName: 'Others', color: '#525252' }
 ]
 
-const isSpaceXActive = ref(true)
 const activeCalendarView = ref('month') // 'day' | 'week' | 'month'
 
 const currentWeekDays = computed(() => {
@@ -673,8 +697,14 @@ const currentDayFocus = computed(() => {
   return props.gridDays.find(d => d.isoDate === targetIso) || props.gridDays[0]
 })
 
-const toggleSpaceXLayer = () => {
-  isSpaceXActive.value = !isSpaceXActive.value
+const isCalendarActive = (calendarId) => props.activeCalendarIds.includes(calendarId)
+
+const toggleCalendarLayer = (calendarId) => {
+  const nextIds = isCalendarActive(calendarId)
+    ? props.activeCalendarIds.filter((id) => id !== calendarId)
+    : [...props.activeCalendarIds, calendarId]
+
+  emit('update:active-calendar-ids', nextIds)
 }
 
 // ─── Subscribe Modal State & Actions ───
@@ -690,11 +720,11 @@ const openSubscribeModal = (providerId = 'spacex') => {
 
 const activeSubscribeIcsUrl = computed(() => {
   const p = subscribeProvider.value
-  const path = p === 'spacex' || p === 'all' ? '/spacex.ics' : `/launches.ics?provider=${p}`
+  const path = p === 'f1' ? '/ics/f1.ics' : '/spacex.ics'
   if (import.meta.client) {
     return `${window.location.origin}${path}`
   }
-  return `https://spacex-calendar.mou7s.com${path}`
+  return `https://calendarhub.mou7s.com${path}`
 })
 
 const activeSubscribeWebcalUrl = computed(() => {
@@ -703,12 +733,12 @@ const activeSubscribeWebcalUrl = computed(() => {
 
 const getWebcalUrl = (providerId = 'spacex') => {
   const p = providerId
-  const path = p === 'spacex' || p === 'all' ? '/spacex.ics' : `/launches.ics?provider=${p}`
+  const path = p === 'f1' ? '/ics/f1.ics' : '/spacex.ics'
   if (import.meta.client) {
     const origin = window.location.origin.replace(/^https?:\/\//, '')
     return `webcal://${origin}${path}`
   }
-  return `webcal://spacex-calendar.mou7s.com${path}`
+  return `webcal://calendarhub.mou7s.com${path}`
 }
 
 const copyIcsUrl = () => {
@@ -823,46 +853,80 @@ const getEventTopPct = (launchAt) => {
   return ((h * 60 + m) / 1440) * 100
 }
 
+const getWeekEventStartMinutes = (launchAt) => {
+  if (!launchAt) return 0
+  const date = new Date(launchAt)
+  if (Number.isNaN(date.getTime())) return 0
+  return date.getHours() * 60 + date.getMinutes()
+}
+
+const getWeekEventDurationMinutes = (event) => {
+  const start = Date.parse(event?.launchAt || '')
+  const end = Date.parse(event?.launchWindow?.close || '')
+
+  if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+    return (end - start) / 60000
+  }
+
+  return 60
+}
+
 const getWeekEventStyle = (event, eventsInDay) => {
-  const topPct = getEventTopPct(event.launchAt)
-  const cardHeight = Math.min(50, Math.max(42, Math.round(containerHeight.value / 15)))
-  const adjustedTop = topPct > 92 ? `calc(${topPct}% - ${cardHeight / 1.5}px)` : `${topPct}%`
+  const availableHeight = Math.max(1, containerHeight.value)
+  const baseCardHeight = Math.min(50, Math.max(42, Math.round(availableHeight / 15)))
+  const minVisualDuration = (baseCardHeight / availableHeight) * 1440
+  const items = (eventsInDay || [])
+    .filter(item => item?.launchAt)
+    .map(item => {
+      const startMinutes = getWeekEventStartMinutes(item.launchAt)
+      const durationMinutes = Math.max(
+        minVisualDuration,
+        getWeekEventDurationMinutes(item)
+      )
+      const cardHeight = Math.min(
+        86,
+        Math.max(42, Math.round((durationMinutes / 1440) * availableHeight))
+      )
 
-  if (!eventsInDay || eventsInDay.length <= 1) {
-    return {
-      top: adjustedTop,
-      height: `${cardHeight}px`,
-      left: '1px',
-      right: '1px'
+      return {
+        event: item,
+        startMinutes,
+        endMinutes: Math.min(1440, startMinutes + durationMinutes + 5),
+        cardHeight
+      }
+    })
+    .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes)
+
+  // Pack events into lanes based on their visible time interval. This also
+  // treats the minimum readable card height as occupied space, so adjacent
+  // short events cannot visually cover one another.
+  const laneEnds = []
+  const placements = new Map()
+
+  for (const item of items) {
+    let lane = laneEnds.findIndex(endMinutes => endMinutes <= item.startMinutes)
+    if (lane === -1) {
+      lane = laneEnds.length
+      laneEnds.push(0)
     }
+
+    laneEnds[lane] = item.endMinutes
+    placements.set(item.event, { lane, cardHeight: item.cardHeight })
   }
 
-  const date = new Date(event.launchAt)
-  const eventMinutes = date ? date.getHours() * 60 + date.getMinutes() : 0
-
-  const overlapping = eventsInDay.filter(e => {
-    if (!e.launchAt) return false
-    const d = new Date(e.launchAt)
-    const m = d.getHours() * 60 + d.getMinutes()
-    return Math.abs(m - eventMinutes) < 60
-  })
-
-  if (overlapping.length <= 1) {
-    return {
-      top: adjustedTop,
-      height: `${cardHeight}px`,
-      left: '1px',
-      right: '1px'
-    }
-  }
-
-  const index = overlapping.findIndex(e => (e.id || e.slug) === (event.id || event.slug))
-  const count = overlapping.length
-  const widthPct = 100 / count
-  const leftPct = widthPct * index
+  const laneCount = Math.max(1, laneEnds.length)
+  const placement = placements.get(event) || { lane: 0, cardHeight: baseCardHeight }
+  const lane = placement.lane
+  const cardHeight = placement.cardHeight
+  const widthPct = 100 / laneCount
+  const topPct = Math.max(
+    0,
+    Math.min(getEventTopPct(event.launchAt), 100 - (cardHeight / availableHeight * 100))
+  )
+  const leftPct = widthPct * lane
 
   return {
-    top: adjustedTop,
+    top: `${topPct}%`,
     height: `${cardHeight}px`,
     left: `calc(${leftPct}% + 1px)`,
     width: `calc(${widthPct}% - 2px)`

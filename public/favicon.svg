@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Calendar Hub</title>
+  <desc id="desc">A minimal calendar icon with a highlighted event</desc>
+
+  <rect width="1024" height="1024" rx="224" fill="#0b1220"/>
+  <rect x="42" y="42" width="940" height="940" rx="204" fill="none" stroke="#1e3a8a" stroke-width="24"/>
+
+  <rect x="226" y="272" width="572" height="500" rx="92" fill="none" stroke="#f8fafc" stroke-width="36"/>
+  <path d="M244 410h536" stroke="#3b82f6" stroke-width="36"/>
+  <path d="M372 220v142M652 220v142" stroke="#f8fafc" stroke-width="44" stroke-linecap="round"/>
+
+  <circle cx="386" cy="582" r="30" fill="#f8fafc" fill-opacity="0.82"/>
+  <circle cx="512" cy="582" r="48" fill="#3b82f6"/>
+  <circle cx="638" cy="582" r="30" fill="#f8fafc" fill-opacity="0.82"/>
+</svg>

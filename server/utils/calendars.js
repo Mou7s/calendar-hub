@@ -36,9 +36,10 @@ export const CALENDAR_TOPICS = [
     category: 'sports',
     icon: 'i-heroicons-trophy',
     color: 'red',
-    description: '包含 2026 赛季一级方程式赛车所有站次排位赛与正赛的时间及大奖赛赛道。',
-    descriptionEn: 'Full 2026 Formula 1 Grand Prix weekend schedules, practice, qualifying and races.',
-    icsPath: '/ics/f1.ics'
+    description: '包含 2026 赛季一级方程式赛车 24 站大奖赛，以及 Sprint、排位赛和正赛时间。',
+    descriptionEn: 'The complete 2026 Formula 1 calendar with 24 Grands Prix, Sprint, qualifying and race sessions.',
+    icsPath: '/ics/f1.ics',
+    sourceUrl: 'https://www.formula1.com/en/racing/2026'
   },
   {
     id: 'games',
@@ -63,6 +64,81 @@ export const CALENDAR_TOPICS = [
     icsPath: '/ics/holidays.ics'
   }
 ]
+
+const F1_2026_RACES = [
+  { round: 1, slug: 'australia', key: 'australia', nameEn: 'Australian Grand Prix', nameZh: '澳大利亚大奖赛', venue: 'Albert Park Grand Prix Circuit', date: '2026-03-08', qualifying: '16:00', race: '15:00', offsetMinutes: 660 },
+  { round: 2, slug: 'china', key: 'china', nameEn: 'Chinese Grand Prix', nameZh: '中国大奖赛', venue: 'Shanghai International Circuit', date: '2026-03-15', sprint: '11:00', qualifying: '15:00', race: '15:00', offsetMinutes: 480 },
+  { round: 3, slug: 'japan', key: 'japan', nameEn: 'Japanese Grand Prix', nameZh: '日本大奖赛', venue: 'Suzuka International Racing Course', date: '2026-03-29', qualifying: '15:00', race: '14:00', offsetMinutes: 540 },
+  { round: 4, slug: 'bahrain', key: 'bahrain', nameEn: 'Bahrain Grand Prix', nameZh: '巴林大奖赛', venue: 'Bahrain International Circuit', date: '2026-04-12', qualifying: '19:00', race: '18:00', offsetMinutes: 180 },
+  { round: 5, slug: 'saudi-arabia', key: 'saudi-arabia', nameEn: 'Saudi Arabian Grand Prix', nameZh: '沙特阿拉伯大奖赛', venue: 'Jeddah Corniche Circuit', date: '2026-04-19', qualifying: '20:00', race: '20:00', offsetMinutes: 180 },
+  { round: 6, slug: 'miami', key: 'miami', nameEn: 'Miami Grand Prix', nameZh: '迈阿密大奖赛', venue: 'Miami International Autodrome', date: '2026-05-03', sprint: '12:00', qualifying: '16:00', race: '16:00', offsetMinutes: -240 },
+  { round: 7, slug: 'canada', key: 'canada', nameEn: 'Canadian Grand Prix', nameZh: '加拿大大奖赛', venue: 'Circuit Gilles-Villeneuve', date: '2026-05-24', sprint: '12:00', qualifying: '16:00', race: '16:00', offsetMinutes: -240 },
+  { round: 8, slug: 'monaco', key: 'monaco', nameEn: 'Monaco Grand Prix', nameZh: '摩纳哥大奖赛', venue: 'Circuit de Monaco', date: '2026-06-07', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 9, slug: 'barcelona-catalunya', key: 'barcelona', nameEn: 'Barcelona-Catalunya Grand Prix', nameZh: '巴塞罗那-加泰罗尼亚大奖赛', venue: 'Circuit de Barcelona-Catalunya', date: '2026-06-14', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 10, slug: 'austria', key: 'austria', nameEn: 'Austrian Grand Prix', nameZh: '奥地利大奖赛', venue: 'Red Bull Ring', date: '2026-06-28', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 11, slug: 'great-britain', key: 'great-britain', nameEn: 'British Grand Prix', nameZh: '英国大奖赛', venue: 'Silverstone Circuit', date: '2026-07-05', sprint: '12:00', qualifying: '16:00', race: '15:00', offsetMinutes: 60 },
+  { round: 12, slug: 'belgium', key: 'belgium', nameEn: 'Belgian Grand Prix', nameZh: '比利时大奖赛', venue: 'Circuit de Spa-Francorchamps', date: '2026-07-19', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 13, slug: 'hungary', key: 'hungary', nameEn: 'Hungarian Grand Prix', nameZh: '匈牙利大奖赛', venue: 'Hungaroring', date: '2026-07-26', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 14, slug: 'netherlands', key: 'netherlands', nameEn: 'Dutch Grand Prix', nameZh: '荷兰大奖赛', venue: 'Circuit Zandvoort', date: '2026-08-23', sprint: '12:00', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 15, slug: 'italy', key: 'italy', nameEn: 'Italian Grand Prix', nameZh: '意大利大奖赛', venue: 'Autodromo Nazionale Monza', date: '2026-09-06', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 16, slug: 'spain', key: 'spain', nameEn: 'Spanish Grand Prix', nameZh: '西班牙大奖赛', venue: 'Madrid, Spain', date: '2026-09-13', qualifying: '16:00', race: '15:00', offsetMinutes: 120 },
+  { round: 17, slug: 'azerbaijan', key: 'azerbaijan', nameEn: 'Azerbaijan Grand Prix', nameZh: '阿塞拜疆大奖赛', venue: 'Baku City Circuit', date: '2026-09-26', qualifying: '16:00', race: '15:00', offsetMinutes: 240 },
+  { round: 18, slug: 'singapore', key: 'singapore', nameEn: 'Singapore Grand Prix', nameZh: '新加坡大奖赛', venue: 'Marina Bay Street Circuit', date: '2026-10-11', sprint: '17:00', qualifying: '21:00', race: '20:00', offsetMinutes: 480 },
+  { round: 19, slug: 'united-states', key: 'united-states', nameEn: 'United States Grand Prix', nameZh: '美国大奖赛', venue: 'Circuit of the Americas', date: '2026-10-25', qualifying: '16:00', race: '15:00', offsetMinutes: -300 },
+  { round: 20, slug: 'mexico', key: 'mexico', nameEn: 'Mexico City Grand Prix', nameZh: '墨西哥城大奖赛', venue: 'Autódromo Hermanos Rodríguez', date: '2026-11-01', qualifying: '15:00', race: '14:00', offsetMinutes: -360 },
+  { round: 21, slug: 'sao-paulo', key: 'brazil', nameEn: 'São Paulo Grand Prix', nameZh: '圣保罗大奖赛', venue: 'Autódromo José Carlos Pace', date: '2026-11-08', qualifying: '15:00', race: '14:00', offsetMinutes: -180 },
+  { round: 22, slug: 'las-vegas', key: 'las-vegas', nameEn: 'Las Vegas Grand Prix', nameZh: '拉斯维加斯大奖赛', venue: 'Las Vegas Strip Circuit', date: '2026-11-21', qualifying: '20:00', race: '20:00', offsetMinutes: -480 },
+  { round: 23, slug: 'qatar', key: 'qatar', nameEn: 'Qatar Grand Prix', nameZh: '卡塔尔大奖赛', venue: 'Lusail International Circuit', date: '2026-11-29', qualifying: '21:00', race: '19:00', offsetMinutes: 180 },
+  { round: 24, slug: 'abu-dhabi', key: 'abu-dhabi', nameEn: 'Abu Dhabi Grand Prix', nameZh: '阿布扎比大奖赛', venue: 'Yas Marina Circuit', date: '2026-12-06', qualifying: '18:00', race: '17:00', offsetMinutes: 240 }
+]
+
+const localF1TimeToIso = (date, time, offsetMinutes) => {
+  const [hours, minutes] = time.split(':').map(Number)
+  const utcMillis = Date.UTC(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1,
+    Number(date.slice(8, 10)),
+    hours,
+    minutes
+  ) - offsetMinutes * 60 * 1000
+
+  return new Date(utcMillis).toISOString()
+}
+
+const addMinutes = (iso, minutes) => new Date(Date.parse(iso) + minutes * 60 * 1000).toISOString()
+
+const createF1Session = (race, sessionId, sessionEn, sessionZh, localTime, durationMinutes) => {
+  const launchAt = localF1TimeToIso(race.date, localTime, race.offsetMinutes)
+  const titleEn = `2026 ${race.nameEn} - ${sessionEn}`
+  const titleZh = `F1 2026 ${race.nameZh} - ${sessionZh}`
+
+  return {
+    id: `f1-2026-${race.key}-${sessionId}`,
+    title: titleEn,
+    titleEn,
+    titleZh,
+    shortTitle: `${race.nameEn} - ${sessionEn}`,
+    shortTitleEn: `${race.nameEn} - ${sessionEn}`,
+    shortTitleZh: `${race.nameZh} - ${sessionZh}`,
+    launchAt,
+    launchWindow: { open: launchAt, close: addMinutes(launchAt, durationMinutes) },
+    vehicle: 'Formula 1 Car',
+    launchSite: race.venue,
+    missionType: `F1 ${sessionEn}`,
+    missionUrl: `https://www.formula1.com/en/racing/2026/${race.slug}`,
+    isLive: false
+  }
+}
+
+const F1_2026_EVENTS = F1_2026_RACES.flatMap((race) => {
+  const sessions = [
+    race.sprint ? createF1Session(race, 'sprint', 'Sprint', '冲刺赛', race.sprint, 90) : null,
+    createF1Session(race, 'qualifying', 'Qualifying', '排位赛', race.qualifying, 60),
+    createF1Session(race, 'race', 'Race', '正赛', race.race, 120)
+  ]
+
+  return sessions.filter(Boolean)
+})
 
 // 内置预设的非 SpaceX 主题静态/精选日历事件数据
 const STATIC_TOPIC_DATA = {
@@ -101,41 +177,7 @@ const STATIC_TOPIC_DATA = {
       isLive: false
     }
   ],
-  'f1': [
-    {
-      id: 'f1-bahrain-2026',
-      title: 'F1 2026 巴林大奖赛 - 正赛',
-      launchAt: '2026-03-29T15:00:00.000Z',
-      launchWindow: { close: '2026-03-29T17:00:00.000Z' },
-      vehicle: 'Formula 1 Car',
-      launchSite: 'Bahrain International Circuit',
-      missionType: 'Grand Prix Race',
-      missionUrl: 'https://www.formula1.com',
-      isLive: false
-    },
-    {
-      id: 'f1-monaco-2026',
-      title: 'F1 2026 摩纳哥大奖赛 - 正赛',
-      launchAt: '2026-05-24T13:00:00.000Z',
-      launchWindow: { close: '2026-05-24T15:00:00.000Z' },
-      vehicle: 'Formula 1 Car',
-      launchSite: 'Circuit de Monaco',
-      missionType: 'Grand Prix Race',
-      missionUrl: 'https://www.formula1.com',
-      isLive: false
-    },
-    {
-      id: 'f1-shanghai-2026',
-      title: 'F1 2026 中国大奖赛 - 上海站正赛',
-      launchAt: '2026-04-19T07:00:00.000Z',
-      launchWindow: { close: '2026-04-19T09:00:00.000Z' },
-      vehicle: 'Formula 1 Car',
-      launchSite: 'Shanghai International Circuit',
-      missionType: 'Grand Prix Race',
-      missionUrl: 'https://www.formula1.com',
-      isLive: false
-    }
-  ],
+  'f1': F1_2026_EVENTS,
   'games': [
     {
       id: 'game-gta6-2026',
@@ -202,8 +244,12 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
     correlationId: item.id,
     slug: item.id,
     missionUrl: item.missionUrl,
-    title: item.title,
-    shortTitle: item.title,
+    title: item.titleEn || item.title,
+    titleEn: item.titleEn || item.title,
+    titleZh: item.titleZh || item.title,
+    shortTitle: item.shortTitleEn || item.shortTitle || item.titleEn || item.title,
+    shortTitleEn: item.shortTitleEn || item.shortTitle || item.titleEn || item.title,
+    shortTitleZh: item.shortTitleZh || item.titleZh || item.title,
     missionType: item.missionType,
     vehicle: item.vehicle,
     launchSite: item.launchSite,
@@ -215,8 +261,11 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
     image: null,
     launchAt: item.launchAt,
     returnAt: null,
-    launchWindow: item.launchWindow || { open: item.launchAt, close: null }
+    launchWindow: item.launchWindow || { open: item.launchAt, close: null },
+    calendarId: topicId
   }));
+
+  missions.sort((a, b) => Date.parse(a.launchAt || 0) - Date.parse(b.launchAt || 0));
 
   // 计算月份分布
   const counts = new Map();
@@ -286,7 +335,7 @@ export function buildTopicCalendarFeed(topicId, data) {
         `STATUS:${mission.isLive ? 'CONFIRMED' : 'TENTATIVE'}`,
         'TRANSP:OPAQUE',
         `CATEGORIES:${escapeIcsText(topicConfig.nameEn || 'Event')}`,
-        `URL:${mission.missionUrl || 'https://spacex-calendar.mou7s.com'}`,
+        `URL:${mission.missionUrl || 'https://calendarhub.mou7s.com'}`,
         'END:VEVENT'
       ];
 

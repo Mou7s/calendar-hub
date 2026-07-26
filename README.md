@@ -1,30 +1,32 @@
-# SpaceX 发射日历 (SpaceX Launch Calendar)
+# Calendar Hub
 
 <p align="center">
-  <img src="./public/icon-512.png" width="128" height="128" alt="SpaceX Launch Calendar Icon" />
+  <img src="./public/icon-512.png" width="128" height="128" alt="Calendar Hub Icon" />
 </p>
 
-一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Pages** 构建的现代化全栈 Web 应用。它能够将 SpaceX 官网的实时发射数据流转换为符合 RFC 5545 标准的 **ICS 订阅日历**，完美适配 Apple Calendar、iCloud、Google Calendar、Outlook 等日历客户端，同时提供了一个支持深色模式、多语言（i18n）以及超高清图解预览的高颜值交互式落地页。
+一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 构建的多类型日历订阅中心。它将发射、赛事及其他主题的日程转换为符合 RFC 5545 标准的 **ICS / Webcal 订阅链接**，适配 Apple Calendar、iCloud、Google Calendar、Outlook 等日历客户端。
 
 ---
 
 ## 🌟 功能特性
 
-- **📅 多渠道日历订阅**：
+- **📅 多类型日历订阅**：
   - `/spacex.ics` / `/calendar.ics` 导出标准的 RFC-compliant ICS 日历数据。
+  - `/ics/:topic.ics` 为每个主题提供独立的 ICS / Webcal 订阅链接。
   - 支持 `webcal://` 协议，可在 Apple Calendar 等设备中实现一键订阅与自动同步。
 - **⚡️ 边缘架构与高性能缓存**：
   - 基于 **Nuxt Hub KV** (Cloudflare KV) 缓存上游 SpaceX 双数据源。
   - 采用 **SWR (Stale-While-Revalidate)** 异步后台刷新技术，前端响应时间降至毫秒级，同时杜绝频繁请求导致上游封禁的风险。
   - 内置基于 UUID 和哈希的版本追踪，确保 `SEQUENCE` 与 `LAST-MODIFIED` 在发射窗口微调时精准更新，避免日历客户端重复提示日程变更。
 - **🎨 现代极致视觉体验**：
-  - 使用 **Nuxt UI** (Tailwind CSS) 构建的极简、未来感交互界面，完美融合 SpaceX 品牌美学。
+  - 使用 **Nuxt UI** (Tailwind CSS) 构建的极简、未来感日历界面。
   - 原生支持系统级 **深色模式 (Dark Mode)** 切换，流转顺滑。
   - 内置实时高精度 **发射倒计时** 计时器。
   - **交互式日历组件**：包含一个迷你日历网格、今日聚焦、事件时间轴，以及可直接交互的发射任务详情卡片。
   - **高清互动图解**：支持在详情页中一键打开超高清任务发射图解（Infographic），配备带磨砂玻璃背景的 Lightbox 弹窗和双击/点击自适应缩放查看原图功能。
-- **🔄 双源实时合并与直播保活**：
+- **🔄 多源日历与实时同步**：
   - 自动聚合 SpaceX 官方 upcoming API 模块的板块卡片信息与高精度的 timings 倒计时数据。
+  - 支持 F1 等非发射主题日历，并可以继续扩展更多公共日程源。
   - **优雅降级机制**：即使 Timing API 临时故障，仍能依据磁贴基础数据生成日历。
   - **直播任务保活**：当发射任务正处于 Live 直播流状态时，即使当前时间已过原定发射时刻，系统仍会智能地在 Upcoming 列表和日历订阅中予以保留，防止用户在观看直播期间因日程过期被移出而错失跳转入口。
 - **🌐 全球多语言支持 (i18n)**：
@@ -40,7 +42,7 @@
 ## 🛠️ 技术栈
 
 - **框架核心**：Nuxt 4 (`nuxt`)
-- **开发与部署套件**：Nuxt Hub (`@nuxthub/core`) + Cloudflare Pages / Workers
+- **开发与部署套件**：Nuxt Hub (`@nuxthub/core`) + Cloudflare Workers
 - **UI 框架与样式**：Nuxt UI (`@nuxt/ui`) & Tailwind CSS & Heroicons
 - **高性能媒体组件**：`@nuxt/image`（为高清图解及任务背景图渲染赋能）
 - **国际化引擎**：Nuxt i18n (`@nuxtjs/i18n`)
@@ -148,23 +150,28 @@ npm test
 
 ## ☁️ 部署上线
 
-本项目极其适合部署在 **Cloudflare Pages**。
+本项目部署为 **Cloudflare Workers Module Worker**，由 Workers Assets 提供前端静态资源，由 Nitro Worker 处理 SSR、API 与 ICS 路由。
 
-### 方式 A：通过 Nuxt Hub 平台（推荐）
-在 Nuxt Hub 控制台关联你的 GitHub 仓库，它会自动为你检测并开通 KV 存储空间、编译并进行边缘部署。
+### 通过 Wrangler 部署
 
-### 方式 B：手动通过 Wrangler 部署
+先确保已经登录 Cloudflare，并确认 `wrangler.toml` 中的 KV namespace ID 属于当前账户。
+
 ```bash
-npm run build
-npx wrangler deploy
+bun run deploy:worker
 ```
 
-部署完成后，在 Cloudflare 后台为你的项目绑定自定义域名（例如 `spacex-calendar.mou7s.com`）。
+本地预览 Workers 运行时：
+
+```bash
+bun run preview:worker
+```
+
+部署后，在 Cloudflare 后台进入 **Workers & Pages → calendarhub-worker → Settings → Domains & Routes**，添加 Custom Domain `calendarhub.mou7s.com`。切换前先移除指向 Pages 的旧 CNAME；Worker Custom Domain 会接管该域名的 DNS 与证书。
 
 ### 部署后验证
 你可以使用 `curl` 验证日历源响应头是否正确：
 ```bash
-curl -I https://spacex-calendar.mou7s.com/spacex.ics
+curl -I https://calendarhub.mou7s.com/spacex.ics
 ```
 **预期响应**：
 ```text

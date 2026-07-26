@@ -1,5 +1,5 @@
 {
-  "name": "spacex-calendar",
+  "name": "calendar-hub",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "node node_modules/nuxt/bin/nuxt.mjs dev --host",
     "build": "bun install && nuxt build",
+    "preview:worker": "bun run build && bunx wrangler dev --config .output/server/wrangler.json",
+    "deploy:worker": "bun run build && bunx wrangler deploy --config .output/server/wrangler.json",
     "test": "bun test",
     "translate:locales": "bun scripts/translate-locales.js"
   },

@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "Calendario de Lanzamientos de SpaceX",
-    "description": "Suscríbete a un calendario ICS en línea y mantente al día con los próximos lanzamientos de SpaceX."
+    "title": "Calendar Hub | Suscripciones de calendarios Webcal",
+    "description": "Suscríbete a calendarios de lanzamientos, carreras y otros eventos mediante enlaces Webcal o ICS."
   },
   "header": {
-    "copy": "Suscríbete a un calendario ICS en línea y sigue los próximos lanzamientos de SpaceX.",
+    "copy": "Suscríbete a calendarios públicos y mantén sincronizados tus horarios favoritos.",
     "github": "GitHub",
     "githubAriaLabel": "Ver el proyecto en GitHub",
     "themeToggleAria": "Cambiar modo oscuro/claro"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "Suscripción ICS",
     "title": "Suscribirse al calendario",
-    "copy": "Usa los siguientes enlaces para suscribirte a este calendario en tu dispositivo. Tu cliente de calendario se mantendrá sincronizado automáticamente con el programa de lanzamiento oficial de SpaceX en tiempo real.",
+    "copy": "Usa los siguientes enlaces para suscribirte a este calendario en tu dispositivo. Tu cliente de calendario se mantendrá sincronizado automáticamente.",
     "subscribeLink": "Suscribirse al calendario",
     "copied": "Copiado",
     "copyBtn": "Copiar",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "Feed de calendario en vivo",
     "loadingTitle": "Cargando calendario de lanzamientos",
-    "loadingDescription": "Obteniendo la cola de misiones y ventanas de lanzamiento desde los feeds del sitio de SpaceX.",
+    "loadingDescription": "Obteniendo los eventos más recientes de los feeds de calendario seleccionados.",
     "noMissionsTitle": "No hay misiones próximas",
     "noMissionsDescription": "El feed en vivo no devolvió lanzamientos próximos.",
     "unavailableTitle": "Datos de lanzamiento no disponibles",
-    "unavailableDescription": "La app no pudo acceder ahora a los feeds de misiones de SpaceX.",
+    "unavailableDescription": "La app no pudo acceder ahora a los feeds de calendario seleccionados.",
     "meta": {
       "nextLaunch": "Próximo lanzamiento",
       "countdown": "Cuenta regresiva"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle} desde {launchSite}, con recuperación en {returnSite}."
   },
   "overview": {
-    "cadenceEyebrow": "Cadencia de vuelo",
-    "cadenceTitle": "Ritmo de próximos lanzamientos",
+    "cadenceEyebrow": "Resumen del calendario",
+    "cadenceTitle": "Próximos eventos",
     "statusEyebrow": "Estado",
-    "statusTitle": "Seguimiento de lanzamientos",
-    "noLaunchWindows": "Aún no hay ventanas de lanzamiento para mostrar.",
-    "launches": "Lanzamientos",
+    "statusTitle": "Seguimiento de eventos",
+    "noLaunchWindows": "Aún no hay horarios de eventos para mostrar.",
+    "launches": "Eventos",
     "tracker": {
-      "missionsLoaded": "Misiones cargadas",
-      "timedWindows": "Ventanas con hora",
+      "missionsLoaded": "Eventos cargados",
+      "timedWindows": "Eventos con hora",
       "liveNow": "En vivo ahora",
       "viewerTimezone": "Zona horaria"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "Suscripciones",
       "language": "Idioma"
     },
-    "eyebrow": "Calendario de lanzamientos",
-    "title": "Ver misiones por mes",
+    "eyebrow": "Calendar Hub",
+    "title": "Ver calendarios y eventos por mes",
     "viewDay": "Día",
     "viewWeek": "Semana",
     "viewMonth": "Mes",
     "today": "Hoy",
+    "filterF1": "F1",
     "moreEvents": "+{count} más...",
     "previousMonthAria": "Ver mes anterior",
     "nextMonthAria": "Ver mes siguiente",

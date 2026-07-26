@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "SpaceX 发射日历",
-    "description": "订阅在线 ICS 日历，随时获取最新的 SpaceX 发射计划。"
+    "title": "Calendar Hub｜多类型日历订阅",
+    "description": "订阅发射、赛事及其他主题日历，通过 Webcal 或 ICS 链接自动同步。"
   },
   "header": {
-    "copy": "订阅在线 ICS 日历，随时获取最新的 SpaceX 发射计划。",
+    "copy": "订阅公开日历，让你关注的赛程与计划自动保持同步。",
     "github": "GitHub 仓库",
     "githubAriaLabel": "在 GitHub 查看项目",
     "themeToggleAria": "切换深色/浅色模式"
@@ -12,7 +12,7 @@
   "subscribe": {
     "eyebrow": "ICS 订阅",
     "title": "订阅在线日历",
-    "copy": "使用下方的链接在您的设备上订阅此日历。日历客户端将自动与 SpaceX 官方实时发射计划保持同步更新。",
+    "copy": "使用下方链接在设备上订阅此日历，日历客户端会自动保持同步。",
     "subscribeLink": "订阅在线日历",
     "copied": "已复制",
     "copyBtn": "复制",
@@ -22,11 +22,11 @@
   "hero": {
     "eyebrow": "实时日历源",
     "loadingTitle": "正在加载发射日历",
-    "loadingDescription": "正在拉取 SpaceX 官网当前使用的任务和发射窗口数据。",
+    "loadingDescription": "正在从已选择的日历源获取最新事件。",
     "noMissionsTitle": "暂无即将发射任务",
     "noMissionsDescription": "实时任务源暂时没有返回可用的即将发射任务。",
     "unavailableTitle": "发射数据暂时不可用",
-    "unavailableDescription": "当前无法从 SpaceX 数据源拉取最新任务信息。",
+    "unavailableDescription": "当前无法连接已选择的日历数据源。",
     "meta": {
       "nextLaunch": "下一次发射",
       "countdown": "倒计时"
@@ -38,15 +38,15 @@
     "nextLaunchDescription": "{vehicle} 从 {launchSite} 发射，并计划在 {returnSite} 回收。"
   },
   "overview": {
-    "cadenceEyebrow": "发射节奏",
-    "cadenceTitle": "近期发射分布",
+    "cadenceEyebrow": "日程概览",
+    "cadenceTitle": "近期日程分布",
     "statusEyebrow": "状态",
-    "statusTitle": "发射追踪",
-    "noLaunchWindows": "当前还没有可展示的发射窗口。",
-    "launches": "次发射",
+    "statusTitle": "事件追踪",
+    "noLaunchWindows": "当前还没有可展示的事件时间。",
+    "launches": "个事件",
     "tracker": {
-      "missionsLoaded": "任务总数",
-      "timedWindows": "有时间窗口的任务",
+      "missionsLoaded": "事件总数",
+      "timedWindows": "有明确时间的事件",
       "liveNow": "正在直播",
       "viewerTimezone": "当前时区"
     }
@@ -57,12 +57,13 @@
       "subscriptions": "订阅项目",
       "language": "语言"
     },
-    "eyebrow": "发射日历",
-    "title": "按月查看任务",
+    "eyebrow": "Calendar Hub",
+    "title": "按月浏览日历与事件",
     "viewDay": "日",
     "viewWeek": "周",
     "viewMonth": "月",
     "today": "今天",
+    "filterF1": "F1",
     "moreEvents": "+{count} 更多...",
     "filterAll": "全部机构",
     "filterSpaceX": "SpaceX",
