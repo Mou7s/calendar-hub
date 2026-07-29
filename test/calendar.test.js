@@ -11,7 +11,9 @@ import fixUrlMiddleware from "../server/middleware/fix-url.js";
 import {
   buildTopicCalendarFeed,
   getTopicCalendarData,
+  parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
+import { CALENDAR_KEYS, syncCalendars } from "../server/utils/calendar-sync.js";
 
 import {
   buildCalendarFeed,
@@ -696,7 +698,7 @@ test("loadLaunchData gracefully degrades when timings API fails", async () => {
   assert.equal(data.missions[0].launchWindow.precision, "unknown");
 });
 
-test("getCachedData returns stale data and triggers background revalidation when ctx is available", async () => {
+test("calendar requests return KV data without request-time revalidation", async () => {
   const staleData = {
     refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
     missions: [
@@ -709,8 +711,6 @@ test("getCachedData returns stale data and triggers background revalidation when
   };
 
   let kvPutCalled = false;
-  let kvPutValue = null;
-
   const mockKv = {
     get: async (key) => {
       if (key === "spacex_launches_data") return staleData;
@@ -719,7 +719,6 @@ test("getCachedData returns stale data and triggers background revalidation when
     put: async (key, val, options) => {
       if (key === "spacex_launches_data") {
         kvPutCalled = true;
-        kvPutValue = JSON.parse(val);
       }
     },
   };
@@ -755,23 +754,15 @@ test("getCachedData returns stale data and triggers background revalidation when
     assert.equal(data.missions[0].id, "mock-stale");
     assert.equal(data.missions[0].title, "Stale Mission");
 
-    // Verify background revalidation was triggered
-    assert.equal(waitUntilCalled, true);
-    assert.ok(waitUntilPromise instanceof Promise);
-
-    // Wait for the background revalidation to complete
-    await waitUntilPromise;
-
-    // Verify KV was updated with the fresh data
-    assert.equal(kvPutCalled, true);
-    assert.equal(kvPutValue.missions.length, 2);
-    assert.equal(kvPutValue.missions[0].title, "Starlink Mission");
+    assert.equal(waitUntilCalled, false);
+    assert.equal(waitUntilPromise, null);
+    assert.equal(kvPutCalled, false);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test("getCachedData falls back to stale data on sync fetch failure when ctx is absent", async () => {
+test("calendar requests keep serving KV data when upstream fetch would fail", async () => {
   const staleData = {
     refreshedAt: new Date(Date.now() - 2400 * 1000).toISOString(), // 40 minutes ago (stale under 30min TTL)
     missions: [
@@ -1054,9 +1045,20 @@ test("F1 topic exposes the complete 2026 race and session schedule", async () =>
   assert.equal(data.missions.length, 54);
   assert.equal(
     data.missions.find((mission) => mission.id === "f1-2026-china-sprint").launchAt,
-    "2026-03-15T03:00:00.000Z",
+    "2026-03-14T03:00:00.000Z",
   );
   assert.match(data.missions.find((mission) => mission.id === "f1-2026-hungary-race").titleEn, /Hungarian Grand Prix/);
+
+  for (const race of raceEvents) {
+    const eventPrefix = race.id.slice(0, -"-race".length);
+    const qualifying = data.missions.find((mission) => mission.id === `${eventPrefix}-qualifying`);
+    const sprint = data.missions.find((mission) => mission.id === `${eventPrefix}-sprint`);
+
+    assert.ok(Date.parse(qualifying.launchAt) < Date.parse(race.launchAt), `${qualifying.id} must start before ${race.id}`);
+    if (sprint) {
+      assert.ok(Date.parse(sprint.launchAt) < Date.parse(qualifying.launchAt), `${sprint.id} must start before ${qualifying.id}`);
+    }
+  }
 
   const feed = buildTopicCalendarFeed("f1", data);
   assert.equal((feed.match(/BEGIN:VEVENT/g) || []).length, 54);
@@ -1064,7 +1066,115 @@ test("F1 topic exposes the complete 2026 race and session schedule", async () =>
   assert.match(feed, /UID:f1-2026-hungary-race@calendarhub\.local/);
 });
 
+const officialF1Rows = [
+  ["Australia, Mar 8", "-", "1600", "1500"],
+  ["China, Mar 15", "1100", "1500", "1500"],
+  ["Japan, Mar 29", "-", "1500", "1400"],
+  ["Bahrain, Apr 12", "-", "1900", "1800"],
+  ["Saudi Arabia, Apr 19", "-", "2000", "2000"],
+  ["Miami, May 3", "1200", "1600", "1600"],
+  ["Canada, May 24", "1200", "1600", "1600"],
+  ["Monaco, Jun 7", "-", "1600", "1500"],
+  ["Barcelona, Jun 14", "-", "1600", "1500"],
+  ["Austria, Jun 28", "-", "1600", "1500"],
+  ["Great Britain, Jul 5", "1200", "1600", "1500"],
+  ["Belgium, Jul 19", "-", "1600", "1500"],
+  ["Hungary, Jul 26", "-", "1600", "1500"],
+  ["Netherlands, Aug 23", "1200", "1600", "1500"],
+  ["Italy, Sep 6", "-", "1600", "1500"],
+  ["Spain, Sep 13", "-", "1600", "1500"],
+  ["Azerbaijan, Sep 26", "-", "1600", "1500"],
+  ["Singapore, Oct 11", "1700", "2100", "2000"],
+  ["United States, Oct 25", "-", "1600", "1500"],
+  ["Mexico, Nov 1", "-", "1500", "1400"],
+  ["Brazil, Nov 8", "-", "1500", "1400"],
+  ["Las Vegas, Nov 21", "-", "2000", "2000"],
+  ["Qatar, Nov 29", "-", "2100", "1900"],
+  ["Abu Dhabi, Dec 6", "-", "1800", "1700"],
+];
+
+const officialF1Html = `
+  <h2>2026 F1 start times</h2>
+  <table><tbody>
+    ${officialF1Rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}
+  </tbody></table>
+`;
+
+test("official F1 start times are parsed into correctly ordered session dates", () => {
+  const races = parseF1OfficialStartTimes(officialF1Html);
+  assert.equal(races.length, 24);
+  assert.equal(races[1].sessions.sprint, "2026-03-14T11:00");
+  assert.equal(races[1].sessions.qualifying, "2026-03-14T15:00");
+  assert.equal(races[1].sessions.race, "2026-03-15T15:00");
+  assert.equal(races[16].sessions.qualifying, "2026-09-25T16:00");
+  assert.equal(races[16].sessions.race, "2026-09-26T15:00");
+});
+
+test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async () => {
+  const values = new Map();
+  const calendarWrites = [];
+  const kv = {
+    async get(key, type) {
+      const value = values.get(key);
+      return type === "json" || value == null ? value ?? null : JSON.stringify(value);
+    },
+    async put(key, value) {
+      const parsed = typeof value === "string" ? JSON.parse(value) : value;
+      values.set(key, parsed);
+      if (Object.values(CALENDAR_KEYS).includes(key)) calendarWrites.push(key);
+    },
+  };
+  const fetchStub = async (url) => {
+    const value = String(url);
+    if (value.includes("formula-1-and-fia-announce")) {
+      return new Response(officialF1Html, { status: 200 });
+    }
+    if (value.includes("launches-page-tiles")) {
+      return new Response(JSON.stringify(sampleTiles), { status: 200 });
+    }
+    if (value.includes("future_missions.json")) {
+      return new Response(JSON.stringify(sampleTimings), { status: 200 });
+    }
+    throw new Error(`Unexpected URL: ${value}`);
+  };
+  const env = { SPACEX_KV: kv };
+  const now = new Date("2026-01-01T00:00:00.000Z");
+
+  const first = await syncCalendars(env, fetchStub, now);
+  assert.equal(first.calendars.spacex.changed, true);
+  assert.equal(first.calendars.f1.changed, true);
+  assert.deepEqual(calendarWrites.sort(), Object.values(CALENDAR_KEYS).sort());
+
+  calendarWrites.length = 0;
+  const second = await syncCalendars(env, fetchStub, now);
+  assert.equal(second.calendars.spacex.changed, false);
+  assert.equal(second.calendars.f1.changed, false);
+  assert.deepEqual(calendarWrites, []);
+});
+
 test("F1 ICS route resolves the topic from an extension URL", async () => {
+  const headers = {};
+  const event = {
+    context: {
+      params: {},
+      cloudflare: {
+        env: {},
+        context: {},
+        url: new URL("https://calendarhub.mou7s.com/ics/f1.ics"),
+      },
+    },
+    node: {
+      req: { url: "/ics/f1.ics" },
+      res: { setHeader(name, value) { headers[name] = value; } },
+    },
+  };
+
+  const feed = await topicIcsRoute(event);
+  assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
+  assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
+});
+
+test("F1 ICS route prefers the request pathname in a Cloudflare-style event", async () => {
   const headers = {};
   const event = {
     context: {
@@ -1072,7 +1182,10 @@ test("F1 ICS route resolves the topic from an extension URL", async () => {
       cloudflare: { env: {}, context: {} },
     },
     node: {
-      req: { url: "/ics/f1.ics" },
+      req: {
+        url: "https://calendarhub.mou7s.com/ics/f1.ics",
+        headers: { host: "calendarhub.mou7s.com" },
+      },
       res: { setHeader(name, value) { headers[name] = value; } },
     },
   };

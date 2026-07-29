@@ -1,10 +1,10 @@
 import { defineEventHandler, setHeader, createError } from 'h3'
-import { getCachedData } from '../utils/kv.js'
+import { getCalendarFromKv } from '../utils/calendar-sync.js'
 import { loadGlobalLaunches } from '../utils/launches.js'
 
 export default defineEventHandler(async (event) => {
   try {
-    const data = await getCachedData(event, "spacex_launches_data", loadGlobalLaunches);
+    const data = await getCalendarFromKv(event, "spacex", loadGlobalLaunches);
     
     setHeader(event, "Cache-Control", "public, max-age=300");
     setHeader(event, "Content-Type", "application/json; charset=utf-8");

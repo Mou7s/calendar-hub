@@ -1,7 +1,19 @@
 name = "calendarhub-worker"
 workers_dev = true
+preview_urls = true
 compatibility_date = "2026-07-21"
 compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+
+[triggers]
+crons = ["7 * * * *"]
+
+[[routes]]
+pattern = "calendarhub.mou7s.com"
+zone_name = "mou7s.com"
+custom_domain = true
 
 [[kv_namespaces]]
 binding = "SPACEX_KV"

@@ -1,10 +1,11 @@
 import { defineEventHandler, setHeader, createError } from 'h3'
-import { getCachedData } from '../utils/kv.js'
-import { loadLaunchData, buildCalendarFeed } from '../utils/spacex.js'
+import { getCalendarFromKv } from '../utils/calendar-sync.js'
+import { loadGlobalLaunches } from '../utils/launches.js'
+import { buildCalendarFeed } from '../utils/spacex.js'
 
 export default defineEventHandler(async (event) => {
   try {
-    const data = await getCachedData(event, "spacex_launches_data", loadLaunchData);
+    const data = await getCalendarFromKv(event, "spacex", loadGlobalLaunches);
     const icsContent = buildCalendarFeed(data);
     
     setHeader(event, "Content-Type", "text/calendar; charset=utf-8");

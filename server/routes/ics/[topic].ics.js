@@ -1,19 +1,14 @@
 import { defineEventHandler, setHeader, createError, getRouterParam } from 'h3'
+import { getCalendarFromKv } from '../../utils/calendar-sync.js'
 import { getCachedData } from '../../utils/kv.js'
 import { getTopicCalendarData, buildTopicCalendarFeed, CALENDAR_TOPICS } from '../../utils/calendars.js'
 
 export default defineEventHandler(async (event) => {
   try {
-    let topic = getRouterParam(event, 'topic')
-
-    // Nitro 的带扩展名动态路由在部分本地/边缘请求适配器中不会填充 params，
-    // 从原始请求路径回退解析，避免 /ics/f1.ics 错误地回退成 SpaceX 日历。
-    if (!topic) {
-      const requestPath = String(event.node?.req?.url || '')
-      const pathname = requestPath.startsWith('http') ? new URL(requestPath).pathname : requestPath
-      const match = pathname.match(/^\/ics\/([^/?#]+?)(?:\.ics)?$/i)
-      topic = match?.[1]
-    }
+    const requestPath = String(event.context.cloudflare?.url?.pathname || event.node?.req?.url || '')
+    const pathname = requestPath.startsWith('http') ? new URL(requestPath).pathname : requestPath
+    const pathMatch = pathname.match(/^\/ics\/([^/?#]+?)(?:\.ics)?$/i)
+    let topic = pathMatch?.[1] || getRouterParam(event, 'topic')
 
     topic = topic || 'spacex'
     // 清理后缀名为 .ics 的情况（例如 spacex.ics 提取出 spacex）
@@ -25,7 +20,9 @@ export default defineEventHandler(async (event) => {
     const cacheKey = `calendar_topic_${topicConfig.id}`
     const loader = (fetchImpl) => getTopicCalendarData(topicConfig.id, fetchImpl)
 
-    const data = await getCachedData(event, cacheKey, loader)
+    const data = topicConfig.id === 'f1'
+      ? await getCalendarFromKv(event, 'f1', loader)
+      : await getCachedData(event, cacheKey, loader)
     const icsContent = buildTopicCalendarFeed(topicConfig.id, data)
 
     setHeader(event, "Content-Type", "text/calendar; charset=utf-8")

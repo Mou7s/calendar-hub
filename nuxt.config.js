@@ -60,6 +60,12 @@ export default defineNuxtConfig({
   // Nitro 服务器引擎编译与部署相关的底层配置
   nitro: {
     preset: "cloudflare_module", // 以 Cloudflare Workers Module Worker 形式部署 Nuxt SSR 与 API
+    experimental: {
+      tasks: true,
+    },
+    scheduledTasks: {
+      "7 * * * *": ["calendar:sync"],
+    },
   },
 
   // 系统升级与向下兼容的基准日期F

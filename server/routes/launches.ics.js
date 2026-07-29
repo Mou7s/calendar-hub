@@ -1,5 +1,5 @@
 import { defineEventHandler, setHeader, createError, getQuery } from 'h3'
-import { getCachedData } from '../utils/kv.js'
+import { getCalendarFromKv } from '../utils/calendar-sync.js'
 import { loadGlobalLaunches, buildGlobalCalendarFeed } from '../utils/launches.js'
 
 export default defineEventHandler(async (event) => {
@@ -7,8 +7,7 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const provider = String(query.provider || 'all').toLowerCase()
     
-    // 使用带前缀的数据键名缓存全量多机构数据
-    const data = await getCachedData(event, "global_launches_data", loadGlobalLaunches);
+    const data = await getCalendarFromKv(event, "spacex", loadGlobalLaunches);
     const icsContent = buildGlobalCalendarFeed(data, provider);
     
     setHeader(event, "Content-Type", "text/calendar; charset=utf-8");
