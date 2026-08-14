@@ -53,6 +53,7 @@ const {
 } = await useFetch("/api/launches");
 const { data: historyPayload } = await useFetch("/api/history-launches");
 const { data: f1Payload } = await useFetch("/api/calendar/f1");
+const { data: wttPayload, refresh: refreshWtt } = await useFetch("/api/calendar/wtt");
 
 const LAUNCH_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const isRefreshingLaunches = ref(false);
@@ -63,7 +64,7 @@ const refreshLaunches = async () => {
 
   isRefreshingLaunches.value = true;
   try {
-    await refreshUpcoming();
+    await Promise.allSettled([refreshUpcoming(), refreshWtt()]);
   } finally {
     isRefreshingLaunches.value = false;
   }
@@ -101,7 +102,7 @@ const computedTitle = computed(() => {
 });
 
 // ─── Calendar Layers ───
-const activeCalendarIds = ref(["spacex", "f1"]);
+const activeCalendarIds = ref(["spacex", "f1", "wtt"]);
 const calendarLayers = computed(() => [
   {
     id: "spacex",
@@ -114,6 +115,12 @@ const calendarLayers = computed(() => [
     name: t("calendar.filterF1"),
     color: "#ef4444",
     icsPath: "/ics/f1.ics",
+  },
+  {
+    id: "wtt",
+    name: t("calendar.filterWTT"),
+    color: "#f59e0b",
+    icsPath: "/ics/wtt.ics",
   },
 ]);
 
@@ -162,7 +169,23 @@ const sortedCalendarMissions = computed(() => {
     };
   });
 
-  return [...upcoming, ...history, ...f1]
+  const wtt = (wttPayload.value?.missions || []).map((m) => {
+    const isChinese = locale.value === "zh-CN";
+    return {
+      ...m,
+      calendarId: "wtt",
+      provider: "wtt",
+      providerName: "WTT",
+      title: isChinese ? (m.titleZh || m.title) : (m.titleEn || m.title),
+      shortTitle: isChinese
+        ? (m.shortTitleZh || m.shortTitle || m.titleZh || m.title)
+        : (m.shortTitleEn || m.shortTitle || m.titleEn || m.title),
+      calendarGroup: "upcoming",
+      key: `wtt:${m.id}`,
+    };
+  });
+
+  return [...upcoming, ...history, ...f1, ...wtt]
     .filter((m) => activeCalendarIds.value.includes(m.calendarId))
     .filter((m) => m.launchAt)
     .sort((a, b) => {

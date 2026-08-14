@@ -68,6 +68,11 @@
       "vehicle": "赛车",
       "track": "赛道"
     },
+    "filterWTT": "WTT 乒乓球",
+    "wtt": {
+      "match": "比赛项目",
+      "venue": "场馆"
+    },
     "moreEvents": "+{count} 更多...",
     "filterAll": "全部机构",
     "filterSpaceX": "SpaceX",

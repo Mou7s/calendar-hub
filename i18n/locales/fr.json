@@ -68,6 +68,11 @@
       "vehicle": "Voiture de course",
       "track": "Circuit"
     },
+    "filterWTT": "Tennis de table WTT",
+    "wtt": {
+      "match": "Match",
+      "venue": "Salle"
+    },
     "moreEvents": "+{count} de plus...",
     "previousMonthAria": "Voir le mois précédent",
     "nextMonthAria": "Voir le mois suivant",

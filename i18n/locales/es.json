@@ -68,6 +68,11 @@
       "vehicle": "Coche de carreras",
       "track": "Circuito"
     },
+    "filterWTT": "Tenis de mesa WTT",
+    "wtt": {
+      "match": "Partido",
+      "venue": "Sede"
+    },
     "moreEvents": "+{count} más...",
     "previousMonthAria": "Ver mes anterior",
     "nextMonthAria": "Ver mes siguiente",

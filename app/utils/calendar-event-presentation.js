@@ -11,6 +11,12 @@ const EVENT_PRESENTATIONS = Object.freeze({
     locationLabelKey: 'calendar.f1.track',
     vehicleIcon: 'i-lucide-car-front',
     locationIcon: 'i-lucide-flag'
+  }),
+  wtt: Object.freeze({
+    vehicleLabelKey: 'calendar.wtt.match',
+    locationLabelKey: 'calendar.wtt.venue',
+    vehicleIcon: 'i-lucide-trophy',
+    locationIcon: 'i-lucide-map-pin'
   })
 })
 

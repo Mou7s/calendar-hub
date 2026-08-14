@@ -8,6 +8,10 @@ import { loadLaunchData, escapeIcsText, formatIcsDate, foldIcsLine, buildSequenc
 
 export const F1_2026_SOURCE_URL = 'https://www.formula1.com/en/latest/article/formula-1-and-fia-announce-2026-sprint-calendar.3PyLPAazrBNe8kQIS3wOfY'
 
+export const WTT_EVENTS_SOURCE_URL = 'https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/general/wtt_upcoming_only_events_list.json'
+export const WTT_SCHEDULE_SOURCE_URL = 'https://wtt-website-api-vm-frontdoor-hhaec5epbhdyfugz.a01.azurefd.net/liveeventsapi/api/cms/GetEventSchedule'
+export const WTT_MAIN_SERIES_TIER = 'WTT Series'
+
 export const CALENDAR_TOPICS = [
   {
     id: 'spacex',
@@ -42,6 +46,18 @@ export const CALENDAR_TOPICS = [
     descriptionEn: 'The complete 2026 Formula 1 calendar with 24 Grands Prix, Sprint, qualifying and race sessions.',
     icsPath: '/ics/f1.ics',
     sourceUrl: 'https://www.formula1.com/en/racing/2026'
+  },
+  {
+    id: 'wtt',
+    name: 'WTT 乒乓球比赛日历',
+    nameEn: 'WTT Table Tennis Calendar',
+    category: 'sports',
+    icon: 'i-heroicons-trophy',
+    color: 'amber',
+    description: '同步 WTT 主系列赛事中已经公布对阵和开赛时间的具体比赛。',
+    descriptionEn: 'Scheduled matchups from the main WTT Series with confirmed players and start times.',
+    icsPath: '/ics/wtt.ics',
+    sourceUrl: 'https://www.worldtabletennis.com/events_calendar'
   },
   {
     id: 'games',
@@ -227,6 +243,160 @@ const createF1Events = (races) => races.flatMap((race) => {
 
 const F1_2026_EVENTS = createF1Events(F1_2026_RACES)
 
+const WTT_REQUEST_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent': 'calendarhub-cloudflare-worker',
+  Referer: 'https://www.worldtabletennis.com/'
+}
+
+export function normalizeWttDate(value) {
+  if (!value) return null
+
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  // WTT schedule timestamps are UTC values without an explicit suffix.
+  // Add it before parsing so the Worker runtime timezone cannot shift them.
+  const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw) ? raw : `${raw}Z`
+  const timestamp = Date.parse(normalized)
+  return Number.isNaN(timestamp) ? null : new Date(timestamp).toISOString()
+}
+
+const isWttNamedCompetitor = (value) => {
+  const name = String(value || '').trim()
+  if (!name) return false
+
+  return !/^(?:bye|tbd|to be determined|winner|loser)(?:\b|\s)/i.test(name)
+}
+
+const getWttCompetitorName = (start) => {
+  const competitor = start?.Competitor || {}
+  const description = competitor.Description || {}
+  const teamName = String(description.TeamName || '').trim()
+  if (isWttNamedCompetitor(teamName)) return teamName
+
+  const individualName = [description.FamilyName, description.GivenName]
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+    .join(' ')
+  if (isWttNamedCompetitor(individualName)) return individualName
+
+  const athletes = Array.isArray(competitor.Composition?.Athlete)
+    ? competitor.Composition.Athlete
+    : []
+  const athleteNames = athletes
+    .map(athlete => [athlete?.Description?.FamilyName, athlete?.Description?.GivenName]
+      .map(value => String(value || '').trim())
+      .filter(Boolean)
+      .join(' '))
+    .filter(isWttNamedCompetitor)
+
+  return athleteNames.join('/')
+}
+
+export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
+  const launchAt = normalizeWttDate(unit?.StartDate)
+  const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
+  if (!launchAt || Number.isNaN(nowMs) || Date.parse(launchAt) < nowMs) return null
+
+  const starts = Array.isArray(unit?.StartList?.Start)
+    ? [...unit.StartList.Start].sort((a, b) => (a?.StartOrder || 0) - (b?.StartOrder || 0))
+    : []
+  const competitors = starts.map(getWttCompetitorName).filter(Boolean)
+  if (competitors.length < 2) return null
+
+  const close = normalizeWttDate(unit.EndDate)
+  const launchWindow = close && Date.parse(close) > Date.parse(launchAt)
+    ? { open: launchAt, close }
+    : { open: launchAt, close: null }
+  const matchCode = String(unit.Code || '').trim()
+  if (!matchCode || unit.ScheduleStatus === 'Cancelled') return null
+
+  const titleEn = `${competitors[0]} vs ${competitors[1]}`
+  const titleZh = `${competitors[0]} 对阵 ${competitors[1]}`
+  const id = `wtt-${event.eventId}-${matchCode}`
+  const venue = unit.VenueDescription?.VenueName || event.venueName || ''
+  const discipline = unit.SubEvent || 'Table Tennis Match'
+
+  return {
+    id,
+    title: titleEn,
+    titleEn,
+    titleZh,
+    shortTitle: titleEn,
+    shortTitleEn: titleEn,
+    shortTitleZh: titleZh,
+    missionType: unit.ItemDescription?.find(item => item.Language === 'ENG')?.Value
+      || `${discipline} ${unit.Round || ''}`.trim(),
+    vehicle: discipline,
+    launchSite: venue,
+    missionUrl: `https://www.worldtabletennis.com/eventInfo?eventId=${encodeURIComponent(event.eventId)}`,
+    launchAt,
+    launchWindow,
+    isLive: false
+  }
+}
+
+export function getWttScheduleUnits(schedule) {
+  const entries = Array.isArray(schedule) ? schedule : [schedule]
+  return entries.flatMap(entry => {
+    const competitions = Array.isArray(entry?.Competition)
+      ? entry.Competition
+      : entry?.Competition
+        ? [entry.Competition]
+        : []
+
+    return competitions.flatMap(competition => (
+      Array.isArray(competition?.Unit) ? competition.Unit : []
+    ))
+  })
+}
+
+const getWttFutureMainSeriesEvents = (events, now) => {
+  const nowMs = now.getTime()
+  return (Array.isArray(events) ? events : [])
+    .filter(event => event?.event_Tier_name === WTT_MAIN_SERIES_TIER)
+    .filter(event => {
+      const endDate = normalizeWttDate(event.endDateTime || event.startDateTime)
+      return endDate && Date.parse(endDate) >= nowMs
+    })
+}
+
+export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
+  const eventListUrl = `${WTT_EVENTS_SOURCE_URL}?q=${encodeURIComponent(now.toISOString())}`
+  const eventResponse = await fetchImpl(eventListUrl, { headers: WTT_REQUEST_HEADERS })
+  if (!eventResponse.ok) {
+    throw new Error(`Unable to load official WTT event list: ${eventResponse.status}`)
+  }
+
+  const events = getWttFutureMainSeriesEvents(await eventResponse.json(), now)
+  const scheduleResults = await Promise.allSettled(events.map(async event => {
+    const response = await fetchImpl(
+      `${WTT_SCHEDULE_SOURCE_URL}/${encodeURIComponent(event.eventId)}`,
+      { headers: WTT_REQUEST_HEADERS }
+    )
+
+    if (response.status === 204) return []
+    if (!response.ok) throw new Error(`WTT schedule ${event.eventId}: ${response.status}`)
+    return getWttScheduleUnits(await response.json())
+  }))
+
+  const items = []
+  scheduleResults.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.warn(`Unable to load WTT schedule for event ${events[index]?.eventId}:`, result.reason)
+      return
+    }
+
+    for (const unit of result.value) {
+      const item = normalizeWttScheduleUnit(events[index], unit, now)
+      if (item) items.push(item)
+    }
+  })
+
+  return buildTopicCalendarData('wtt', items)
+}
+
 // 内置预设的非 SpaceX 主题静态/精选日历事件数据
 const STATIC_TOPIC_DATA = {
   'tech-events': [
@@ -321,6 +491,10 @@ const STATIC_TOPIC_DATA = {
 export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
   if (topicId === 'spacex') {
     return await loadLaunchData(fetchImpl);
+  }
+
+  if (topicId === 'wtt') {
+    return await loadWttCalendarData(fetchImpl);
   }
 
   return buildTopicCalendarData(topicId, STATIC_TOPIC_DATA[topicId] || []);

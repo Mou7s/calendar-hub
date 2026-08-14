@@ -11,6 +11,8 @@ import fixUrlMiddleware from "../server/middleware/fix-url.js";
 import {
   buildTopicCalendarFeed,
   getTopicCalendarData,
+  loadWttCalendarData,
+  normalizeWttScheduleUnit,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
 import { CALENDAR_KEYS, syncCalendars } from "../server/utils/calendar-sync.js";
@@ -1071,6 +1073,133 @@ test("F1 topic exposes the complete 2026 race and session schedule", async () =>
   assert.match(feed, /UID:f1-2026-hungary-race@calendarhub\.local/);
 });
 
+test("WTT normalizes only future matches with two named competitors", () => {
+  const event = {
+    eventId: 9001,
+    eventName: "WTT Test Event 2026",
+    venueName: "Test Arena",
+  };
+  const now = new Date("2026-08-14T00:00:00.000Z");
+  const match = normalizeWttScheduleUnit(event, {
+    Code: "TTEWSINGLES-----------FNL-000100--",
+    StartDate: "2026-08-15T10:00:00",
+    EndDate: "2026-08-15T11:00:00",
+    ScheduleStatus: "Scheduled",
+    SubEvent: "Women's Singles",
+    VenueDescription: { VenueName: "Test Arena", LocationName: "Table 1" },
+    StartList: {
+      Start: [
+        { StartOrder: 1, Competitor: { Description: { FamilyName: "SUN", GivenName: "Ying" } } },
+        { StartOrder: 2, Competitor: { Description: { FamilyName: "ITO", GivenName: "Mima" } } },
+      ],
+    },
+  }, now);
+
+  assert.equal(match.id, "wtt-9001-TTEWSINGLES-----------FNL-000100--");
+  assert.equal(match.titleEn, "SUN Ying vs ITO Mima");
+  assert.equal(match.titleZh, "SUN Ying 对阵 ITO Mima");
+  assert.equal(match.launchAt, "2026-08-15T10:00:00.000Z");
+  assert.equal(match.launchWindow.close, "2026-08-15T11:00:00.000Z");
+  assert.equal(match.vehicle, "Women's Singles");
+  assert.equal(match.launchSite, "Test Arena");
+
+  const doubles = normalizeWttScheduleUnit(event, {
+    Code: "TTEWDOUBLES-----------SFNL000100--",
+    StartDate: "2026-08-15T12:00:00Z",
+    ScheduleStatus: "Scheduled",
+    SubEvent: "Women's Doubles",
+    StartList: {
+      Start: [
+        { StartOrder: 1, Competitor: { Description: { TeamName: "PLAYER A/PLAYER B" } } },
+        { StartOrder: 2, Competitor: { Description: { TeamName: "PLAYER C/PLAYER D" } } },
+      ],
+    },
+  }, now);
+  assert.equal(doubles.titleEn, "PLAYER A/PLAYER B vs PLAYER C/PLAYER D");
+
+  assert.equal(normalizeWttScheduleUnit(event, {
+    Code: "past",
+    StartDate: "2026-08-13T12:00:00Z",
+    StartList: { Start: [] },
+  }, now), null);
+  assert.equal(normalizeWttScheduleUnit(event, {
+    Code: "unpublished",
+    StartDate: "2026-08-15T12:00:00Z",
+    StartList: {
+      Start: [
+        { StartOrder: 1, Competitor: { Description: { TeamName: "TBD" } } },
+        { StartOrder: 2, Competitor: { Description: { TeamName: "PLAYER C" } } },
+      ],
+    },
+  }, now), null);
+});
+
+test("WTT loader filters to the main series and tolerates unpublished schedules", async () => {
+  const now = new Date("2026-08-14T00:00:00.000Z");
+  const scheduleCalls = [];
+  const events = [
+    {
+      eventId: 9001,
+      eventName: "WTT Main Event 2026",
+      event_Tier_name: "WTT Series",
+      startDateTime: "2026-08-15T00:00:00",
+      endDateTime: "2026-08-20T00:00:00",
+      venueName: "Main Arena",
+    },
+    {
+      eventId: 9002,
+      eventName: "WTT Feeder Event 2026",
+      event_Tier_name: "WTT Feeder Series",
+      startDateTime: "2026-08-15T00:00:00",
+      endDateTime: "2026-08-20T00:00:00",
+    },
+    {
+      eventId: 9003,
+      eventName: "WTT Youth Event 2026",
+      event_Tier_name: "WTT Youth Series",
+      startDateTime: "2026-08-15T00:00:00",
+      endDateTime: "2026-08-20T00:00:00",
+    },
+    {
+      eventId: 9004,
+      eventName: "Past WTT Main Event",
+      event_Tier_name: "WTT Series",
+      startDateTime: "2026-08-01T00:00:00",
+      endDateTime: "2026-08-05T00:00:00",
+    },
+  ];
+  const schedule = [{ Competition: { Unit: [{
+    Code: "match-1",
+    StartDate: "2026-08-15T10:00:00",
+    EndDate: "2026-08-15T11:00:00",
+    ScheduleStatus: "Scheduled",
+    SubEvent: "Men's Singles",
+    VenueDescription: { VenueName: "Main Arena" },
+    StartList: { Start: [
+      { StartOrder: 1, Competitor: { Description: { FamilyName: "ZHANG", GivenName: "Ben" } } },
+      { StartOrder: 2, Competitor: { Description: { FamilyName: "WANG", GivenName: "Chuqin" } } },
+    ] },
+  }] } }];
+
+  const fetchStub = async (url) => {
+    const value = String(url);
+    if (value.includes("wtt_upcoming_only_events_list.json")) {
+      return new Response(JSON.stringify(events), { status: 200 });
+    }
+    const eventId = Number(value.split("/").pop());
+    scheduleCalls.push(eventId);
+    if (eventId === 9001) return new Response(JSON.stringify(schedule), { status: 200 });
+    return new Response(null, { status: 204 });
+  };
+
+  const data = await loadWttCalendarData(fetchStub, now);
+  assert.deepEqual(scheduleCalls, [9001]);
+  assert.equal(data.topic.id, "wtt");
+  assert.equal(data.missions.length, 1);
+  assert.equal(data.missions[0].titleZh, "ZHANG Ben 对阵 WANG Chuqin");
+  assert.equal(data.missions[0].calendarId, "wtt");
+});
+
 const officialF1Rows = [
   ["Australia, Mar 8", "-", "1600", "1500"],
   ["China, Mar 15", "1100", "1500", "1500"],
@@ -1200,6 +1329,48 @@ test("F1 ICS route prefers the request pathname in a Cloudflare-style event", as
   assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
 });
 
+test("WTT ICS route serves the cached topic feed", async () => {
+  const headers = {};
+  const data = {
+    refreshedAt: new Date().toISOString(),
+    topic: { id: "wtt", nameEn: "WTT Table Tennis Calendar" },
+    missions: [{
+      id: "wtt-9001-match-1",
+      correlationId: "wtt-9001-match-1",
+      title: "ZHANG Ben vs WANG Chuqin",
+      launchAt: "2026-08-15T10:00:00.000Z",
+      launchWindow: { close: "2026-08-15T11:00:00.000Z" },
+      launchSite: "Main Arena",
+      missionUrl: "https://www.worldtabletennis.com/eventInfo?eventId=9001",
+    }],
+  };
+  const kv = {
+    async get(key) {
+      return key === "calendar_topic_wtt" ? data : null;
+    },
+    async put() {},
+  };
+  const event = {
+    context: {
+      params: {},
+      cloudflare: {
+        env: { SPACEX_KV: kv },
+        context: {},
+        url: new URL("https://calendarhub.mou7s.com/ics/wtt.ics"),
+      },
+    },
+    node: {
+      req: { url: "/ics/wtt.ics" },
+      res: { setHeader(name, value) { headers[name] = value; } },
+    },
+  };
+
+  const feed = await topicIcsRoute(event);
+  assert.match(feed, /X-WR-CALNAME:WTT Table Tennis Calendar/);
+  assert.match(feed, /UID:wtt-9001-match-1@calendarhub\.local/);
+  assert.equal(headers["Content-Disposition"], 'inline; filename="wtt.ics"');
+});
+
 test("local date helpers correctly handle timezone and month boundary conversion", () => {
   const getLocalDateParts = (dateInput) => {
     if (!dateInput) return null;
@@ -1273,5 +1444,12 @@ test("calendar event presentation uses F1 semantics without changing SpaceX defa
     locationLabelKey: "mission.launchSite",
     vehicleIcon: "i-heroicons-rocket-launch",
     locationIcon: "i-heroicons-map-pin",
+  });
+
+  assert.deepEqual(getCalendarEventPresentation({ calendarId: "wtt" }), {
+    vehicleLabelKey: "calendar.wtt.match",
+    locationLabelKey: "calendar.wtt.venue",
+    vehicleIcon: "i-lucide-trophy",
+    locationIcon: "i-lucide-map-pin",
   });
 });

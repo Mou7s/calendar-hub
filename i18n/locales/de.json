@@ -68,6 +68,11 @@
       "vehicle": "Rennwagen",
       "track": "Rennstrecke"
     },
+    "filterWTT": "WTT-Tischtennis",
+    "wtt": {
+      "match": "Match",
+      "venue": "Austragungsort"
+    },
     "moreEvents": "+{count} mehr...",
     "previousMonthAria": "Vorherigen Monat anzeigen",
     "nextMonthAria": "Nächsten Monat anzeigen",

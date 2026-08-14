@@ -68,6 +68,11 @@
       "vehicle": "Race car",
       "track": "Circuit"
     },
+    "filterWTT": "WTT Table Tennis",
+    "wtt": {
+      "match": "Match",
+      "venue": "Venue"
+    },
     "moreEvents": "+{count} more...",
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",

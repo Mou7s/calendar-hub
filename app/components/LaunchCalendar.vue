@@ -665,7 +665,7 @@ const props = defineProps({
   todayIso: { type: String, required: true },
   selectedDateIso: { type: String, default: null },
   calendarLayers: { type: Array, default: () => [] },
-  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1'] }
+  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1', 'wtt'] }
 })
 
 const emit = defineEmits([
@@ -678,6 +678,7 @@ const emit = defineEmits([
 const providerList = [
   { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#ffffff' },
   { id: 'f1', nameKey: 'calendar.filterF1', defaultName: 'F1', color: '#ef4444' },
+  { id: 'wtt', nameKey: 'calendar.filterWTT', defaultName: 'WTT', color: '#f59e0b' },
   { id: 'rocketlab', nameKey: 'calendar.filterRocketLab', defaultName: 'Rocket Lab', color: '#e5e5e5' },
   { id: 'nasa', nameKey: 'calendar.filterNasa', defaultName: 'NASA', color: '#d4d4d4' },
   { id: 'casc', nameKey: 'calendar.filterCasc', defaultName: 'CASC', color: '#a3a3a3' },
@@ -718,6 +719,11 @@ const toggleCalendarLayer = (calendarId) => {
 const showSubscribeModal = ref(false)
 const subscribeProvider = ref('spacex')
 const isCopied = ref(false)
+const calendarIcsPaths = Object.freeze({
+  spacex: '/spacex.ics',
+  f1: '/ics/f1.ics',
+  wtt: '/ics/wtt.ics'
+})
 
 const openSubscribeModal = (providerId = 'spacex') => {
   subscribeProvider.value = providerId
@@ -727,7 +733,7 @@ const openSubscribeModal = (providerId = 'spacex') => {
 
 const activeSubscribeIcsUrl = computed(() => {
   const p = subscribeProvider.value
-  const path = p === 'f1' ? '/ics/f1.ics' : '/spacex.ics'
+  const path = calendarIcsPaths[p] || calendarIcsPaths.spacex
   if (import.meta.client) {
     return `${window.location.origin}${path}`
   }
@@ -739,8 +745,7 @@ const activeSubscribeWebcalUrl = computed(() => {
 })
 
 const getWebcalUrl = (providerId = 'spacex') => {
-  const p = providerId
-  const path = p === 'f1' ? '/ics/f1.ics' : '/spacex.ics'
+  const path = calendarIcsPaths[providerId] || calendarIcsPaths.spacex
   if (import.meta.client) {
     const origin = window.location.origin.replace(/^https?:\/\//, '')
     return `webcal://${origin}${path}`

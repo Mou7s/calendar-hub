@@ -68,6 +68,11 @@
       "vehicle": "레이싱카",
       "track": "서킷"
     },
+    "filterWTT": "WTT 탁구",
+    "wtt": {
+      "match": "경기 종목",
+      "venue": "경기장"
+    },
     "moreEvents": "+{count}개 더보기...",
     "previousMonthAria": "이전 달 보기",
     "nextMonthAria": "다음 달 보기",

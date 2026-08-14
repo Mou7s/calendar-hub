@@ -68,6 +68,11 @@
       "vehicle": "レーシングカー",
       "track": "サーキット"
     },
+    "filterWTT": "WTT 卓球",
+    "wtt": {
+      "match": "試合種目",
+      "venue": "会場"
+    },
     "moreEvents": "+{count} 件...",
     "previousMonthAria": "前の月を表示",
     "nextMonthAria": "次の月を表示",
