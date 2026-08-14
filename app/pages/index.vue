@@ -28,6 +28,7 @@
         :calendar-layers="calendarLayers"
         :active-calendar-ids="activeCalendarIds"
         @update:active-month-index="setActiveMonthIndex"
+        @update:selected-date-iso="setSelectedDateIso"
         @update:active-calendar-ids="activeCalendarIds = $event"
         @select-mission="selectMission"
       />
@@ -42,6 +43,10 @@ import {
   buildCalendarMonthKeys,
   resolveCalendarMonthIndex,
 } from "~/utils/calendar-month";
+import {
+  getCalendarMonthAnchor,
+  getCalendarMonthKey,
+} from "~/utils/calendar-navigation";
 
 const { t, locale } = useI18n();
 
@@ -218,6 +223,8 @@ const getLocalDateIso = (dateInput = new Date()) => {
 
 const todayIso = computed(() => getLocalDateIso(new Date()));
 
+const selectedDateIso = ref(null);
+
 const monthKeys = computed(() => {
   const currentMonthKey = todayIso.value.slice(0, 7);
   const missionMonthKeys = [];
@@ -229,6 +236,11 @@ const monthKeys = computed(() => {
     missionMonthKeys.push(parts.monthKey);
   }
 
+  const selectedDateMonthKey = getCalendarMonthKey(selectedDateIso.value);
+  if (selectedDateMonthKey) {
+    missionMonthKeys.push(selectedDateMonthKey);
+  }
+
   return buildCalendarMonthKeys(missionMonthKeys, currentMonthKey);
 });
 
@@ -237,8 +249,24 @@ const selectedMonthKey = ref("");
 const activeMonthKey = computed(() => monthKeys.value[activeMonthIndex.value]);
 
 const setActiveMonthIndex = (index) => {
+  const monthKey = monthKeys.value[index] || "";
+  if (!monthKey) return;
+
   activeMonthIndex.value = index;
-  selectedMonthKey.value = monthKeys.value[index] || "";
+  selectedMonthKey.value = monthKey;
+  selectedDateIso.value = getCalendarMonthAnchor(monthKey);
+};
+
+const setSelectedDateIso = (dateIso) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateIso || ""))) return;
+
+  selectedDateIso.value = dateIso;
+  const monthKey = getCalendarMonthKey(dateIso);
+  const index = monthKeys.value.indexOf(monthKey);
+  if (index >= 0) {
+    activeMonthIndex.value = index;
+    selectedMonthKey.value = monthKey;
+  }
 };
 
 // Prefer the current month, while preserving a month manually selected by the user.
@@ -320,7 +348,6 @@ const gridDays = computed(() => {
   return days;
 });
 
-const selectedDateIso = ref(null);
 const selectedMission = ref(null);
 
 const selectMission = (mission) => {

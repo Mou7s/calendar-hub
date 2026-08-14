@@ -141,8 +141,8 @@
             <button
               type="button"
               class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
-              :disabled="activeMonthIndex <= 0"
-              @click="$emit('update:activeMonthIndex', activeMonthIndex - 1)"
+              :disabled="activeCalendarView === 'month' && activeMonthIndex <= 0"
+              @click="navigateCalendar(-1)"
             >
               <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
             </button>
@@ -158,8 +158,8 @@
             <button
               type="button"
               class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
-              :disabled="activeMonthIndex >= monthKeys.length - 1"
-              @click="$emit('update:activeMonthIndex', activeMonthIndex + 1)"
+              :disabled="activeCalendarView === 'month' && activeMonthIndex >= monthKeys.length - 1"
+              @click="navigateCalendar(1)"
             >
               <UIcon name="i-heroicons-chevron-right" class="w-5 h-5" />
             </button>
@@ -624,6 +624,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useLunar } from '~/composables/useLunar'
 import { getCalendarEventPresentation } from '~/utils/calendar-event-presentation'
+import { getCalendarNavigationStep, shiftCalendarDate } from '~/utils/calendar-navigation'
 
 const { getLunarText } = useLunar()
 const { t, locale, locales, setLocale } = useI18n()
@@ -670,6 +671,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'update:activeMonthIndex',
+  'update:selected-date-iso',
   'update:active-calendar-ids',
   'select-mission'
 ])
@@ -704,6 +706,22 @@ const currentDayFocus = computed(() => {
   const targetIso = props.selectedDateIso || props.todayIso
   return props.gridDays.find(d => d.isoDate === targetIso) || props.gridDays[0]
 })
+
+const navigateCalendar = (direction) => {
+  if (activeCalendarView.value === 'month') {
+    const nextIndex = props.activeMonthIndex + direction
+    if (nextIndex < 0 || nextIndex >= props.monthKeys.length) return
+    emit('update:activeMonthIndex', nextIndex)
+    return
+  }
+
+  const anchorDate = props.selectedDateIso || props.todayIso
+  const step = getCalendarNavigationStep(activeCalendarView.value)
+  const nextDate = shiftCalendarDate(anchorDate, direction * step)
+  if (nextDate) {
+    emit('update:selected-date-iso', nextDate)
+  }
+}
 
 const isCalendarActive = (calendarId) => props.activeCalendarIds.includes(calendarId)
 
@@ -1035,11 +1053,7 @@ const formatFullDateTime = (isoString) => {
 
 const jumpToToday = () => {
   if (!props.todayIso) return
-  const todayMonthKey = props.todayIso.slice(0, 7)
-  const idx = props.monthKeys.indexOf(todayMonthKey)
-  if (idx >= 0) {
-    emit('update:activeMonthIndex', idx)
-  }
+  emit('update:selected-date-iso', props.todayIso)
 }
 
 const getEventStyleClass = (event) => {
