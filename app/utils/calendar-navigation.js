@@ -17,6 +17,18 @@ export function shiftCalendarDate(dateIso, days) {
   return `${year}-${month}-${day}`
 }
 
+export function sortCalendarEventsByStartTime(events) {
+  if (!Array.isArray(events)) return []
+
+  return [...events].sort((a, b) => {
+    const aTime = Date.parse(a?.launchAt || '')
+    const bTime = Date.parse(b?.launchAt || '')
+    const safeATime = Number.isFinite(aTime) ? aTime : Number.MAX_SAFE_INTEGER
+    const safeBTime = Number.isFinite(bTime) ? bTime : Number.MAX_SAFE_INTEGER
+    return safeATime - safeBTime
+  })
+}
+
 export function getCalendarMonthKey(dateIso) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(dateIso || ''))
     ? String(dateIso).slice(0, 7)

@@ -335,7 +335,7 @@
           </div>
 
           <!-- 24-Hour Non-Scrollable Adaptive Body -->
-          <div ref="weekScrollContainer" class="flex-1 flex min-h-0 bg-[#141414] relative overflow-hidden select-none">
+          <div ref="timelineContainer" class="flex-1 flex min-h-0 bg-[#141414] relative overflow-hidden select-none">
             <!-- Left Adaptive 24-Hour Timeline Column -->
             <div class="w-14 shrink-0 bg-[#141414] border-r border-[#262626] select-none relative z-20 pointer-events-none h-full">
               <div
@@ -414,8 +414,8 @@
           </div>
         </div>
 
-        <!-- 3. Day View (日视图：单日集中流视界) -->
-        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-y-auto p-3 sm:p-6 bg-[#161616] space-y-3 sm:space-y-4 scrollbar-none">
+        <!-- 3. Day View (日视图：按 24 小时刻度定位) -->
+        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[#161616] gap-3 sm:gap-4">
           <div class="flex items-center justify-between border-b border-[#262626] pb-4 shrink-0">
             <div class="flex items-center gap-3">
               <span class="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shadow-white/20">
@@ -431,46 +431,63 @@
             </span>
           </div>
 
-          <!-- Day Events Timeline Stream -->
-          <div v-if="currentDayFocus?.events?.length" class="space-y-3">
-            <div
-              v-for="event in currentDayFocus.events"
-              :key="event.id || event.slug"
-              class="bg-[#212121] border-b border-[#333333] hover:border-[#525252] p-3 sm:p-4 rounded-none transition-all flex flex-col md:flex-row justify-between gap-3 sm:gap-4 cursor-pointer group"
-              :class="selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[#2b2b2b]' : ''"
-              @click="handleEventClick(event, $event)"
-            >
-              <div class="space-y-1.5 flex-1">
-                <div class="flex items-center gap-2">
-                  <span v-if="event.isLive" class="px-2 py-0.5 rounded text-[9px] font-black bg-red-500 text-white uppercase animate-pulse">● LIVE</span>
-                  <span class="text-xs font-mono text-[#a3a3a3] uppercase font-bold">{{ event.providerName || 'SPACEX' }}</span>
-                </div>
-                <h3 class="text-sm sm:text-base font-black text-white group-hover:text-primary-400 transition-colors uppercase font-mono">
-                  {{ event.title }}
-                </h3>
-                <div class="flex flex-wrap gap-4 text-xs text-[#a3a3a3] pt-1">
-                  <span v-if="event.vehicle" class="flex items-center gap-1">
-                    <UIcon :name="getCalendarEventPresentation(event).vehicleIcon" class="w-3.5 h-3.5" />
-                    {{ event.vehicle }}
-                  </span>
-                  <span v-if="event.launchSite" class="flex items-center gap-1">
-                    <UIcon :name="getCalendarEventPresentation(event).locationIcon" class="w-3.5 h-3.5" />
-                    {{ event.launchSite }}
-                  </span>
-                </div>
-              </div>
-              <div class="flex flex-col items-start md:items-end justify-center shrink-0">
-                <span class="text-sm font-bold text-white font-mono bg-[#2b2b2b] px-3 py-1 rounded-lg border border-[#383838]">
-                  {{ formatTimeShort(event.launchAt) }}
-                </span>
-              </div>
-            </div>
-          </div>
-
           <!-- Empty Day State -->
-          <div v-else class="py-16 text-center text-[#737373] space-y-2">
+          <div v-if="!currentDayFocus?.events?.length" class="flex-1 py-16 text-center text-[#737373] space-y-2">
             <UIcon name="i-heroicons-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
             <p class="text-sm font-semibold">{{ t('calendar.noLaunches') }}</p>
+          </div>
+
+          <!-- Day Events Timeline -->
+          <div v-else ref="timelineContainer" class="flex-1 flex min-h-0 bg-[#141414] relative overflow-hidden select-none">
+            <div class="w-14 shrink-0 bg-[#141414] border-r border-[#262626] select-none relative z-20 pointer-events-none h-full">
+              <div
+                v-for="hour in visibleHours"
+                :key="`day-hour-${hour}`"
+                class="absolute right-0 pr-2 text-[10px] font-mono text-[#737373] -translate-y-1/2 flex items-center justify-end"
+                :style="{ top: `${(hour / 24) * 100}%` }"
+              >
+                <span>{{ formatHourLabel(hour) }}</span>
+              </div>
+            </div>
+
+            <div class="flex-1 relative bg-[#181818] min-w-0 h-full">
+              <div
+                v-for="hour in hours24"
+                :key="`day-line-${hour}`"
+                class="absolute left-0 right-0 border-b pointer-events-none"
+                :class="hour % hourStep === 0 ? 'border-[#333333]/70' : 'border-[#262626]/30'"
+                :style="{ top: `${(hour / 24) * 100}%` }"
+              ></div>
+
+              <div
+                v-if="currentDayFocus.isoDate === todayIso"
+                class="absolute left-0 right-0 z-30 pointer-events-none flex items-center -translate-y-1/2"
+                :style="{ top: `${currentTimeTopPct}%` }"
+              >
+                <div class="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.25 shadow-md shadow-red-500/80 ring-2 ring-black"></div>
+                <div class="flex-1 h-[2px] bg-red-500 shadow-md shadow-red-500/50"></div>
+              </div>
+
+              <button
+                v-for="event in currentDayFocus.events"
+                :key="event.id || event.slug"
+                type="button"
+                class="absolute z-20 min-w-0 text-left px-2 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[#383838] hover:border-white hover:z-30 shadow-lg group overflow-hidden"
+                :class="[
+                  getEventStyleClass(event),
+                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'ring-2 ring-white z-30 font-bold' : ''
+                ]"
+                :style="getWeekEventStyle(event, currentDayFocus.events)"
+                @click="handleEventClick(event, $event)"
+              >
+                <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
+                  <span v-if="event.isLive" class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                  <span v-else class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
+                  <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
+                </div>
+                <span class="truncate font-black text-[11px] leading-snug group-hover:text-white w-full">{{ event.title }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </Transition>
@@ -624,7 +641,11 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useLunar } from '~/composables/useLunar'
 import { getCalendarEventPresentation } from '~/utils/calendar-event-presentation'
-import { getCalendarNavigationStep, shiftCalendarDate } from '~/utils/calendar-navigation'
+import {
+  getCalendarNavigationStep,
+  shiftCalendarDate,
+  sortCalendarEventsByStartTime,
+} from '~/utils/calendar-navigation'
 
 const { getLunarText } = useLunar()
 const { t, locale, locales, setLocale } = useI18n()
@@ -704,7 +725,11 @@ const currentWeekDays = computed(() => {
 const currentDayFocus = computed(() => {
   if (!props.gridDays || props.gridDays.length === 0) return null
   const targetIso = props.selectedDateIso || props.todayIso
-  return props.gridDays.find(d => d.isoDate === targetIso) || props.gridDays[0]
+  const day = props.gridDays.find(d => d.isoDate === targetIso) || props.gridDays[0]
+  return {
+    ...day,
+    events: sortCalendarEventsByStartTime(day.events),
+  }
 })
 
 const navigateCalendar = (direction) => {
@@ -856,7 +881,7 @@ const isTodayInCurrentWeek = computed(() => {
 
 // ─── 周视图 24 小时刻度自适应逻辑 ───
 const hours24 = Array.from({ length: 24 }, (_, i) => i)
-const weekScrollContainer = ref(null)
+const timelineContainer = ref(null)
 const containerHeight = ref(600)
 let resizeObserver = null
 
@@ -967,7 +992,7 @@ onMounted(() => {
   if (import.meta.client) {
     window.addEventListener('click', handleGlobalClick)
 
-    if (window.ResizeObserver && weekScrollContainer.value) {
+    if (window.ResizeObserver && timelineContainer.value) {
       resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           if (entry.contentRect && entry.contentRect.height > 0) {
@@ -975,7 +1000,7 @@ onMounted(() => {
           }
         }
       })
-      resizeObserver.observe(weekScrollContainer.value)
+      resizeObserver.observe(timelineContainer.value)
     }
 
     timerId = setInterval(() => {
@@ -993,9 +1018,21 @@ onUnmounted(() => {
 })
 
 watch(activeCalendarView, (val) => {
-  if (val === 'week' && import.meta.client && weekScrollContainer.value) {
+  if ((val === 'week' || val === 'day') && import.meta.client) {
     nextTick(() => {
-      containerHeight.value = weekScrollContainer.value.clientHeight || 600
+      if (!timelineContainer.value) return
+      containerHeight.value = timelineContainer.value.clientHeight || 600
+      if (resizeObserver) resizeObserver.disconnect()
+      if (window.ResizeObserver) {
+        resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.contentRect && entry.contentRect.height > 0) {
+              containerHeight.value = entry.contentRect.height
+            }
+          }
+        })
+        resizeObserver.observe(timelineContainer.value)
+      }
     })
   }
 })

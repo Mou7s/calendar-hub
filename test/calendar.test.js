@@ -25,6 +25,7 @@ import {
   getCalendarMonthAnchor,
   getCalendarMonthKey,
   getCalendarNavigationStep,
+  sortCalendarEventsByStartTime,
   shiftCalendarDate,
 } from "../app/utils/calendar-navigation.js";
 
@@ -1447,6 +1448,20 @@ test("calendar navigation moves by view-specific steps and supports empty months
   assert.equal(getCalendarMonthKey("2026-09-07"), "2026-09");
   assert.equal(getCalendarMonthAnchor("2026-09"), "2026-09-01");
   assert.equal(shiftCalendarDate("", 1), "");
+});
+
+test("calendar day events are sorted from midnight to the end of the day", () => {
+  const events = [
+    { id: "late", launchAt: "2026-08-15T23:00:00+08:00" },
+    { id: "early", launchAt: "2026-08-15T04:05:00+08:00" },
+    { id: "middle", launchAt: "2026-08-15T09:30:00+08:00" },
+  ];
+
+  assert.deepEqual(
+    sortCalendarEventsByStartTime(events).map((event) => event.id),
+    ["early", "middle", "late"],
+  );
+  assert.deepEqual(events.map((event) => event.id), ["late", "early", "middle"]);
 });
 
 test("calendar event presentation uses F1 semantics without changing SpaceX defaults", () => {
