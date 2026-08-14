@@ -64,6 +64,10 @@
     "viewMonth": "Month",
     "today": "Today",
     "filterF1": "F1",
+    "f1": {
+      "vehicle": "Race car",
+      "track": "Circuit"
+    },
     "moreEvents": "+{count} more...",
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",
@@ -77,6 +81,9 @@
     "previousMonthAria": "View previous month",
     "nextMonthAria": "View next month",
     "noLaunches": "No dated launches are available for this month yet.",
+    "dataLoadError": "SpaceX launch data could not be loaded.",
+    "retry": "Retry",
+    "refreshing": "Refreshing...",
     "dayLabel": "{month} {day}",
     "untimed": "Time TBD",
     "weekdayShort": [

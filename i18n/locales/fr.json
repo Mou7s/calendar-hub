@@ -64,10 +64,17 @@
     "viewMonth": "Mois",
     "today": "Aujourd'hui",
     "filterF1": "F1",
+    "f1": {
+      "vehicle": "Voiture de course",
+      "track": "Circuit"
+    },
     "moreEvents": "+{count} de plus...",
     "previousMonthAria": "Voir le mois précédent",
     "nextMonthAria": "Voir le mois suivant",
     "noLaunches": "Aucun lancement daté n'est disponible pour ce mois.",
+    "dataLoadError": "Impossible de charger les données de lancement SpaceX.",
+    "retry": "Réessayer",
+    "refreshing": "Actualisation...",
     "dayLabel": "{day} {month}",
     "untimed": "Heure à confirmer",
     "weekdayShort": [

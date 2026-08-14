@@ -64,6 +64,10 @@
     "viewMonth": "月",
     "today": "今天",
     "filterF1": "F1",
+    "f1": {
+      "vehicle": "赛车",
+      "track": "赛道"
+    },
     "moreEvents": "+{count} 更多...",
     "filterAll": "全部机构",
     "filterSpaceX": "SpaceX",
@@ -77,6 +81,9 @@
     "previousMonthAria": "查看上个月",
     "nextMonthAria": "查看下个月",
     "noLaunches": "这个月还没有带日期的发射任务。",
+    "dataLoadError": "SpaceX 发射数据暂时加载失败。",
+    "retry": "重试",
+    "refreshing": "刷新中...",
     "dayLabel": "{month}月{day}日",
     "untimed": "时间待定",
     "weekdayShort": [

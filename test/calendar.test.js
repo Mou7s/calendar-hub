@@ -14,6 +14,11 @@ import {
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
 import { CALENDAR_KEYS, syncCalendars } from "../server/utils/calendar-sync.js";
+import { getCalendarEventPresentation } from "../app/utils/calendar-event-presentation.js";
+import {
+  buildCalendarMonthKeys,
+  resolveCalendarMonthIndex,
+} from "../app/utils/calendar-month.js";
 
 import {
   buildCalendarFeed,
@@ -1227,3 +1232,46 @@ test("local date helpers correctly handle timezone and month boundary conversion
   assert.equal(getLocalDateParts("invalid-date-string"), null);
 });
 
+test("calendar month selection prefers today and preserves manual navigation", () => {
+  assert.deepEqual(
+    buildCalendarMonthKeys(["2026-07"], "2026-08"),
+    ["2026-07", "2026-08"],
+  );
+  assert.equal(
+    resolveCalendarMonthIndex(["2026-07", "2026-08"], "2026-08", "2026-09"),
+    1,
+  );
+  assert.equal(
+    resolveCalendarMonthIndex(["2026-07", "2026-09"], "2026-08", "2026-09"),
+    1,
+  );
+  assert.equal(
+    resolveCalendarMonthIndex(
+      ["2026-07", "2026-08"],
+      "2026-08",
+      "2026-09",
+      "2026-07",
+    ),
+    0,
+  );
+  assert.equal(
+    resolveCalendarMonthIndex(["2026-07", "2026-08"], "2026-09", "2026-10"),
+    0,
+  );
+});
+
+test("calendar event presentation uses F1 semantics without changing SpaceX defaults", () => {
+  assert.deepEqual(getCalendarEventPresentation({ calendarId: "f1" }), {
+    vehicleLabelKey: "calendar.f1.vehicle",
+    locationLabelKey: "calendar.f1.track",
+    vehicleIcon: "i-lucide-car-front",
+    locationIcon: "i-lucide-flag",
+  });
+
+  assert.deepEqual(getCalendarEventPresentation({ calendarId: "spacex" }), {
+    vehicleLabelKey: "mission.vehicle",
+    locationLabelKey: "mission.launchSite",
+    vehicleIcon: "i-heroicons-rocket-launch",
+    locationIcon: "i-heroicons-map-pin",
+  });
+});

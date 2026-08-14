@@ -64,10 +64,17 @@
     "viewMonth": "Monat",
     "today": "Heute",
     "filterF1": "F1",
+    "f1": {
+      "vehicle": "Rennwagen",
+      "track": "Rennstrecke"
+    },
     "moreEvents": "+{count} mehr...",
     "previousMonthAria": "Vorherigen Monat anzeigen",
     "nextMonthAria": "Nächsten Monat anzeigen",
     "noLaunches": "Für diesen Monat sind noch keine datierten Starts verfügbar.",
+    "dataLoadError": "SpaceX-Startdaten konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "refreshing": "Aktualisierung...",
     "dayLabel": "{day}. {month}",
     "untimed": "Zeit offen",
     "weekdayShort": [

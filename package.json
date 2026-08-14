@@ -13,19 +13,19 @@
     "translate:locales": "bun scripts/translate-locales.js"
   },
   "dependencies": {
-    "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.8.0",
-    "@nuxthub/core": "^0.10.7",
-    "@nuxtjs/i18n": "^10.4.0",
+    "@nuxt/image": "^2.1.0",
+    "@nuxt/ui": "^4.10.0",
+    "@nuxthub/core": "^0.10.8",
+    "@nuxtjs/i18n": "^10.6.0",
     "h3": "^1.15.11",
-    "nuxt": "^4.4.6"
+    "nuxt": "^4.5.2"
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
-    "@iconify-json/lucide": "^1.2.114",
-    "@iconify-json/simple-icons": "^1.2.86",
+    "@iconify-json/lucide": "^1.2.123",
+    "@iconify-json/simple-icons": "^1.2.93",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
-    "wrangler": "^4.94.0"
+    "wrangler": "^4.123.0"
   }
 }

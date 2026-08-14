@@ -449,8 +449,14 @@
                   {{ event.title }}
                 </h3>
                 <div class="flex flex-wrap gap-4 text-xs text-[#a3a3a3] pt-1">
-                  <span v-if="event.vehicle" class="flex items-center gap-1"><UIcon name="i-heroicons-rocket-launch" class="w-3.5 h-3.5" /> {{ event.vehicle }}</span>
-                  <span v-if="event.launchSite" class="flex items-center gap-1"><UIcon name="i-heroicons-map-pin" class="w-3.5 h-3.5" /> {{ event.launchSite }}</span>
+                  <span v-if="event.vehicle" class="flex items-center gap-1">
+                    <UIcon :name="getCalendarEventPresentation(event).vehicleIcon" class="w-3.5 h-3.5" />
+                    {{ event.vehicle }}
+                  </span>
+                  <span v-if="event.launchSite" class="flex items-center gap-1">
+                    <UIcon :name="getCalendarEventPresentation(event).locationIcon" class="w-3.5 h-3.5" />
+                    {{ event.launchSite }}
+                  </span>
                 </div>
               </div>
               <div class="flex flex-col items-start md:items-end justify-center shrink-0">
@@ -511,13 +517,13 @@
         </div>
 
         <div v-if="popoverEvent.vehicle" class="flex items-center gap-2.5">
-          <UIcon name="i-heroicons-rocket-launch" class="w-4 h-4 text-[#737373] shrink-0" />
-          <span class="truncate text-[#e5e5e5]">{{ t('mission.vehicle') }}: <strong class="text-white">{{ popoverEvent.vehicle }}</strong></span>
+          <UIcon :name="getCalendarEventPresentation(popoverEvent).vehicleIcon" class="w-4 h-4 text-[#737373] shrink-0" />
+          <span class="truncate text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).vehicleLabelKey) }}: <strong class="text-white">{{ popoverEvent.vehicle }}</strong></span>
         </div>
 
         <div v-if="popoverEvent.launchSite" class="flex items-start gap-2.5">
-          <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
-          <span class="leading-relaxed text-[#e5e5e5]">{{ t('mission.launchSite') }}: <strong class="text-white">{{ popoverEvent.launchSite }}</strong></span>
+          <UIcon :name="getCalendarEventPresentation(popoverEvent).locationIcon" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
+          <span class="leading-relaxed text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).locationLabelKey) }}: <strong class="text-white">{{ popoverEvent.launchSite }}</strong></span>
         </div>
       </div>
 
@@ -617,6 +623,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useLunar } from '~/composables/useLunar'
+import { getCalendarEventPresentation } from '~/utils/calendar-event-presentation'
 
 const { getLunarText } = useLunar()
 const { t, locale, locales, setLocale } = useI18n()

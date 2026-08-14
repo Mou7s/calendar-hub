@@ -1,5 +1,22 @@
 <template>
   <div class="page-shell">
+    <div
+      v-if="upcomingError"
+      class="fixed left-1/2 top-3 z-[60] flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-3 border border-red-500/40 bg-[#241414] px-3 py-2 text-xs text-red-100 shadow-xl"
+      role="alert"
+      aria-live="assertive"
+    >
+      <span>{{ t("calendar.dataLoadError") }}</span>
+      <button
+        type="button"
+        class="shrink-0 font-bold text-white underline underline-offset-2 disabled:cursor-wait disabled:opacity-60"
+        :disabled="isRefreshingLaunches"
+        @click="refreshLaunches"
+      >
+        {{ isRefreshingLaunches ? t("calendar.refreshing") : t("calendar.retry") }}
+      </button>
+    </div>
+
     <main class="flex-1 flex flex-col min-h-0 overflow-hidden">
       <LaunchCalendar
         id="calendar"
@@ -10,7 +27,7 @@
         :selected-date-iso="selectedDateIso"
         :calendar-layers="calendarLayers"
         :active-calendar-ids="activeCalendarIds"
-        @update:active-month-index="activeMonthIndex = $event"
+        @update:active-month-index="setActiveMonthIndex"
         @update:active-calendar-ids="activeCalendarIds = $event"
         @select-mission="selectMission"
       />
@@ -19,15 +36,62 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useHead, useFetch, useSeoMeta } from "#app";
+import {
+  buildCalendarMonthKeys,
+  resolveCalendarMonthIndex,
+} from "~/utils/calendar-month";
 
 const { t, locale } = useI18n();
 
 // ─── Data Fetching ───
-const { data: upcomingPayload } = await useFetch("/api/launches");
+const {
+  data: upcomingPayload,
+  error: upcomingError,
+  refresh: refreshUpcoming,
+} = await useFetch("/api/launches");
 const { data: historyPayload } = await useFetch("/api/history-launches");
 const { data: f1Payload } = await useFetch("/api/calendar/f1");
+
+const LAUNCH_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const isRefreshingLaunches = ref(false);
+let launchRefreshTimer = null;
+
+const refreshLaunches = async () => {
+  if (!import.meta.client || isRefreshingLaunches.value) return;
+
+  isRefreshingLaunches.value = true;
+  try {
+    await refreshUpcoming();
+  } finally {
+    isRefreshingLaunches.value = false;
+  }
+};
+
+const refreshVisibleLaunches = () => {
+  if (document.visibilityState === "visible") {
+    void refreshLaunches();
+  }
+};
+
+onMounted(() => {
+  void refreshLaunches();
+  launchRefreshTimer = window.setInterval(
+    refreshVisibleLaunches,
+    LAUNCH_REFRESH_INTERVAL_MS,
+  );
+  window.addEventListener("focus", refreshVisibleLaunches);
+  document.addEventListener("visibilitychange", refreshVisibleLaunches);
+});
+
+onUnmounted(() => {
+  if (launchRefreshTimer) {
+    window.clearInterval(launchRefreshTimer);
+  }
+  window.removeEventListener("focus", refreshVisibleLaunches);
+  document.removeEventListener("visibilitychange", refreshVisibleLaunches);
+});
 
 // ─── SEO & Data ───
 const nextLaunch = computed(() => upcomingPayload.value?.nextLaunch);
@@ -129,38 +193,48 @@ const getLocalDateIso = (dateInput = new Date()) => {
   return parts ? parts.dateIso : "";
 };
 
+const todayIso = computed(() => getLocalDateIso(new Date()));
+
 const monthKeys = computed(() => {
-  const keys = [];
-  const seen = new Set();
+  const currentMonthKey = todayIso.value.slice(0, 7);
+  const missionMonthKeys = [];
 
   for (const mission of sortedCalendarMissions.value) {
     if (!mission.launchAt) continue;
     const parts = getLocalDateParts(mission.launchAt);
     if (!parts) continue;
-    if (!seen.has(parts.monthKey)) {
-      seen.add(parts.monthKey);
-      keys.push(parts.monthKey);
-    }
+    missionMonthKeys.push(parts.monthKey);
   }
 
-  return keys.sort((a, b) => a.localeCompare(b));
+  return buildCalendarMonthKeys(missionMonthKeys, currentMonthKey);
 });
 
-const activeMonthIndex = ref(0);
+const activeMonthIndex = ref(-1);
+const selectedMonthKey = ref("");
 const activeMonthKey = computed(() => monthKeys.value[activeMonthIndex.value]);
 
-// Set default active month to next launch's month
+const setActiveMonthIndex = (index) => {
+  activeMonthIndex.value = index;
+  selectedMonthKey.value = monthKeys.value[index] || "";
+};
+
+// Prefer the current month, while preserving a month manually selected by the user.
 watch(
   [monthKeys, nextLaunch],
   () => {
-    if (nextLaunch.value?.launchAt) {
-      const parts = getLocalDateParts(nextLaunch.value.launchAt);
-      if (parts) {
-        const idx = monthKeys.value.indexOf(parts.monthKey);
-        if (idx >= 0) {
-          activeMonthIndex.value = idx;
-        }
-      }
+    const nextLaunchMonthKey = nextLaunch.value?.launchAt
+      ? getLocalDateParts(nextLaunch.value.launchAt)?.monthKey || ""
+      : "";
+    const index = resolveCalendarMonthIndex(
+      monthKeys.value,
+      todayIso.value.slice(0, 7),
+      nextLaunchMonthKey,
+      selectedMonthKey.value,
+    );
+
+    if (index >= 0) {
+      activeMonthIndex.value = index;
+      selectedMonthKey.value = monthKeys.value[index] || "";
     }
   },
   { immediate: true },
@@ -223,7 +297,6 @@ const gridDays = computed(() => {
   return days;
 });
 
-const todayIso = computed(() => getLocalDateIso(new Date()));
 const selectedDateIso = ref(null);
 const selectedMission = ref(null);
 

@@ -64,10 +64,17 @@
     "viewMonth": "월",
     "today": "오늘",
     "filterF1": "F1",
+    "f1": {
+      "vehicle": "레이싱카",
+      "track": "서킷"
+    },
     "moreEvents": "+{count}개 더보기...",
     "previousMonthAria": "이전 달 보기",
     "nextMonthAria": "다음 달 보기",
     "noLaunches": "이 달에는 날짜가 있는 발사가 아직 없습니다.",
+    "dataLoadError": "SpaceX 발사 데이터를 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "refreshing": "새로 고치는 중...",
     "dayLabel": "{month}월 {day}일",
     "untimed": "시간 미정",
     "weekdayShort": [
