@@ -14,6 +14,7 @@
   - `/spacex.ics` / `/calendar.ics` 导出标准的 RFC-compliant ICS 日历数据。
   - `/ics/:topic.ics` 为每个主题提供独立的 ICS / Webcal 订阅链接。
   - 支持 `webcal://` 协议，可在 Apple Calendar 等设备中实现一键订阅与自动同步。
+  - 内置 SpaceX、F1 和 WTT 乒乓球比赛日历，其中 WTT 仅显示主系列赛事里已经公布双方选手和开赛时间的具体比赛。
 - **⚡️ 边缘架构与高性能缓存**：
   - 基于 **Nuxt Hub KV** (Cloudflare KV) 缓存上游 SpaceX 双数据源。
   - 采用 **SWR (Stale-While-Revalidate)** 异步后台刷新技术，前端响应时间降至毫秒级，同时杜绝频繁请求导致上游封禁的风险。
@@ -26,7 +27,8 @@
   - **高清互动图解**：支持在详情页中一键打开超高清任务发射图解（Infographic），配备带磨砂玻璃背景的 Lightbox 弹窗和双击/点击自适应缩放查看原图功能。
 - **🔄 多源日历与实时同步**：
   - 自动聚合 SpaceX 官方 upcoming API 模块的板块卡片信息与高精度的 timings 倒计时数据。
-  - 支持 F1 等非发射主题日历，并可以继续扩展更多公共日程源。
+  - 支持 F1 赛程及 WTT 主系列赛事的比赛级日程，并可以继续扩展更多公共日程源。
+  - WTT 比赛从官方赛程中提取双方选手、项目、轮次、场馆和开赛时间；未公布对阵的比赛不会生成日历事件。
   - **优雅降级机制**：即使 Timing API 临时故障，仍能依据磁贴基础数据生成日历。
   - **直播任务保活**：当发射任务正处于 Live 直播流状态时，即使当前时间已过原定发射时刻，系统仍会智能地在 Upcoming 列表和日历订阅中予以保留，防止用户在观看直播期间因日程过期被移出而错失跳转入口。
 - **🌐 全球多语言支持 (i18n)**：
@@ -48,6 +50,14 @@
 - **国际化引擎**：Nuxt i18n (`@nuxtjs/i18n`)
 - **测试框架**：Node.js 原生测试运行器 (`node --test`)
 - **运行环境**：Wrangler (`wrangler`)
+
+### 主题订阅地址
+
+| 主题 | ICS / Webcal 路径 |
+| --- | --- |
+| SpaceX | `/spacex.ics` |
+| F1 | `/ics/f1.ics` |
+| WTT 乒乓球 | `/ics/wtt.ics` |
 
 ---
 
@@ -72,14 +82,17 @@
 │   ├── api/                 # 结构化 JSON 接口
 │   │   ├── launches.get.js          # 获取即将发射的列表（对接 SWR 缓存）
 │   │   ├── history-launches.get.js  # 获取历史已发射列表（限制 50 条）
+│   │   ├── calendar/[topic].get.js  # 获取 F1、WTT 等主题日历数据
 │   │   └── launches/
 │   │       └── [slug].get.js        # 获取某特定发射任务的深度图文详情
 │   ├── routes/              # ICS 标准订阅路由
 │   │   ├── spacex.ics.js            # 主日历源
-│   │   └── calendar.ics.js          # 别名日历源
+│   │   ├── calendar.ics.js          # 别名日历源
+│   │   └── ics/[topic].ics.js       # F1、WTT 等主题订阅源
 │   └── utils/               # 后端工具库
 │       ├── kv.js                    # 缓存及 SWR 分布式版本控制逻辑
-│       └── spacex.js                # 数据拉取、格式标准化、图解解析与 ICS 组装
+│       ├── spacex.js                # SpaceX 数据拉取、图解解析与 ICS 组装
+│       └── calendars.js             # F1/WTT 数据标准化及通用 ICS 组装
 ├── i18n/                    # 国际化翻译资源包
 │   └── locales/             # 7国语言的 .json 字典及支持配置
 ├── public/                  # 网站纯静态资源（字体、网站图标、robots、sitemap）
@@ -118,17 +131,24 @@ npm run dev
 - 日历订阅源：`http://localhost:3000/spacex.ics`
 - 发射数据接口：`http://localhost:3000/api/launches`
 - 历史任务接口：`http://localhost:3000/api/history-launches`
+- WTT 比赛接口：`http://localhost:3000/api/calendar/wtt`
+- WTT 订阅源：`http://localhost:3000/ics/wtt.ics`
 - 某任务细节接口：`http://localhost:3000/api/launches/starlink-group-10-1`
 
 ---
 
 ## 🧪 自动化测试
 
-项目内置了 **18** 项全覆盖的单元测试，包含对 SpaceX API 响应降级、ICS 文本安全转义、SWR 缓存机制、时区转换以及**直播状态保活逻辑**的全面校验。
+项目内置了 **33** 项单元测试，覆盖 SpaceX 数据源降级、F1 赛程、WTT 主系列赛事筛选、比赛双方解析、ICS 文本安全转义、SWR 缓存、时区转换以及**直播状态保活逻辑**。
 
 运行命令：
 ```bash
-npm test
+bun test
+node --check server/routes/spacex.ics.js
+node --check server/utils/spacex.js
+node --check server/utils/kv.js
+node --check server/utils/calendars.js
+bun run build
 ```
 
 ---
@@ -143,7 +163,7 @@ npm test
    ```
 2. 运行同步脚本（以翻译更新德语、日语、西班牙语为例）：
    ```bash
-   npm run translate:locales -- --locales=de,ja,es
+   bun run translate:locales -- --locales=de,ja,es
    ```
 
 ---
@@ -172,6 +192,7 @@ bun run preview:worker
 你可以使用 `curl` 验证日历源响应头是否正确：
 ```bash
 curl -I https://calendarhub.mou7s.com/spacex.ics
+curl -I https://calendarhub.mou7s.com/ics/wtt.ics
 ```
 **预期响应**：
 ```text
@@ -186,5 +207,6 @@ content-disposition: inline; filename="spacex-launches.ics"
 ## 📝 备注与免责
 
 - 本项目的数据源均拉取自 SpaceX 官网暴露的真实前端 API，不受 SpaceX v4 历史 API 停止维护的影响。
+- WTT 数据来自 [World Table Tennis 官方赛历](https://www.worldtabletennis.com/events_calendar)，仅同步 `WTT Series` 中已经公布对阵和开赛时间的未来比赛。
 - 本项目日历数据只专注于即将到来的/计划中的航天发射任务（Upcoming Launches），详情卡片支持查询最近 50 次已完成发射（History Launches）的元数据。
 - 日历事件时间依据浏览器时区或日历客户端设定自动换算，无需手动调整。

@@ -1,7 +1,7 @@
 # AI 智能体开发守则 (AGENTS)
 
 ## 📌 项目概述
-本仓库包含一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 构建的现代化全栈 Web 应用。它能够将 SpaceX 官网的实时发射数据转换为符合 RFC 5545 标准的 **ICS 订阅日历**，同时提供一个具备极致视觉美感的多语言订阅落地页。
+本仓库包含一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 构建的现代化全栈 Web 应用。它能够将 SpaceX 官网的实时发射数据、F1 赛程以及 WTT 主系列乒乓球比赛转换为符合 RFC 5545 标准的 **ICS 订阅日历**，同时提供一个具备极致视觉美感的多语言订阅落地页。
 
 ---
 
@@ -17,7 +17,7 @@
   - `AppHeader.vue`：顶部磨砂玻璃导航栏与品牌展示。
   - `HeroSection.vue`：首屏高能背景图、实时发射倒计时及核心概念介绍。
   - `OverviewGrid.vue`：项目核心功能/优势的多维网格卡片展示。
-  - `LaunchCalendar.vue`：核心日历交互组件。包含迷你日历网格、今日聚焦以及带微动画的发射事件时间轴。
+  - `LaunchCalendar.vue`：核心日历交互组件。包含 SpaceX、F1、WTT 图层筛选、迷你日历网格、今日聚焦以及带微动画的事件时间轴。
   - `MissionDetail.vue`：任务深度详情卡片。支持高清发射图文图解预览、Lightbox 弹窗模态层及一键自适应比例/滚动双击缩放查看大图。
   - `SubscribePanel.vue`：快捷日历订阅面板，提供 `webcal://` 一键订阅及 ICS 链接复制功能。
   - `FaqSection.vue`：支持折叠展开的常见问题解答，深度适配 SEO 结构化数据锚点。
@@ -26,10 +26,13 @@
 基于 Nitro Engine 驱动的超轻量、无状态边缘计算路由逻辑。
 - **`server/routes/spacex.ics.js`**：生成符合 RFC 5545 标准的 ICS 订阅数据源的主路由。
 - **`server/routes/calendar.ics.js`**：日历订阅路由的备用别名路由。
+- **`server/routes/ics/[topic].ics.js`**：F1、WTT 等主题日历的通用 ICS 订阅路由。
 - **`server/api/launches.get.js`**：聚合即将发射任务列表的 JSON API（对接 SWR 缓存）。
 - **`server/api/history-launches.get.js`**：拉取并格式化历史已完成发射任务的 API（限制 50 条）。
+- **`server/api/calendar/[topic].get.js`**：提供 F1、WTT 等主题日历的 JSON 数据接口。
 - **`server/api/launches/[slug].get.js`**：动态路由接口，按 Slug 获取特定发射任务的超高清图解及深度内容详情。
 - **`server/utils/spacex.js`**：核心后端数据处理库。包含双源 API 拉取（GraphQL Page Tiles + TIMING JSON）、格式标准化、历史发射适配、超高清图解数据解析及 ICS 标准格式序列化（处理安全换行与字符转义）。
+- **`server/utils/calendars.js`**：主题日历注册、F1 赛程处理、WTT 官方比赛级赛程解析及通用 ICS 序列化。WTT 只保留 `WTT Series` 中有明确双方选手和开赛时间的未来比赛。
 - **`server/utils/kv.js`**：基于 **Nuxt Hub KV** (Cloudflare KV) 封装的 **SWR (Stale-While-Revalidate)** 后台异步刷新缓存控制器。支持分布式版本 Sequence 自增追踪与 `LAST-MODIFIED` 时间锁。
 
 ---
@@ -65,9 +68,12 @@
 在提代码更改并交付部署之前，**必须**依次运行并确认以下所有检查全部通过：
 
 ### 1. 运行完整单元测试
-项目内置了 **21** 项全面的单元测试，覆盖了数据源合并、优雅降级、ICS 文本转义、SWR 异步刷新、直播保活以及特定动态路由 API 校验。
+项目内置了 **33** 项全面的单元测试，覆盖了 SpaceX 数据源合并与降级、F1 赛程、WTT 主系列筛选与比赛双方解析、ICS 文本转义、SWR 异步刷新、直播保活以及主题 ICS 路由校验。
 ```bash
 bun test
+node --check server/utils/calendars.js
+git diff --check
+bun run build
 ```
 
 ### 2. 服务端语法/静态分析预校验
