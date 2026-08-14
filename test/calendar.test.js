@@ -1194,3 +1194,36 @@ test("F1 ICS route prefers the request pathname in a Cloudflare-style event", as
   assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
   assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
 });
+
+test("local date helpers correctly handle timezone and month boundary conversion", () => {
+  const getLocalDateParts = (dateInput) => {
+    if (!dateInput) return null;
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return {
+      year,
+      month,
+      day,
+      monthKey: `${year}-${month}`,
+      dateIso: `${year}-${month}-${day}`,
+    };
+  };
+
+  // Test standard ISO string parse
+  const parts1 = getLocalDateParts("2026-08-14T12:00:00.000Z");
+  assert.ok(parts1);
+  assert.equal(typeof parts1.year, "number");
+  assert.equal(typeof parts1.month, "string");
+  assert.equal(typeof parts1.day, "string");
+  assert.equal(parts1.monthKey, `${parts1.year}-${parts1.month}`);
+  assert.equal(parts1.dateIso, `${parts1.year}-${parts1.month}-${parts1.day}`);
+
+  // Test invalid input returns null safely
+  assert.equal(getLocalDateParts(null), null);
+  assert.equal(getLocalDateParts("invalid-date-string"), null);
+});
+

@@ -106,17 +106,40 @@ const sortedCalendarMissions = computed(() => {
     });
 });
 
+// ─── Local Timezone Date Helpers ───
+const getLocalDateParts = (dateInput) => {
+  if (!dateInput) return null;
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return {
+    year,
+    month,
+    day,
+    monthKey: `${year}-${month}`,
+    dateIso: `${year}-${month}-${day}`,
+  };
+};
+
+const getLocalDateIso = (dateInput = new Date()) => {
+  const parts = getLocalDateParts(dateInput);
+  return parts ? parts.dateIso : "";
+};
+
 const monthKeys = computed(() => {
   const keys = [];
   const seen = new Set();
 
   for (const mission of sortedCalendarMissions.value) {
     if (!mission.launchAt) continue;
-    const date = new Date(mission.launchAt);
-    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      keys.push(key);
+    const parts = getLocalDateParts(mission.launchAt);
+    if (!parts) continue;
+    if (!seen.has(parts.monthKey)) {
+      seen.add(parts.monthKey);
+      keys.push(parts.monthKey);
     }
   }
 
@@ -131,11 +154,12 @@ watch(
   [monthKeys, nextLaunch],
   () => {
     if (nextLaunch.value?.launchAt) {
-      const nextDate = new Date(nextLaunch.value.launchAt);
-      const nextKey = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, "0")}`;
-      const idx = monthKeys.value.indexOf(nextKey);
-      if (idx >= 0) {
-        activeMonthIndex.value = idx;
+      const parts = getLocalDateParts(nextLaunch.value.launchAt);
+      if (parts) {
+        const idx = monthKeys.value.indexOf(parts.monthKey);
+        if (idx >= 0) {
+          activeMonthIndex.value = idx;
+        }
       }
     }
   },
@@ -147,9 +171,8 @@ const monthMissions = computed(() => {
   if (!monthKey) return [];
   return sortedCalendarMissions.value.filter((mission) => {
     if (!mission.launchAt) return false;
-    const date = new Date(mission.launchAt);
-    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-    return key === monthKey;
+    const parts = getLocalDateParts(mission.launchAt);
+    return parts?.monthKey === monthKey;
   });
 });
 
@@ -158,19 +181,23 @@ const gridDays = computed(() => {
   const monthKey = activeMonthKey.value;
   if (!monthKey) return [];
 
-  const monthStart = new Date(`${monthKey}-01T00:00:00.000Z`);
-  const year = monthStart.getUTCFullYear();
-  const month = monthStart.getUTCMonth();
-  const firstDayIndex = (monthStart.getUTCDay() + 6) % 7; // 以周一为第一天 (0 = Mon, 6 = Sun)
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = parseInt(yearStr, 10);
+  const monthIndex = parseInt(monthStr, 10) - 1;
+
+  const monthStart = new Date(year, monthIndex, 1);
+  const firstDayIndex = (monthStart.getDay() + 6) % 7; // 以周一为第一天 (0 = Mon, 6 = Sun)
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const totalCells = Math.ceil((firstDayIndex + daysInMonth) / 7) * 7;
   const days = [];
 
-  // 按日期归类当前月份的所有事件
+  // 按本地日期归类当前月份的所有事件
   const eventsByDate = new Map();
   for (const m of monthMissions.value) {
     if (!m.launchAt) continue;
-    const dStr = m.launchAt.slice(0, 10);
+    const parts = getLocalDateParts(m.launchAt);
+    if (!parts) continue;
+    const dStr = parts.dateIso;
     if (!eventsByDate.has(dStr)) {
       eventsByDate.set(dStr, []);
     }
@@ -179,14 +206,15 @@ const gridDays = computed(() => {
 
   for (let cellIndex = 0; cellIndex < totalCells; cellIndex += 1) {
     const dayOffset = cellIndex - firstDayIndex;
-    const date = new Date(Date.UTC(year, month, dayOffset + 1));
-    const isoDate = date.toISOString().slice(0, 10);
+    const date = new Date(year, monthIndex, dayOffset + 1);
+    const parts = getLocalDateParts(date);
+    const isoDate = parts ? parts.dateIso : "";
     const dayEvents = eventsByDate.get(isoDate) || [];
 
     days.push({
       isoDate,
-      dayNumber: date.getUTCDate(),
-      isCurrentMonth: date.getUTCMonth() === month,
+      dayNumber: date.getDate(),
+      isCurrentMonth: date.getMonth() === monthIndex,
       hasEvents: dayEvents.length > 0,
       events: dayEvents,
     });
@@ -195,7 +223,7 @@ const gridDays = computed(() => {
   return days;
 });
 
-const todayIso = computed(() => new Date().toISOString().slice(0, 10));
+const todayIso = computed(() => getLocalDateIso(new Date()));
 const selectedDateIso = ref(null);
 const selectedMission = ref(null);
 

@@ -972,9 +972,9 @@ watch(activeCalendarView, (val) => {
 
 const weekdayHeaders = computed(() => {
   try {
-    const formatter = new Intl.DateTimeFormat(displayLocale.value, { weekday: 'short', timeZone: 'UTC' })
+    const formatter = new Intl.DateTimeFormat(displayLocale.value, { weekday: 'short' })
     const sundayFirst = Array.from({ length: 7 }, (_, index) => {
-      return formatter.format(new Date(Date.UTC(2021, 7, 1 + index)))
+      return formatter.format(new Date(2021, 7, 1 + index))
     })
     return [...sundayFirst.slice(1), sundayFirst[0]]
   } catch (error) {
@@ -985,11 +985,14 @@ const weekdayHeaders = computed(() => {
 const monthTitleEnglish = computed(() => {
   const monthKey = props.monthKeys[props.activeMonthIndex]
   if (!monthKey) return 'July 2026'
-  const d = new Date(`${monthKey}-01T00:00:00.000Z`)
+  const [yearStr, monthStr] = monthKey.split('-')
+  const year = parseInt(yearStr, 10)
+  const month = parseInt(monthStr, 10) - 1
+  const d = new Date(year, month, 1)
   try {
-    return d.toLocaleString(displayLocale.value, { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    return d.toLocaleString(displayLocale.value, { month: 'long', year: 'numeric' })
   } catch (e) {
-    return d.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
   }
 })
 
