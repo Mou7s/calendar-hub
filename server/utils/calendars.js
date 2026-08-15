@@ -249,15 +249,53 @@ const WTT_REQUEST_HEADERS = {
   Referer: 'https://www.worldtabletennis.com/'
 }
 
-export function normalizeWttDate(value) {
+// WTT publishes local venue times without an offset. These IDs and offsets
+// mirror the timezone_codes table used by the official WTT frontend.
+const WTT_TIMEZONE_OFFSETS = Object.freeze({
+  3: '-12:00', 4: '-11:00', 5: '-10:00', 6: '-09:00', 7: '-08:00',
+  8: '-07:00', 9: '-08:00', 10: '-07:00', 11: '-07:00', 12: '-07:00',
+  13: '-06:00', 14: '-06:00', 15: '-06:00', 16: '-06:00',
+  17: '-05:00', 18: '-05:00', 19: '-05:00', 20: '-04:30',
+  21: '-04:00', 22: '-04:00', 23: '-04:00', 24: '-04:00', 25: '-04:00',
+  26: '-03:30', 27: '-03:00', 28: '-03:00', 29: '-03:00', 30: '-03:00',
+  31: '-03:00', 32: '-03:00', 33: '-02:00', 34: '-02:00',
+  35: '-01:00', 36: '-01:00', 37: '00:00', 38: '00:00', 39: '00:00',
+  40: '+01:00', 41: '00:00', 42: '00:00', 43: '+01:00', 44: '+01:00',
+  45: '+01:00', 46: '+01:00', 47: '+01:00', 48: '+01:00',
+  49: '+02:00', 50: '+02:00', 51: '+02:00', 52: '+02:00', 53: '+02:00',
+  54: '+02:00', 55: '+02:00', 56: '+03:00', 57: '+02:00', 58: '+02:00',
+  59: '+03:00', 60: '+03:00', 61: '+02:00', 62: '+03:00', 63: '+03:00',
+  64: '+03:00', 65: '+04:00', 66: '+03:30', 67: '+04:00', 68: '+04:00',
+  69: '+04:00', 70: '+04:00', 71: '+04:00', 72: '+04:30', 73: '+05:00',
+  74: '+05:00', 75: '+05:00', 76: '+05:30', 77: '+05:30', 78: '+05:45',
+  79: '+06:00', 80: '+06:00', 81: '+06:30', 82: '+07:00', 83: '+07:00',
+  84: '+08:00', 85: '+08:00', 86: '+08:00', 87: '+08:00', 88: '+08:00',
+  89: '+08:00', 90: '+08:00', 91: '+09:00', 92: '+09:00', 93: '+09:30',
+  94: '+09:30', 95: '+10:00', 96: '+10:00', 97: '+10:00', 98: '+10:00',
+  99: '+09:00', 100: '+11:00', 101: '+11:00', 102: '+12:00', 103: '+12:00',
+  104: '+12:00', 105: '+12:00', 106: '+12:00', 107: '+13:00', 108: '+13:00'
+})
+
+const getWttTimezoneSuffix = (timeZoneId) => {
+  if (timeZoneId === null || timeZoneId === undefined || timeZoneId === '') return null
+
+  const offset = WTT_TIMEZONE_OFFSETS[Number(timeZoneId)]
+  return offset ? (offset === '00:00' ? 'Z' : offset) : null
+}
+
+export function normalizeWttDate(value, timeZoneId) {
   if (!value) return null
 
   const raw = String(value).trim()
   if (!raw) return null
 
-  // WTT schedule timestamps are UTC values without an explicit suffix.
-  // Add it before parsing so the Worker runtime timezone cannot shift them.
-  const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw) ? raw : `${raw}Z`
+  // WTT schedule timestamps without a suffix are local venue times. Keep
+  // explicit offsets untouched and use UTC only when the WTT timezone ID is
+  // missing or unknown, preserving the legacy fallback behavior.
+  const hasExplicitTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)
+  const normalized = hasExplicitTimezone
+    ? raw
+    : `${raw}${getWttTimezoneSuffix(timeZoneId) || 'Z'}`
   const timestamp = Date.parse(normalized)
   return Number.isNaN(timestamp) ? null : new Date(timestamp).toISOString()
 }
@@ -295,7 +333,8 @@ const getWttCompetitorName = (start) => {
 }
 
 export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
-  const launchAt = normalizeWttDate(unit?.StartDate)
+  const timeZoneId = event?.timeZoneId
+  const launchAt = normalizeWttDate(unit?.StartDate, timeZoneId)
   const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
   if (!launchAt || Number.isNaN(nowMs) || Date.parse(launchAt) < nowMs) return null
 
@@ -305,7 +344,7 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const competitors = starts.map(getWttCompetitorName).filter(Boolean)
   if (competitors.length < 2) return null
 
-  const close = normalizeWttDate(unit.EndDate)
+  const close = normalizeWttDate(unit.EndDate, timeZoneId)
   const launchWindow = close && Date.parse(close) > Date.parse(launchAt)
     ? { open: launchAt, close }
     : { open: launchAt, close: null }
@@ -357,7 +396,10 @@ const getWttFutureMainSeriesEvents = (events, now) => {
   return (Array.isArray(events) ? events : [])
     .filter(event => event?.event_Tier_name === WTT_MAIN_SERIES_TIER)
     .filter(event => {
-      const endDate = normalizeWttDate(event.endDateTime || event.startDateTime)
+      const endDate = normalizeWttDate(
+        event.endDateTime || event.startDateTime,
+        event.timeZoneId
+      )
       return endDate && Date.parse(endDate) >= nowMs
     })
 }

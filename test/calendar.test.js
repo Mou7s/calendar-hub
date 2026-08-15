@@ -12,6 +12,7 @@ import {
   buildTopicCalendarFeed,
   getTopicCalendarData,
   loadWttCalendarData,
+  normalizeWttDate,
   normalizeWttScheduleUnit,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
@@ -1080,11 +1081,35 @@ test("F1 topic exposes the complete 2026 race and session schedule", async () =>
   assert.match(feed, /UID:f1-2026-hungary-race@calendarhub\.local/);
 });
 
+test("WTT normalizes venue-local dates with explicit timezone and safe fallback", () => {
+  assert.equal(
+    normalizeWttDate("2026-08-15T14:15:00", 53),
+    "2026-08-15T12:15:00.000Z",
+  );
+  assert.equal(
+    normalizeWttDate("2026-08-15T00:15:00", 53),
+    "2026-08-14T22:15:00.000Z",
+  );
+  assert.equal(
+    normalizeWttDate("2026-08-15T14:15:00Z", 53),
+    "2026-08-15T14:15:00.000Z",
+  );
+  assert.equal(
+    normalizeWttDate("2026-08-15T14:15:00+01:00", 53),
+    "2026-08-15T13:15:00.000Z",
+  );
+  assert.equal(
+    normalizeWttDate("2026-08-15T14:15:00", 999),
+    "2026-08-15T14:15:00.000Z",
+  );
+});
+
 test("WTT normalizes only future matches with two named competitors", () => {
   const event = {
     eventId: 9001,
     eventName: "WTT Test Event 2026",
     venueName: "Test Arena",
+    timeZoneId: 53,
   };
   const now = new Date("2026-08-14T00:00:00.000Z");
   const match = normalizeWttScheduleUnit(event, {
@@ -1105,8 +1130,8 @@ test("WTT normalizes only future matches with two named competitors", () => {
   assert.equal(match.id, "wtt-9001-TTEWSINGLES-----------FNL-000100--");
   assert.equal(match.titleEn, "SUN Ying vs ITO Mima");
   assert.equal(match.titleZh, "SUN Ying 对阵 ITO Mima");
-  assert.equal(match.launchAt, "2026-08-15T10:00:00.000Z");
-  assert.equal(match.launchWindow.close, "2026-08-15T11:00:00.000Z");
+  assert.equal(match.launchAt, "2026-08-15T08:00:00.000Z");
+  assert.equal(match.launchWindow.close, "2026-08-15T09:00:00.000Z");
   assert.equal(match.vehicle, "Women's Singles");
   assert.equal(match.launchSite, "Test Arena");
 
@@ -1152,6 +1177,7 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
       startDateTime: "2026-08-15T00:00:00",
       endDateTime: "2026-08-20T00:00:00",
       venueName: "Main Arena",
+      timeZoneId: 53,
     },
     {
       eventId: 9002,
@@ -1177,8 +1203,8 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
   ];
   const schedule = [{ Competition: { Unit: [{
     Code: "match-1",
-    StartDate: "2026-08-15T10:00:00",
-    EndDate: "2026-08-15T11:00:00",
+    StartDate: "2026-08-15T14:15:00",
+    EndDate: "2026-08-15T15:00:00",
     ScheduleStatus: "Scheduled",
     SubEvent: "Men's Singles",
     VenueDescription: { VenueName: "Main Arena" },
@@ -1205,6 +1231,12 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
   assert.equal(data.missions.length, 1);
   assert.equal(data.missions[0].titleZh, "ZHANG Ben 对阵 WANG Chuqin");
   assert.equal(data.missions[0].calendarId, "wtt");
+  assert.equal(data.missions[0].launchAt, "2026-08-15T12:15:00.000Z");
+  assert.equal(data.missions[0].launchWindow.close, "2026-08-15T13:00:00.000Z");
+
+  const feed = buildTopicCalendarFeed("wtt", data);
+  assert.match(feed, /DTSTART:20260815T121500Z/);
+  assert.match(feed, /DTEND:20260815T130000Z/);
 });
 
 const officialF1Rows = [
