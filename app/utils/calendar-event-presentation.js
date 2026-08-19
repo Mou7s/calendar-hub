@@ -15,6 +15,9 @@ const EVENT_PRESENTATIONS = Object.freeze({
   wtt: Object.freeze({
     vehicleLabelKey: 'calendar.wtt.match',
     locationLabelKey: 'calendar.wtt.venue',
+    scoreLabelKey: 'calendar.wtt.score',
+    winnerLabelKey: 'calendar.wtt.winner',
+    gamesLabelKey: 'calendar.wtt.games',
     vehicleIcon: 'i-lucide-trophy',
     locationIcon: 'i-lucide-map-pin'
   })

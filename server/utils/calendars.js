@@ -332,6 +332,118 @@ const getWttCompetitorName = (start) => {
   return athleteNames.join('/')
 }
 
+export function normalizeWttOfficialResult(event, resultItem) {
+  const matchCard = resultItem?.match_card
+  const documentCode = String(resultItem?.documentCode || matchCard?.documentCode || '').trim()
+  if (!documentCode) return null
+
+  const rawCompetitors = Array.isArray(matchCard?.competitiors)
+    ? matchCard.competitiors
+    : Array.isArray(matchCard?.competitors)
+      ? matchCard.competitors
+      : []
+  if (rawCompetitors.length < 2) return null
+
+  const comp1 = rawCompetitors[0]
+  const comp2 = rawCompetitors[1]
+  const name1 = String(comp1?.competitiorName || comp1?.competitorName || comp1?.players?.[0]?.playerName || '').trim()
+  const name2 = String(comp2?.competitiorName || comp2?.competitorName || comp2?.players?.[0]?.playerName || '').trim()
+  if (!name1 || !name2 || !isWttNamedCompetitor(name1) || !isWttNamedCompetitor(name2)) return null
+
+  const overallScores = String(matchCard?.resultOverallScores || matchCard?.overallScores || '').trim()
+  const rawGameScores = String(matchCard?.resultsGameScores || matchCard?.gameScores || '').trim()
+  const gameScores = rawGameScores
+    ? rawGameScores.split(',').map(s => s.trim()).filter(s => s && s !== '0-0' && s !== '0 - 0')
+    : []
+
+  let winner = null
+  let isWinner1 = false
+  let isWinner2 = false
+  if (overallScores.includes('-')) {
+    const [s1, s2] = overallScores.split('-').map(Number)
+    if (!Number.isNaN(s1) && !Number.isNaN(s2)) {
+      if (s1 > s2) {
+        winner = name1
+        isWinner1 = true
+      } else if (s2 > s1) {
+        winner = name2
+        isWinner2 = true
+      }
+    }
+  }
+
+  const startUtc = matchCard?.matchDateTime?.startDateUTC
+  const startLocal = matchCard?.matchDateTime?.startDateLocal || resultItem?.startDateLocal
+  let launchAt = null
+
+  if (startUtc) {
+    const m = String(startUtc).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/)
+    if (m) {
+      const [, month, day, year, hour, min, sec = '00'] = m
+      launchAt = new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}Z`).toISOString()
+    } else {
+      const parsed = Date.parse(startUtc.includes('Z') ? startUtc : `${startUtc}Z`)
+      if (!Number.isNaN(parsed)) {
+        launchAt = new Date(parsed).toISOString()
+      }
+    }
+  }
+
+  if (!launchAt && startLocal) {
+    const m = String(startLocal).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/)
+    if (m) {
+      const [, month, day, year, hour, min, sec = '00'] = m
+      launchAt = normalizeWttDate(`${year}-${month}-${day}T${hour}:${min}:${sec}`, event?.timeZoneId)
+    } else {
+      launchAt = normalizeWttDate(startLocal, event?.timeZoneId)
+    }
+  }
+
+  if (!launchAt && (event?.endDateTime || event?.startDateTime)) {
+    launchAt = normalizeWttDate(event.startDateTime, event?.timeZoneId)
+  }
+  if (!launchAt) return null
+
+  const titleEn = `${name1} vs ${name2}`
+  const titleZh = `${name1} 对阵 ${name2}`
+  const id = `wtt-${event.eventId}-${documentCode.replace(/[-]+$/, '')}`
+  const venue = matchCard?.venueName || event?.venueName || ''
+  const discipline = matchCard?.subEventName || resultItem?.subEventType || 'Table Tennis Match'
+  const roundDesc = matchCard?.subEventDescription || `${discipline} Official Result`
+
+  return {
+    id,
+    title: titleEn,
+    titleEn,
+    titleZh,
+    shortTitle: titleEn,
+    shortTitleEn: titleEn,
+    shortTitleZh: titleZh,
+    missionType: roundDesc,
+    vehicle: discipline,
+    launchSite: venue,
+    missionUrl: `https://www.worldtabletennis.com/eventInfo?eventId=${encodeURIComponent(event.eventId)}`,
+    launchAt,
+    launchWindow: { open: launchAt, close: null },
+    isLive: false,
+    status: 'Finished',
+    calendarGroup: 'history',
+    scores: overallScores || null,
+    gameScores,
+    winner,
+    competitor1: {
+      name: name1,
+      org: comp1?.competitiorOrg || comp1?.competitorOrg || comp1?.players?.[0]?.playerOrgCode || '',
+      isWinner: isWinner1
+    },
+    competitor2: {
+      name: name2,
+      org: comp2?.competitiorOrg || comp2?.competitorOrg || comp2?.players?.[0]?.playerOrgCode || '',
+      isWinner: isWinner2
+    }
+  }
+}
+
 export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const timeZoneId = event?.timeZoneId
   const launchAt = normalizeWttDate(unit?.StartDate, timeZoneId)
@@ -372,7 +484,9 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
     missionUrl: `https://www.worldtabletennis.com/eventInfo?eventId=${encodeURIComponent(event.eventId)}`,
     launchAt,
     launchWindow,
-    isLive: false
+    isLive: false,
+    status: 'Scheduled',
+    calendarGroup: 'upcoming'
   }
 }
 
@@ -411,28 +525,66 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
     throw new Error(`Unable to load official WTT event list: ${eventResponse.status}`)
   }
 
-  const events = getWttFutureMainSeriesEvents(await eventResponse.json(), now)
-  const scheduleResults = await Promise.allSettled(events.map(async event => {
-    const response = await fetchImpl(
-      `${WTT_SCHEDULE_SOURCE_URL}/${encodeURIComponent(event.eventId)}`,
-      { headers: WTT_REQUEST_HEADERS }
-    )
+  const rawEvents = await eventResponse.json()
+  const events = getWttFutureMainSeriesEvents(rawEvents, now)
 
-    if (response.status === 204) return []
-    if (!response.ok) throw new Error(`WTT schedule ${event.eventId}: ${response.status}`)
-    return getWttScheduleUnits(await response.json())
-  }))
+  const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+  const recentEvents = (Array.isArray(rawEvents) ? rawEvents : [])
+    .filter(event => event?.event_Tier_name === WTT_MAIN_SERIES_TIER)
+    .filter(event => {
+      const endDate = normalizeWttDate(event.endDateTime || event.startDateTime, event.timeZoneId)
+      const endMs = endDate ? Date.parse(endDate) : NaN
+      return !Number.isNaN(endMs) && endMs >= (nowMs - THIRTY_DAYS_MS)
+    })
+
+  const [scheduleResults, officialResults] = await Promise.all([
+    Promise.allSettled(events.map(async event => {
+      const response = await fetchImpl(
+        `${WTT_SCHEDULE_SOURCE_URL}/${encodeURIComponent(event.eventId)}`,
+        { headers: WTT_REQUEST_HEADERS }
+      )
+
+      if (response.status === 204) return { event, units: [] }
+      if (!response.ok) throw new Error(`WTT schedule ${event.eventId}: ${response.status}`)
+      return { event, units: getWttScheduleUnits(await response.json()) }
+    })),
+    Promise.allSettled(recentEvents.map(async event => {
+      const staticUrl = `https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/${event.eventId}/${event.eventId}_take_10_official_results.json`
+      const response = await fetchImpl(staticUrl, { headers: WTT_REQUEST_HEADERS })
+      if (response.status === 204 || response.status === 404) return { event, results: [] }
+      if (!response.ok) throw new Error(`WTT official results ${event.eventId}: ${response.status}`)
+      const data = await response.json()
+      return { event, results: Array.isArray(data) ? data : [] }
+    }))
+  ])
 
   const items = []
-  scheduleResults.forEach((result, index) => {
-    if (result.status === 'rejected') {
-      console.warn(`Unable to load WTT schedule for event ${events[index]?.eventId}:`, result.reason)
-      return
-    }
+  const seenIds = new Set()
 
-    for (const unit of result.value) {
-      const item = normalizeWttScheduleUnit(events[index], unit, now)
-      if (item) items.push(item)
+  officialResults.forEach((result) => {
+    if (result.status === 'fulfilled' && result.value?.results) {
+      const { event, results } = result.value
+      for (const resItem of results) {
+        const item = normalizeWttOfficialResult(event, resItem)
+        if (item && !seenIds.has(item.id)) {
+          seenIds.add(item.id)
+          items.push(item)
+        }
+      }
+    }
+  })
+
+  scheduleResults.forEach((result) => {
+    if (result.status === 'fulfilled' && result.value?.units) {
+      const { event, units } = result.value
+      for (const unit of units) {
+        const item = normalizeWttScheduleUnit(event, unit, now)
+        if (item && !seenIds.has(item.id)) {
+          seenIds.add(item.id)
+          items.push(item)
+        }
+      }
     }
   })
 
@@ -561,14 +713,20 @@ function buildTopicCalendarData(topicId, items) {
     launchSite: item.launchSite,
     returnSite: 'N/A',
     callToAction: 'View Event',
-    status: 'Confirmed',
+    status: item.status || 'Confirmed',
+    calendarGroup: item.calendarGroup || (item.status === 'Finished' ? 'history' : 'upcoming'),
     isLive: item.isLive,
     directToCell: false,
     image: null,
     launchAt: item.launchAt,
     returnAt: null,
     launchWindow: item.launchWindow || { open: item.launchAt, close: null },
-    calendarId: topicId
+    calendarId: topicId,
+    scores: item.scores || null,
+    gameScores: item.gameScores || [],
+    winner: item.winner || null,
+    competitor1: item.competitor1 || null,
+    competitor2: item.competitor2 || null
   }));
 
   missions.sort((a, b) => Date.parse(a.launchAt || 0) - Date.parse(b.launchAt || 0));
@@ -591,7 +749,7 @@ function buildTopicCalendarData(topicId, items) {
   return {
     refreshedAt: new Date().toISOString(),
     topic: topicConfig,
-    nextLaunch: missions[0] || null,
+    nextLaunch: missions.find(m => m.calendarGroup !== 'history' && m.status !== 'Finished') || missions[0] || null,
     monthSummary,
     missions
   };
@@ -633,15 +791,31 @@ export function buildTopicCalendarFeed(topicId, data) {
       const uidDomain = topicId === 'spacex' ? 'spacexcalendar.local' : 'calendarhub.local';
       const uid = `${mission.correlationId || mission.id}@${uidDomain}`;
 
+      let summary = mission.title;
+      if (topicId === 'wtt' && mission.status === 'Finished' && mission.scores) {
+        summary = `🏆 [${mission.scores}] ${mission.title}`;
+      }
+
       const descLines = [
         mission.title,
         `Category: ${topicConfig.nameEn || 'Event'}`,
         `Details: ${mission.vehicle || 'N/A'}`,
         `Location: ${mission.launchSite || 'Online'}`,
       ];
+      if (mission.scores) {
+        descLines.push(`Score: ${mission.scores}`);
+      }
+      if (mission.winner) {
+        descLines.push(`Winner: ${mission.winner}`);
+      }
+      if (mission.gameScores && mission.gameScores.length > 0) {
+        descLines.push(`Games: ${mission.gameScores.join(', ')}`);
+      }
       if (mission.launchWindow?.close) {
         descLines.push(`Ends at: ${mission.launchWindow.close}`);
       }
+
+      const isConfirmed = mission.status === 'Finished' || mission.isLive || mission.status === 'Confirmed';
 
       const lines = [
         'BEGIN:VEVENT',
@@ -650,10 +824,10 @@ export function buildTopicCalendarFeed(topicId, data) {
         `LAST-MODIFIED:${eventLastModified}`,
         `SEQUENCE:${eventSequence}`,
         `DTSTART:${formatIcsDate(mission.launchAt)}`,
-        `SUMMARY:${escapeIcsText(mission.title)}`,
+        `SUMMARY:${escapeIcsText(summary)}`,
         `DESCRIPTION:${escapeIcsText(descLines.join('\n'))}`,
         `LOCATION:${escapeIcsText(mission.launchSite || 'Online')}`,
-        `STATUS:${mission.isLive ? 'CONFIRMED' : 'TENTATIVE'}`,
+        `STATUS:${isConfirmed ? 'CONFIRMED' : 'TENTATIVE'}`,
         'TRANSP:OPAQUE',
         `CATEGORIES:${escapeIcsText(topicConfig.nameEn || 'Event')}`,
         `URL:${mission.missionUrl || 'https://calendarhub.mou7s.com'}`,

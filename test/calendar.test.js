@@ -13,6 +13,7 @@ import {
   getTopicCalendarData,
   loadWttCalendarData,
   normalizeWttDate,
+  normalizeWttOfficialResult,
   normalizeWttScheduleUnit,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
@@ -1166,7 +1167,65 @@ test("WTT normalizes only future matches with two named competitors", () => {
   }, now), null);
 });
 
-test("WTT loader filters to the main series and tolerates unpublished schedules", async () => {
+test("normalizeWttOfficialResult parses completed match, scores, winner, and game breakdown", () => {
+  const event = {
+    eventId: 3246,
+    eventName: "Europe Smash - Sweden 2026",
+    venueName: "Malmö Arena",
+    timeZoneId: 53,
+  };
+  const resultItem = {
+    id: 15832417,
+    eventId: "3246",
+    documentCode: "TTEMSINGLES-----------FNL-000100----------",
+    subEventType: "Men Singles",
+    fullResults: "OFFICIAL",
+    match_card: {
+      eventId: "3246",
+      documentCode: "TTEMSINGLES-----------FNL-000100----------",
+      subEventName: "Men's Singles",
+      subEventDescription: "Men's Singles - Final - Match 1",
+      venueName: "Malmö Arena",
+      competitiors: [
+        {
+          competitorType: "H",
+          competitiorName: "LEBRUN Felix",
+          competitiorOrg: "FRA",
+        },
+        {
+          competitorType: "A",
+          competitiorName: "HARIMOTO Tomokazu",
+          competitiorOrg: "JPN",
+        },
+      ],
+      resultsGameScores: "11-5,11-8,5-11,11-9,11-9,0-0,0-0",
+      resultOverallScores: "4-1",
+      resultStatus: "OFFICIAL",
+      matchDateTime: {
+        startDateLocal: "08/16/2026 19:00:00",
+        startDateUTC: "08/16/2026 17:00:00",
+      },
+    },
+  };
+
+  const parsed = normalizeWttOfficialResult(event, resultItem);
+  assert.ok(parsed);
+  assert.equal(parsed.id, "wtt-3246-TTEMSINGLES-----------FNL-000100");
+  assert.equal(parsed.titleEn, "LEBRUN Felix vs HARIMOTO Tomokazu");
+  assert.equal(parsed.titleZh, "LEBRUN Felix 对阵 HARIMOTO Tomokazu");
+  assert.equal(parsed.status, "Finished");
+  assert.equal(parsed.calendarGroup, "history");
+  assert.equal(parsed.scores, "4-1");
+  assert.equal(parsed.winner, "LEBRUN Felix");
+  assert.equal(parsed.competitor1.isWinner, true);
+  assert.equal(parsed.competitor2.isWinner, false);
+  assert.deepEqual(parsed.gameScores, ["11-5", "11-8", "5-11", "11-9", "11-9"]);
+  assert.equal(parsed.launchAt, "2026-08-16T17:00:00.000Z");
+  assert.equal(parsed.launchSite, "Malmö Arena");
+  assert.equal(parsed.vehicle, "Men's Singles");
+});
+
+test("WTT loader filters to the main series and includes completed official results and future schedules", async () => {
   const now = new Date("2026-08-14T00:00:00.000Z");
   const scheduleCalls = [];
   const events = [
@@ -1197,8 +1256,8 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
       eventId: 9004,
       eventName: "Past WTT Main Event",
       event_Tier_name: "WTT Series",
-      startDateTime: "2026-08-01T00:00:00",
-      endDateTime: "2026-08-05T00:00:00",
+      startDateTime: "2026-07-01T00:00:00",
+      endDateTime: "2026-07-05T00:00:00",
     },
   ];
   const schedule = [{ Competition: { Unit: [{
@@ -1214,10 +1273,38 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
     ] },
   }] } }];
 
+  const officialResults = [
+    {
+      eventId: "9001",
+      documentCode: "TTEMSINGLES-----------FNL-000100--",
+      subEventType: "Men Singles",
+      match_card: {
+        eventId: "9001",
+        documentCode: "TTEMSINGLES-----------FNL-000100--",
+        subEventName: "Men's Singles",
+        subEventDescription: "Men's Singles - Final",
+        venueName: "Main Arena",
+        competitiors: [
+          { competitiorName: "FAN Zhendong", competitiorOrg: "CHN" },
+          { competitiorName: "HARIMOTO Tomokazu", competitiorOrg: "JPN" },
+        ],
+        resultsGameScores: "11-8,11-6,9-11,11-7,0-0",
+        resultOverallScores: "3-1",
+        resultStatus: "OFFICIAL",
+        matchDateTime: {
+          startDateUTC: "08/14/2026 10:00:00",
+        },
+      },
+    },
+  ];
+
   const fetchStub = async (url) => {
     const value = String(url);
     if (value.includes("wtt_upcoming_only_events_list.json")) {
       return new Response(JSON.stringify(events), { status: 200 });
+    }
+    if (value.includes("take_10_official_results.json")) {
+      return new Response(JSON.stringify(officialResults), { status: 200 });
     }
     const eventId = Number(value.split("/").pop());
     scheduleCalls.push(eventId);
@@ -1228,13 +1315,29 @@ test("WTT loader filters to the main series and tolerates unpublished schedules"
   const data = await loadWttCalendarData(fetchStub, now);
   assert.deepEqual(scheduleCalls, [9001]);
   assert.equal(data.topic.id, "wtt");
-  assert.equal(data.missions.length, 1);
-  assert.equal(data.missions[0].titleZh, "ZHANG Ben 对阵 WANG Chuqin");
-  assert.equal(data.missions[0].calendarId, "wtt");
-  assert.equal(data.missions[0].launchAt, "2026-08-15T12:15:00.000Z");
-  assert.equal(data.missions[0].launchWindow.close, "2026-08-15T13:00:00.000Z");
+  assert.equal(data.missions.length, 2);
+
+  // 1. Completed match
+  const finishedMatch = data.missions.find(m => m.status === "Finished");
+  assert.ok(finishedMatch);
+  assert.equal(finishedMatch.titleZh, "FAN Zhendong 对阵 HARIMOTO Tomokazu");
+  assert.equal(finishedMatch.scores, "3-1");
+  assert.equal(finishedMatch.winner, "FAN Zhendong");
+  assert.equal(finishedMatch.calendarGroup, "history");
+
+  // 2. Future match
+  const futureMatch = data.missions.find(m => m.status === "Scheduled");
+  assert.ok(futureMatch);
+  assert.equal(futureMatch.titleZh, "ZHANG Ben 对阵 WANG Chuqin");
+  assert.equal(futureMatch.calendarId, "wtt");
+  assert.equal(futureMatch.launchAt, "2026-08-15T12:15:00.000Z");
+  assert.equal(futureMatch.launchWindow.close, "2026-08-15T13:00:00.000Z");
 
   const feed = buildTopicCalendarFeed("wtt", data);
+  assert.match(feed, /SUMMARY:🏆 \[3-1\] FAN Zhendong vs HARIMOTO Tomokazu/);
+  assert.match(feed, /Score: 3-1/);
+  assert.match(feed, /FAN Zhendong/);
+  assert.match(feed, /11-8/);
   assert.match(feed, /DTSTART:20260815T121500Z/);
   assert.match(feed, /DTEND:20260815T130000Z/);
 });
@@ -1514,6 +1617,9 @@ test("calendar event presentation uses F1 semantics without changing SpaceX defa
   assert.deepEqual(getCalendarEventPresentation({ calendarId: "wtt" }), {
     vehicleLabelKey: "calendar.wtt.match",
     locationLabelKey: "calendar.wtt.venue",
+    scoreLabelKey: "calendar.wtt.score",
+    winnerLabelKey: "calendar.wtt.winner",
+    gamesLabelKey: "calendar.wtt.games",
     vehicleIcon: "i-lucide-trophy",
     locationIcon: "i-lucide-map-pin",
   });

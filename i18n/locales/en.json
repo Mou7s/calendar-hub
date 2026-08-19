@@ -70,8 +70,14 @@
     },
     "filterWTT": "WTT Table Tennis",
     "wtt": {
-      "match": "Match",
-      "venue": "Venue"
+      "match": "Discipline",
+      "venue": "Venue",
+      "scoreboard": "Match Scoreboard",
+      "finished": "Official Result",
+      "finalScore": "Final Score",
+      "score": "Score",
+      "winner": "Winner",
+      "games": "Game Scores"
     },
     "moreEvents": "+{count} more...",
     "filterAll": "All Providers",

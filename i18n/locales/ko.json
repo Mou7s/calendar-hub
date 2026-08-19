@@ -71,7 +71,13 @@
     "filterWTT": "WTT 탁구",
     "wtt": {
       "match": "경기 종목",
-      "venue": "경기장"
+      "venue": "경기장",
+      "scoreboard": "경기 스코어보드",
+      "finished": "경기 종료",
+      "finalScore": "최종 스코어",
+      "score": "스코어",
+      "winner": "승자",
+      "games": "세트 스코어"
     },
     "moreEvents": "+{count}개 더보기...",
     "previousMonthAria": "이전 달 보기",

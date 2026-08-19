@@ -71,7 +71,13 @@
     "filterWTT": "WTT 乒乓球",
     "wtt": {
       "match": "比赛项目",
-      "venue": "场馆"
+      "venue": "场馆",
+      "scoreboard": "比赛比分看板",
+      "finished": "完赛",
+      "finalScore": "完赛大比分",
+      "score": "比分",
+      "winner": "获胜者",
+      "games": "每局小分"
     },
     "moreEvents": "+{count} 更多...",
     "filterAll": "全部机构",

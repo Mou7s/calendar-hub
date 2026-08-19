@@ -60,19 +60,82 @@
             {{ missionWindowCopy }}
           </p>
 
+          <!-- WTT Match Scoreboard Card (when scores available) -->
+          <div v-if="selectedMission.scores || selectedMission.competitor1" class="mb-6 p-5 rounded-2xl bg-neutral-100/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/80">
+            <div class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-3 flex items-center justify-between">
+              <span>{{ t('calendar.wtt.scoreboard') || 'MATCH SCOREBOARD' }}</span>
+              <span v-if="selectedMission.status === 'Finished'" class="text-amber-500 font-extrabold flex items-center gap-1">
+                <UIcon name="i-lucide-trophy" class="w-3.5 h-3.5" />
+                {{ t('calendar.wtt.finished') || 'OFFICIAL RESULT' }}
+              </span>
+            </div>
+
+            <!-- Players Matchup & Big Score -->
+            <div class="grid grid-cols-1 sm:grid-cols-7 gap-3 items-center text-center">
+              <!-- Player 1 -->
+              <div class="sm:col-span-3 p-3 rounded-xl bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
+                <div class="flex items-center gap-1.5 mb-1">
+                  <span v-if="selectedMission.competitor1?.isWinner" class="text-amber-400 text-sm">🏆</span>
+                  <strong class="text-sm sm:text-base font-black text-neutral-900 dark:text-white">{{ selectedMission.competitor1?.name || selectedMission.title?.split(' vs ')[0] }}</strong>
+                </div>
+                <span v-if="selectedMission.competitor1?.org" class="px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                  {{ selectedMission.competitor1.org }}
+                </span>
+              </div>
+
+              <!-- Big Score Center -->
+              <div class="sm:col-span-1 flex flex-col items-center justify-center py-2">
+                <span v-if="selectedMission.scores" class="text-xl sm:text-2xl font-black font-mono text-primary-600 dark:text-primary-400 tracking-wider">
+                  {{ selectedMission.scores }}
+                </span>
+                <span v-else class="text-xs font-bold text-neutral-400">VS</span>
+              </div>
+
+              <!-- Player 2 -->
+              <div class="sm:col-span-3 p-3 rounded-xl bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
+                <div class="flex items-center gap-1.5 mb-1">
+                  <span v-if="selectedMission.competitor2?.isWinner" class="text-amber-400 text-sm">🏆</span>
+                  <strong class="text-sm sm:text-base font-black text-neutral-900 dark:text-white">{{ selectedMission.competitor2?.name || selectedMission.title?.split(' vs ')[1] }}</strong>
+                </div>
+                <span v-if="selectedMission.competitor2?.org" class="px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                  {{ selectedMission.competitor2.org }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Game by Game Scores Breakdown -->
+            <div v-if="selectedMission.gameScores?.length" class="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-800/60 flex flex-wrap items-center justify-center gap-2">
+              <span class="text-[10px] font-bold text-neutral-400 uppercase font-mono mr-1">{{ t('calendar.wtt.games') || 'Games' }}:</span>
+              <span
+                v-for="(gameScore, idx) in selectedMission.gameScores"
+                :key="idx"
+                class="px-2 py-1 rounded-lg bg-white/80 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200 shadow-sm"
+              >
+                <span class="text-neutral-400 text-[10px] mr-1">G{{ idx + 1 }}</span>
+                <span>{{ gameScore }}</span>
+              </span>
+            </div>
+          </div>
+
           <!-- Mission Facts List -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-b border-neutral-200 dark:border-neutral-800/40 py-6 mb-6">
             <div>
-              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">{{ t('mission.vehicle') }}</div>
+              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">
+                {{ t(getCalendarEventPresentation(selectedMission).vehicleLabelKey) }}
+              </div>
               <div class="text-sm font-bold text-neutral-900 dark:text-white font-mono">{{ selectedMission.vehicle || t('mission.tbd') }}</div>
             </div>
             <div>
-              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">{{ t('mission.launchSite') }}</div>
+              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">
+                {{ t(getCalendarEventPresentation(selectedMission).locationLabelKey) }}
+              </div>
               <div class="text-sm font-bold text-neutral-900 dark:text-white">{{ selectedMission.launchSite || t('mission.tbd') }}</div>
             </div>
             <div>
-              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">{{ t('mission.returnSite') }}</div>
-              <div class="text-sm font-bold text-neutral-900 dark:text-white">{{ selectedMission.returnSite || t('mission.tbd') }}</div>
+              <div class="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mb-1">
+                {{ selectedMission.calendarId === 'wtt' ? (t('calendar.wtt.winner') || 'Winner') : t('mission.returnSite') }}
+              </div>
+              <div class="text-sm font-bold text-neutral-900 dark:text-white">{{ selectedMission.winner || selectedMission.returnSite || t('mission.tbd') }}</div>
             </div>
           </div>
 
@@ -252,6 +315,8 @@
 </template>
 
 <script setup>
+import { getCalendarEventPresentation } from '~/utils/calendar-event-presentation'
+
 const { t, locale, te } = useI18n()
 
 defineProps({

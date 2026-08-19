@@ -274,10 +274,11 @@
                 @click="handleEventClick(event, $event)"
               >
                 <span
-                  v-if="!event.isLive"
+                  v-if="!event.isLive && !(event.scores && (event.provider === 'wtt' || event.calendarId === 'wtt'))"
                   class="calendar-event-dot w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full shrink-0"
                   :style="{ backgroundColor: getProviderColor(event.provider) }"
                 ></span>
+                <span v-else-if="event.scores && (event.provider === 'wtt' || event.calendarId === 'wtt')" class="text-[8px] sm:text-[9px] leading-none shrink-0" title="Completed Match">🏆</span>
                 <span v-else class="calendar-event-live inline-flex items-center gap-1 shrink-0">
                   <span class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
                   <span class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
@@ -482,6 +483,7 @@
               >
                 <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
                   <span v-if="event.isLive" class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                  <span v-else-if="event.scores" class="text-[10px] font-bold text-amber-400 font-mono shrink-0">🏆 {{ event.scores }}</span>
                   <span v-else class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
                   <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
                 </div>
@@ -515,11 +517,17 @@
         </button>
       </div>
 
-      <!-- Title & Live Badge -->
+      <!-- Title, Scores & Live Badge -->
       <div>
         <div v-if="popoverEvent.isLive" class="flex items-center gap-1.5 text-[10px] font-bold text-[#ef4444] uppercase tracking-wider mb-1 font-mono">
           <span class="w-2 h-2 rounded-full bg-[#ef4444] animate-ping"></span>
           <span>{{ t('status.liveNow') }}</span>
+        </div>
+        <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 rounded-lg bg-[#202020] border border-[#333333] mb-2">
+          <span class="text-amber-400 font-bold font-mono text-xs">🏆 {{ t('calendar.wtt.finalScore') || 'Final' }}: {{ popoverEvent.scores }}</span>
+          <span v-if="popoverEvent.winner" class="text-[10px] text-neutral-300 font-semibold truncate max-w-[130px]">
+            {{ t('calendar.wtt.winner') || 'Winner' }}: <strong class="text-white">{{ popoverEvent.winner }}</strong>
+          </span>
         </div>
         <h3 class="text-base font-black text-white uppercase font-mono leading-snug">
           {{ popoverEvent.title }}
@@ -536,6 +544,11 @@
         <div v-if="popoverEvent.vehicle" class="flex items-center gap-2.5">
           <UIcon :name="getCalendarEventPresentation(popoverEvent).vehicleIcon" class="w-4 h-4 text-[#737373] shrink-0" />
           <span class="truncate text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).vehicleLabelKey) }}: <strong class="text-white">{{ popoverEvent.vehicle }}</strong></span>
+        </div>
+
+        <div v-if="popoverEvent.gameScores?.length" class="flex items-start gap-2.5">
+          <UIcon name="i-heroicons-list-bullet" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
+          <span class="leading-relaxed text-[#e5e5e5]">{{ t('calendar.wtt.games') || 'Games' }}: <strong class="text-white font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
         </div>
 
         <div v-if="popoverEvent.launchSite" class="flex items-start gap-2.5">
@@ -1068,10 +1081,14 @@ const lunarYearLabel = computed(() => {
 })
 
 const getCompactEventTitle = (event) => {
-  const title = String(event?.shortTitle || event?.title || 'Launch')
+  let title = String(event?.shortTitle || event?.title || 'Launch')
     .replace(/\s+(mission|flight test|unknown payload)$/i, '')
     .replace(/\s+/g, ' ')
     .trim()
+
+  if (event?.scores) {
+    title = `[${event.scores}] ${title}`
+  }
 
   return title || 'Launch'
 }

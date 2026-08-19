@@ -68,10 +68,16 @@
       "vehicle": "Coche de carreras",
       "track": "Circuito"
     },
-    "filterWTT": "Tenis de mesa WTT",
+    "filterWTT": "WTT Tenis de mesa",
     "wtt": {
-      "match": "Partido",
-      "venue": "Sede"
+      "match": "Modalidad",
+      "venue": "Sede",
+      "scoreboard": "Marcador del partido",
+      "finished": "Resultado oficial",
+      "finalScore": "Marcador final",
+      "score": "Marcador",
+      "winner": "Ganador",
+      "games": "Marcador por juegos"
     },
     "moreEvents": "+{count} más...",
     "previousMonthAria": "Ver mes anterior",

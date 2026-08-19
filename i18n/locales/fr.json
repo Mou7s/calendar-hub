@@ -68,10 +68,16 @@
       "vehicle": "Voiture de course",
       "track": "Circuit"
     },
-    "filterWTT": "Tennis de table WTT",
+    "filterWTT": "WTT Tennis de table",
     "wtt": {
-      "match": "Match",
-      "venue": "Salle"
+      "match": "Discipline",
+      "venue": "Lieu",
+      "scoreboard": "Tableau d'affichage",
+      "finished": "Résultat officiel",
+      "finalScore": "Score final",
+      "score": "Score",
+      "winner": "Vainqueur",
+      "games": "Scores des sets"
     },
     "moreEvents": "+{count} de plus...",
     "previousMonthAria": "Voir le mois précédent",

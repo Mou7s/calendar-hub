@@ -68,10 +68,16 @@
       "vehicle": "Rennwagen",
       "track": "Rennstrecke"
     },
-    "filterWTT": "WTT-Tischtennis",
+    "filterWTT": "WTT Tischtennis",
     "wtt": {
-      "match": "Match",
-      "venue": "Austragungsort"
+      "match": "Disziplin",
+      "venue": "Austragungsort",
+      "scoreboard": "Spielstandsanzeige",
+      "finished": "Offizielles Ergebnis",
+      "finalScore": "Endergebnis",
+      "score": "Ergebnis",
+      "winner": "Sieger",
+      "games": "Satzergebnisse"
     },
     "moreEvents": "+{count} mehr...",
     "previousMonthAria": "Vorherigen Monat anzeigen",

@@ -71,7 +71,13 @@
     "filterWTT": "WTT 卓球",
     "wtt": {
       "match": "試合種目",
-      "venue": "会場"
+      "venue": "会場",
+      "scoreboard": "試合スコアボード",
+      "finished": "試合終了",
+      "finalScore": "最終スコア",
+      "score": "スコア",
+      "winner": "勝者",
+      "games": "ゲームスコア"
     },
     "moreEvents": "+{count} 件...",
     "previousMonthAria": "前の月を表示",
