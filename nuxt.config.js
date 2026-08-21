@@ -48,6 +48,15 @@ export default defineNuxtConfig({
     ],
   },
 
+  // Nuxt Icon：开启客户端 bundle 源码扫描，把应用用到的图标全部内联打包。
+  // 否则 SSR 渲染时图标需运行时从 api.iconify.design 远程加载，网络受限环境
+  // （如本地代理/防火墙）下会刷 "[Icon] failed to load icon" 警告且无内联 SVG。
+  icon: {
+    clientBundle: {
+      scan: true,
+    },
+  },
+
   // Nuxt Hub 平台特性配置：开启 KV 数据库缓存支持
   hub: {
     kv: true,
