@@ -4,9 +4,6 @@
     "description": "Abonniere Kalender für Starts, Rennen und andere Ereignisse über Webcal- oder ICS-Links."
   },
   "header": {
-    "copy": "Abonniere öffentliche Kalender und halte deine wichtigsten Termine synchron.",
-    "github": "GitHub",
-    "githubAriaLabel": "Projekt auf GitHub ansehen",
     "themeToggleAria": "Dunkel-/Hellmodus umschalten"
   },
   "subscribe": {
@@ -21,21 +18,10 @@
   },
   "hero": {
     "eyebrow": "Live-Kalenderfeed",
-    "loadingTitle": "Startkalender wird geladen",
-    "loadingDescription": "Die neuesten Ereignisse werden aus den ausgewählten Kalenderfeeds geladen.",
-    "noMissionsTitle": "Keine kommenden Missionen",
-    "noMissionsDescription": "Der Live-Feed hat keine kommenden Starts zurückgegeben.",
-    "unavailableTitle": "Startdaten nicht verfügbar",
-    "unavailableDescription": "Die ausgewählten Kalenderfeeds sind momentan nicht erreichbar.",
     "meta": {
       "nextLaunch": "Nächster Start",
       "countdown": "Countdown"
-    },
-    "pending": "Ausstehend",
-    "syncing": "Synchronisierung",
-    "retryLater": "Später erneut versuchen",
-    "unavailable": "Nicht verfügbar",
-    "nextLaunchDescription": "{vehicle} startet von {launchSite}, mit Bergung bei {returnSite}."
+    }
   },
   "overview": {
     "cadenceEyebrow": "Terminübersicht",
@@ -57,7 +43,6 @@
       "subscriptions": "Abonnements",
       "language": "Sprache"
     },
-    "eyebrow": "Calendar Hub",
     "title": "Kalender und Ereignisse nach Monat durchsuchen",
     "viewDay": "Tag",
     "viewWeek": "Woche",
@@ -81,64 +66,20 @@
       "winner": "Sieger",
       "games": "Satzergebnisse"
     },
-    "moreEvents": "+{count} mehr...",
-    "previousMonthAria": "Vorherigen Monat anzeigen",
-    "nextMonthAria": "Nächsten Monat anzeigen",
     "noLaunches": "Für diesen Monat sind noch keine datierten Starts verfügbar.",
     "dataLoadError": "SpaceX-Startdaten konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
     "refreshing": "Aktualisierung...",
-    "dayLabel": "{day}. {month}",
-    "untimed": "Zeit offen",
-    "weekdayShort": [
-      "So",
-      "Mo",
-      "Di",
-      "Mi",
-      "Do",
-      "Fr",
-      "Sa"
-    ]
-  },
-  "manifest": {
-    "eyebrow": "Manifest",
-    "title": "Kommende Missionen",
-    "waiting": "Warten auf Daten",
-    "refreshedAt": "Aktualisiert {value}"
-  },
-  "history": {
-    "eyebrow": "Historie",
-    "title": "Jüngste Starts",
-    "waiting": "Warten auf Historie",
-    "refreshedAt": "Historie aktualisiert {value}",
-    "unavailable": "Starthistorie nicht verfügbar",
-    "emptyState": "Es wurden keine jüngsten SpaceX-Starts zurückgegeben.",
-    "noDetails": "Für diesen Start sind keine Missionsdetails verfügbar.",
-    "detailsLabel": "Details",
-    "detailsAvailable": "Details verfügbar",
-    "noLink": "Keine externe Seite",
-    "detailsLink": "Startdetails",
-    "status": {
-      "success": "Erfolg",
-      "failure": "Fehlgeschlagen",
-      "unknown": "Unbekannt"
-    }
+    "untimed": "Zeit offen"
   },
   "mission": {
     "vehicle": "Träger",
     "launchSite": "Startplatz",
     "returnSite": "Bergungsort",
     "watchLive": "Live ansehen",
-    "detailsLink": "Missionsseite",
-    "emptyState": "Der Live-Datenfeed hat keine kommenden SpaceX-Missionen zurückgegeben.",
     "live": "Live",
     "unspecified": "Nicht angegeben",
     "tbd": "Offen",
-    "sitePending": "Startplatz offen",
-    "recoveryPending": "ein nicht angegebener Bergungsort",
-    "launchTimingUnavailable": "Die Startzeit wurde noch nicht veröffentlicht.",
-    "window": "Fenster: {open} bis {close}",
-    "launchTarget": "Zielstartzeit: {local} · {utc}",
     "types": {
       "starlink": "Starlink",
       "nssl": "Nationaler Sicherheitsstart",
@@ -147,48 +88,21 @@
     "detailsHeading": "Missionsübersicht",
     "preLaunchTimeline": "Countdown vor dem Start",
     "postLaunchTimeline": "Startsequenz",
-    "webcastLink": "Webcast",
     "infographicLink": "Infografik",
     "selectionEyebrow": "Missionsdetails",
     "selectionTitle": "Wählen Sie eine Mission im Kalender aus",
     "selectionCopy": "Wählen Sie einen Start aus der Kalenderliste aus, um SpaceX-Missionsdetails, Webcast-Links und Startzeitpläne hier anzuzeigen.",
     "detailsLoading": "Missionsdetails werden geladen...",
-    "detailsUnavailable": "Missionsdetails sind derzeit nicht verfügbar.",
-    "infographicAlt": "SpaceX Missionsinfografik",
     "infographicTitle": "Missions-Infografik",
     "clickToViewInfographic": "Klicken, um die vollständige Infografik anzuzeigen",
     "clickToShrink": "Klicken zum Verkleinern",
     "clickToZoom": "Klicken zum Vergrößern",
     "viewOriginal": "Original anzeigen",
-    "infographicLabel": "{title} Infografik",
     "viewOfficialDetails": "Offizielle Details anzeigen"
-  },
-  "countdown": {
-    "awaitingTime": "Warten auf Zeit",
-    "windowOpen": "Fenster geöffnet",
-    "format": "{days}T {hours}Std {minutes}Min {seconds}Sek",
-    "units": {
-      "days": "Tage",
-      "hours": "Std",
-      "minutes": "Min",
-      "seconds": "Sek"
-    }
   },
   "status": {
     "upcoming": "Bevorstehend",
     "live": "Live",
     "liveNow": "LIVE JETZT"
-  },
-  "faq": {
-    "title": "Häufig gestellte Fragen & Anleitungen",
-    "subtitle": "FAQ & Leitfäden",
-    "q1": "Wie füge ich den SpaceX-Startplan zu Google Kalender oder Apple Kalender hinzu?",
-    "a1": "Sehr einfach! Klicken Sie einfach auf die Schaltfläche \"<b>Kalender abonnieren</b>\" oben auf der Seite. Auf iOS- oder macOS-Geräten werden Sie automatisch zum Abonnieren aufgefordert. Kopieren Sie für Google Kalender den Link <code>{link}</code>, navigieren Sie im Web zu Google Kalender &rarr; Weitere Kalender &rarr; Per URL hinzufügen und fügen Sie die Adresse ein.",
-    "q2": "Wie oft wird dieser Startkalender aktualisiert?",
-    "a2": "Die Zeitpläne werden <b>automatisch auf dem neuesten Stand gehalten</b>. Die serverseitige Engine fragt alle 5 Minuten die offiziellen SpaceX-APIs ab und speichert die Daten in Cloudflare KV, wodurch Countdowns und Kalender-Feeds in Echtzeit aktualisiert werden.",
-    "q3": "Welche Trägerraketen und Startplätze werden verfolgt?",
-    "a3": "Der Kalender verfolgt alle aktiven SpaceX-Startsysteme, einschließlich <b>Falcon 9</b>, <b>Falcon Heavy</b> und des Raumschiffs <b>Starship</b>. Die Startplätze umfassen Cape Canaveral (Florida), Vandenberg Space Force Base (Kalifornien) und die Starbase in Boca Chica (Texas).",
-    "q4": "Kann ich Start-Livestreams direkt aus dem Kalender ansehen?",
-    "a4": "Ja. Sobald SpaceX die offiziellen Webcast-Links veröffentlicht, gleicht unser System die Details ab und fügt die Webcast-URLs (wie YouTube oder X.com) in die Kalenderbeschreibung und das Detail-Panel der Webseite ein."
   }
 }

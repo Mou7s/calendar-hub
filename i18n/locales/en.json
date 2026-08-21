@@ -4,9 +4,6 @@
     "description": "Subscribe to public calendars for launches, races, and other events through Webcal or ICS links."
   },
   "header": {
-    "copy": "Subscribe to public calendars and keep your favorite schedules in sync.",
-    "github": "GitHub",
-    "githubAriaLabel": "View project on GitHub",
     "themeToggleAria": "Toggle dark/light mode"
   },
   "subscribe": {
@@ -21,21 +18,10 @@
   },
   "hero": {
     "eyebrow": "Live Calendar Feed",
-    "loadingTitle": "Loading launch calendar",
-    "loadingDescription": "Fetching the latest events from the selected calendar feeds.",
-    "noMissionsTitle": "No upcoming missions",
-    "noMissionsDescription": "The live mission feed did not return any upcoming launches.",
-    "unavailableTitle": "Launch data unavailable",
-    "unavailableDescription": "The app could not reach the selected calendar feeds just now.",
     "meta": {
       "nextLaunch": "Next launch",
       "countdown": "Countdown"
-    },
-    "pending": "Pending",
-    "syncing": "Syncing",
-    "retryLater": "Retry later",
-    "unavailable": "Unavailable",
-    "nextLaunchDescription": "{vehicle} from {launchSite} with recovery at {returnSite}."
+    }
   },
   "overview": {
     "cadenceEyebrow": "Schedule overview",
@@ -57,7 +43,6 @@
       "subscriptions": "Subscriptions",
       "language": "Language"
     },
-    "eyebrow": "Calendar Hub",
     "title": "Browse calendars and events by month",
     "viewDay": "Day",
     "viewWeek": "Week",
@@ -81,7 +66,6 @@
       "winner": "Winner",
       "games": "Game Scores"
     },
-    "moreEvents": "+{count} more...",
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",
     "filterRocketLab": "Rocket Lab",
@@ -91,63 +75,20 @@
     "filterUla": "ULA",
     "filterEsa": "ESA",
     "filterOther": "Others",
-    "previousMonthAria": "View previous month",
-    "nextMonthAria": "View next month",
     "noLaunches": "No dated launches are available for this month yet.",
     "dataLoadError": "SpaceX launch data could not be loaded.",
     "retry": "Retry",
     "refreshing": "Refreshing...",
-    "dayLabel": "{month} {day}",
-    "untimed": "Time TBD",
-    "weekdayShort": [
-      "Sun",
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat"
-    ]
-  },
-  "manifest": {
-    "eyebrow": "Manifest",
-    "title": "Upcoming missions",
-    "waiting": "Waiting for data",
-    "refreshedAt": "Refreshed {value}"
-  },
-  "history": {
-    "eyebrow": "History",
-    "title": "Recent launches",
-    "waiting": "Waiting for history",
-    "refreshedAt": "History refreshed {value}",
-    "unavailable": "Launch history unavailable",
-    "emptyState": "No recent SpaceX launches were returned.",
-    "noDetails": "No mission details are available for this launch.",
-    "detailsLabel": "Details",
-    "detailsAvailable": "Details available",
-    "noLink": "No external page",
-    "detailsLink": "Launch details",
-    "status": {
-      "success": "Success",
-      "failure": "Failure",
-      "unknown": "Unknown"
-    }
+    "untimed": "Time TBD"
   },
   "mission": {
     "vehicle": "Vehicle",
     "launchSite": "Launch site",
     "returnSite": "Return site",
     "watchLive": "Watch Live",
-    "detailsLink": "Mission Page",
-    "emptyState": "No upcoming SpaceX missions were returned by the live data feed.",
     "live": "Live",
     "unspecified": "Unspecified",
     "tbd": "TBD",
-    "sitePending": "site pending",
-    "recoveryPending": "an unlisted recovery site",
-    "launchTimingUnavailable": "Launch timing has not been published yet.",
-    "window": "Window: {open} to {close}",
-    "launchTarget": "Launch target: {local} · {utc}",
     "types": {
       "starlink": "Starlink",
       "nssl": "National Security Launch",
@@ -156,32 +97,17 @@
     "detailsHeading": "Mission brief",
     "preLaunchTimeline": "Countdown",
     "postLaunchTimeline": "Launch sequence",
-    "webcastLink": "Webcast",
     "infographicLink": "Infographic",
     "selectionEyebrow": "Mission details",
     "selectionTitle": "Select a mission on the calendar",
     "selectionCopy": "Choose a launch from the calendar list to view SpaceX mission details, webcast links, and launch timelines here.",
     "detailsLoading": "Loading mission details...",
-    "detailsUnavailable": "Mission details are unavailable right now.",
-    "infographicAlt": "SpaceX mission infographic",
     "infographicTitle": "Mission Infographic",
     "clickToViewInfographic": "Click to View Full Infographic",
     "clickToShrink": "Click to Shrink",
     "clickToZoom": "Click to Zoom",
     "viewOriginal": "View Original",
-    "infographicLabel": "{title} Infographic",
     "viewOfficialDetails": "View Official Details"
-  },
-  "countdown": {
-    "awaitingTime": "Awaiting time",
-    "windowOpen": "Window open",
-    "format": "{days}d {hours}h {minutes}m {seconds}s",
-    "units": {
-      "days": "Days",
-      "hours": "Hours",
-      "minutes": "Mins",
-      "seconds": "Secs"
-    }
   },
   "status": {
     "upcoming": "Upcoming",
@@ -201,17 +127,5 @@
       "ct": "Use Central Time (Starbase)",
       "pt": "Use Pacific Time (Vandenberg)"
     }
-  },
-  "faq": {
-    "title": "Frequently Asked Questions",
-    "subtitle": "FAQ & Guides",
-    "q1": "How do I add the SpaceX launch schedule to Google Calendar or Apple Calendar?",
-    "a1": "Extremely easy! Simply click the \"<b>Subscribe to Calendar</b>\" button at the top of the page. On iOS or macOS devices, it automatically prompts you to subscribe. On Google Calendar, copy the <code>{link}</code> link, navigate to Calendar Web &rarr; Other Calendars &rarr; Add by URL, and paste the address.",
-    "q2": "How often is this launch calendar updated?",
-    "a2": "The schedules are <b>automatically kept updated</b>. The server-side edge engine queries official SpaceX APIs every 5 minutes and caches the latest queues inside Cloudflare KV, updating countdowns and calendar feeds in real-time.",
-    "q3": "What launch vehicles and launch sites are tracked?",
-    "a3": "The calendar tracks all active SpaceX launch systems, including <b>Falcon 9</b>, <b>Falcon Heavy</b>, and the deep-space <b>Starship</b> vehicle. Pad locations cover all commercial pads at Cape Canaveral Space Force Station (Florida), Vandenberg Space Force Base (California), and Boca Chica Starbase (Texas).",
-    "q4": "Can I watch launch live streams directly from the calendar?",
-    "a4": "Yes. Once SpaceX publishes the official webcast media links, our SWR cache automatically matches details and appends the streaming webcast URLs (such as YouTube or X.com live broadcasts) inside the calendar description and page details panel."
   }
 }

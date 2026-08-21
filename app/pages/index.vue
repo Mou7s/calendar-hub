@@ -377,15 +377,6 @@ const selectMission = (mission) => {
   selectedMission.value = mission;
 };
 
-// ─── FAQ for Schema ───
-const getFaqQuestion = (num) => {
-  return t(`faq.q${num}`);
-};
-
-const getFaqAnswer = (num) => {
-  return t(`faq.a${num}`, { link: webcalSubscriptionLink.value });
-};
-
 useSeoMeta({
   title: computedTitle,
   ogTitle: computedTitle,
@@ -430,12 +421,6 @@ useHead(() => ({
                 name: t("calendar.title"),
                 url: "https://calendarhub.mou7s.com/#calendar",
               },
-              {
-                "@type": "WebPage",
-                "@id": "https://calendarhub.mou7s.com/#faq",
-                name: t("faq.title"),
-                url: "https://calendarhub.mou7s.com/#faq",
-              },
             ],
           },
           {
@@ -449,18 +434,6 @@ useHead(() => ({
               price: "0.00",
               priceCurrency: "USD",
             },
-          },
-          {
-            "@type": "FAQPage",
-            "@id": "https://calendarhub.mou7s.com/#faq-page",
-            mainEntity: [1, 2, 3, 4].map((num) => ({
-              "@type": "Question",
-              name: getFaqQuestion(num),
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: getFaqAnswer(num).replace(/<[^>]+>/g, ""),
-              },
-            })),
           },
           nextLaunch.value?.launchAt
             ? {

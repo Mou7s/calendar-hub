@@ -4,9 +4,6 @@
     "description": "打ち上げ、レースなどのテーマ別カレンダーを Webcal または ICS リンクで購読できます。"
   },
   "header": {
-    "copy": "公開カレンダーを購読して、お気に入りの予定を同期できます。",
-    "github": "GitHub",
-    "githubAriaLabel": "GitHub でプロジェクトを見る",
     "themeToggleAria": "ダーク/ライトモードを切り替え"
   },
   "subscribe": {
@@ -21,21 +18,10 @@
   },
   "hero": {
     "eyebrow": "ライブカレンダーフィード",
-    "loadingTitle": "打ち上げカレンダーを読み込み中",
-    "loadingDescription": "選択したカレンダーフィードから最新のイベントを取得しています。",
-    "noMissionsTitle": "今後のミッションはありません",
-    "noMissionsDescription": "ライブデータフィードから今後の打ち上げが返されませんでした。",
-    "unavailableTitle": "打ち上げデータを利用できません",
-    "unavailableDescription": "現在、選択したカレンダーフィードに接続できません。",
     "meta": {
       "nextLaunch": "次の打ち上げ",
       "countdown": "カウントダウン"
-    },
-    "pending": "待機中",
-    "syncing": "同期中",
-    "retryLater": "後でもう一度",
-    "unavailable": "利用不可",
-    "nextLaunchDescription": "{vehicle} が {launchSite} から打ち上げられ、{returnSite} で回収予定です。"
+    }
   },
   "overview": {
     "cadenceEyebrow": "スケジュール概要",
@@ -57,7 +43,6 @@
       "subscriptions": "購読",
       "language": "言語"
     },
-    "eyebrow": "Calendar Hub",
     "title": "カレンダーとイベントを月別に表示",
     "viewDay": "日",
     "viewWeek": "週",
@@ -81,64 +66,20 @@
       "winner": "勝者",
       "games": "ゲームスコア"
     },
-    "moreEvents": "+{count} 件...",
-    "previousMonthAria": "前の月を表示",
-    "nextMonthAria": "次の月を表示",
     "noLaunches": "この月には日付付きの打ち上げがまだありません。",
     "dataLoadError": "SpaceX の打ち上げデータを読み込めませんでした。",
     "retry": "再試行",
     "refreshing": "更新中...",
-    "dayLabel": "{month}月{day}日",
-    "untimed": "時刻未定",
-    "weekdayShort": [
-      "日",
-      "月",
-      "火",
-      "水",
-      "木",
-      "金",
-      "土"
-    ]
-  },
-  "manifest": {
-    "eyebrow": "マニフェスト",
-    "title": "今後のミッション",
-    "waiting": "データ待機中",
-    "refreshedAt": "{value} 更新"
-  },
-  "history": {
-    "eyebrow": "履歴",
-    "title": "最近の打ち上げ",
-    "waiting": "履歴データ待機中",
-    "refreshedAt": "履歴を {value} 更新",
-    "unavailable": "打ち上げ履歴を利用できません",
-    "emptyState": "最近の SpaceX 打ち上げは返されませんでした。",
-    "noDetails": "この打ち上げのミッション詳細はありません。",
-    "detailsLabel": "詳細",
-    "detailsAvailable": "詳細あり",
-    "noLink": "外部ページなし",
-    "detailsLink": "打ち上げ詳細",
-    "status": {
-      "success": "成功",
-      "failure": "失敗",
-      "unknown": "不明"
-    }
+    "untimed": "時刻未定"
   },
   "mission": {
     "vehicle": "機体",
     "launchSite": "打ち上げ場",
     "returnSite": "回収地点",
     "watchLive": "ライブを見る",
-    "detailsLink": "ミッションページ",
-    "emptyState": "ライブデータフィードから今後の SpaceX ミッションが返されませんでした。",
     "live": "ライブ",
     "unspecified": "未指定",
     "tbd": "未定",
-    "sitePending": "打ち上げ場未定",
-    "recoveryPending": "未掲載の回収地点",
-    "launchTimingUnavailable": "打ち上げ時刻はまだ公開されていません。",
-    "window": "時間枠: {open} から {close}",
-    "launchTarget": "目標打ち上げ時刻: {local} · {utc}",
     "types": {
       "starlink": "Starlink",
       "nssl": "国家安全保障打ち上げ",
@@ -147,48 +88,21 @@
     "detailsHeading": "ミッション概要",
     "preLaunchTimeline": "打上げ前タイムライン",
     "postLaunchTimeline": "打上げ後タイムライン",
-    "webcastLink": "ウェブキャスト",
     "infographicLink": "インフォグラフィック",
     "selectionEyebrow": "ミッション詳細",
     "selectionTitle": "カレンダーからミッションを選択",
     "selectionCopy": "カレンダーのリストから打ち上げを選択すると、SpaceXのミッション詳細、ウェブキャストのリンク、打ち上げのタイムラインがここに表示されます。",
     "detailsLoading": "ミッション詳細を読み込み中...",
-    "detailsUnavailable": "ミッション詳細は現在利用できません。",
-    "infographicAlt": "SpaceX ミッションインフォグラフィック",
     "infographicTitle": "ミッション打ち上げ図解",
     "clickToViewInfographic": "クリックして超高画質図解を表示",
     "clickToShrink": "クリックして縮小",
     "clickToZoom": "クリックして原寸大で表示",
     "viewOriginal": "新しいタブで原画を開く",
-    "infographicLabel": "{title} ミッション図解",
     "viewOfficialDetails": "公式詳細を見る"
-  },
-  "countdown": {
-    "awaitingTime": "時刻待ち",
-    "windowOpen": "時間枠開始",
-    "format": "{days}日 {hours}時間 {minutes}分 {seconds}秒",
-    "units": {
-      "days": "日",
-      "hours": "時",
-      "minutes": "分",
-      "seconds": "秒"
-    }
   },
   "status": {
     "upcoming": "予定",
     "live": "ライブ",
     "liveNow": "LIVE 配信中"
-  },
-  "faq": {
-    "title": "よくある質問とガイド",
-    "subtitle": "FAQ & ガイド",
-    "q1": "SpaceX の打ち上げスケジュールを Google カレンダーや Apple カレンダーに追加するにはどうすればよいですか？",
-    "a1": "とても簡単です！ページ上部にある「<b>カレンダーを購読</b>」ボタンをクリックするだけです。iOS や macOS デバイスでは、自動的に購読画面が開きます。Google カレンダーの場合は、<code>{link}</code> のリンクをコピーし、ウェブ版 Google カレンダーを開いて「他のカレンダー &rarr; URL で追加」を選択し、コピーしたアドレスを貼り付けてください。",
-    "q2": "この打ち上げカレンダーはどのくらいの頻度で更新されますか？",
-    "a2": "スケジュールは<b>自動的に最新状態に更新</b>されます。サーバー側のエッジエンジンが 5 分ごとに SpaceX の公式 API をクエリし、Cloudflare KV 内に最新データをキャッシュすることで、カウントダウンとカレンダーフィードをリアルタイムに更新します。",
-    "q3": "どの打ち上げロケットや打ち上げ場所が追跡されていますか？",
-    "a3": "このカレンダーは、現在運用中のすべての SpaceX 打ち上げシステムを追跡しています。これには<b>ファルコン9 (Falcon 9)</b>、<b>ファルコン・ヘビー (Falcon Heavy)</b>、そして深宇宙探査用の<b>スターシップ (Starship)</b> が含まれます。打ち上げ場所は、ケープカナベラル宇宙軍基地（フロリダ州）、ヴァンデンバーグ宇宙軍基地（カリフォルニア州）、ボカチカのスターベース（テキサス州）の商業射点を網羅しています。",
-    "q4": "カレンダーから直接打ち上げライブ配信を視聴できますか？",
-    "a4": "はい。SpaceX が公式ウェブキャストのリンクを公開すると、サーバーのキャッシュが詳細を自動で照合し、YouTube や X.com のライブ配信などのウェブキャスト URL をカレンダーの説明欄やページのミッション詳細パネルに追加します。"
   }
 }

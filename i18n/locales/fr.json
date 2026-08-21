@@ -4,9 +4,6 @@
     "description": "Abonnez-vous aux calendriers de lancements, courses et autres événements via des liens Webcal ou ICS."
   },
   "header": {
-    "copy": "Abonnez-vous à des calendriers publics et gardez vos programmes favoris synchronisés.",
-    "github": "GitHub",
-    "githubAriaLabel": "Voir le projet sur GitHub",
     "themeToggleAria": "Basculer mode sombre/clair"
   },
   "subscribe": {
@@ -21,21 +18,10 @@
   },
   "hero": {
     "eyebrow": "Flux de calendrier en direct",
-    "loadingTitle": "Chargement du calendrier des lancements",
-    "loadingDescription": "Récupération des derniers événements depuis les flux de calendrier sélectionnés.",
-    "noMissionsTitle": "Aucune mission à venir",
-    "noMissionsDescription": "Le flux en direct n'a renvoyé aucun lancement à venir.",
-    "unavailableTitle": "Données de lancement indisponibles",
-    "unavailableDescription": "L'app ne peut pas joindre les flux de calendrier sélectionnés pour le moment.",
     "meta": {
       "nextLaunch": "Prochain lancement",
       "countdown": "Compte à rebours"
-    },
-    "pending": "En attente",
-    "syncing": "Synchronisation",
-    "retryLater": "Réessayer plus tard",
-    "unavailable": "Indisponible",
-    "nextLaunchDescription": "{vehicle} depuis {launchSite}, avec récupération à {returnSite}."
+    }
   },
   "overview": {
     "cadenceEyebrow": "Vue d'ensemble",
@@ -57,7 +43,6 @@
       "subscriptions": "Abonnements",
       "language": "Langue"
     },
-    "eyebrow": "Calendar Hub",
     "title": "Parcourir les calendriers et événements par mois",
     "viewDay": "Jour",
     "viewWeek": "Semaine",
@@ -81,64 +66,20 @@
       "winner": "Vainqueur",
       "games": "Scores des sets"
     },
-    "moreEvents": "+{count} de plus...",
-    "previousMonthAria": "Voir le mois précédent",
-    "nextMonthAria": "Voir le mois suivant",
     "noLaunches": "Aucun lancement daté n'est disponible pour ce mois.",
     "dataLoadError": "Impossible de charger les données de lancement SpaceX.",
     "retry": "Réessayer",
     "refreshing": "Actualisation...",
-    "dayLabel": "{day} {month}",
-    "untimed": "Heure à confirmer",
-    "weekdayShort": [
-      "Dim",
-      "Lun",
-      "Mar",
-      "Mer",
-      "Jeu",
-      "Ven",
-      "Sam"
-    ]
-  },
-  "manifest": {
-    "eyebrow": "Manifeste",
-    "title": "Missions à venir",
-    "waiting": "En attente des données",
-    "refreshedAt": "Actualisé {value}"
-  },
-  "history": {
-    "eyebrow": "Historique",
-    "title": "Lancements récents",
-    "waiting": "En attente de l'historique",
-    "refreshedAt": "Historique actualisé {value}",
-    "unavailable": "Historique des lancements indisponible",
-    "emptyState": "Aucun lancement SpaceX récent n'a été renvoyé.",
-    "noDetails": "Aucun détail de mission n'est disponible pour ce lancement.",
-    "detailsLabel": "Détails",
-    "detailsAvailable": "Détails disponibles",
-    "noLink": "Aucune page externe",
-    "detailsLink": "Détails du lancement",
-    "status": {
-      "success": "Réussi",
-      "failure": "Échec",
-      "unknown": "Inconnu"
-    }
+    "untimed": "Heure à confirmer"
   },
   "mission": {
     "vehicle": "Véhicule",
     "launchSite": "Site de lancement",
     "returnSite": "Site de récupération",
     "watchLive": "Regarder en direct",
-    "detailsLink": "Page de la mission",
-    "emptyState": "Le flux en direct n'a renvoyé aucune mission SpaceX à venir.",
     "live": "En direct",
     "unspecified": "Non précisé",
     "tbd": "À confirmer",
-    "sitePending": "site à confirmer",
-    "recoveryPending": "un site de récupération non indiqué",
-    "launchTimingUnavailable": "L'heure de lancement n'a pas encore été publiée.",
-    "window": "Fenêtre : {open} à {close}",
-    "launchTarget": "Objectif de lancement : {local} · {utc}",
     "types": {
       "starlink": "Starlink",
       "nssl": "Lancement de sécurité nationale",
@@ -147,48 +88,21 @@
     "detailsHeading": "Résumé de la mission",
     "preLaunchTimeline": "Chronologie avant lancement",
     "postLaunchTimeline": "Séquence de lancement",
-    "webcastLink": "Webcast",
     "infographicLink": "Infographie",
     "selectionEyebrow": "Détails de la mission",
     "selectionTitle": "Sélectionnez une mission sur le calendrier",
     "selectionCopy": "Choisissez un lancement dans la liste du calendrier pour afficher ici les détails de la mission SpaceX, les liens de diffusion et les chronologies de lancement.",
     "detailsLoading": "Chargement des détails de la mission...",
-    "detailsUnavailable": "Les détails de la mission sont indisponibles pour le moment.",
-    "infographicAlt": "Infographie de la mission SpaceX",
     "infographicTitle": "Infographie de la Mission",
     "clickToViewInfographic": "Cliquez pour voir l'infographie complète",
     "clickToShrink": "Cliquez pour rétrécir",
     "clickToZoom": "Cliquez pour agrandir",
     "viewOriginal": "Voir l'original",
-    "infographicLabel": "Infographie de la mission {title}",
     "viewOfficialDetails": "Voir les détails officiels"
-  },
-  "countdown": {
-    "awaitingTime": "En attente de l'heure",
-    "windowOpen": "Fenêtre ouverte",
-    "format": "{days}j {hours}h {minutes}m {seconds}s",
-    "units": {
-      "days": "Jours",
-      "hours": "Heures",
-      "minutes": "Mins",
-      "seconds": "Secs"
-    }
   },
   "status": {
     "upcoming": "À venir",
     "live": "En direct",
     "liveNow": "EN DIRECT MAINTENANT"
-  },
-  "faq": {
-    "title": "Foire Aux Questions et Guides",
-    "subtitle": "FAQ & Guides",
-    "q1": "Comment ajouter le calendrier des lancements SpaceX à Google Agenda ou Apple Calendrier ?",
-    "a1": "Très facile ! Cliquez simplement sur le bouton \"<b>S'abonner au calendrier</b>\" en haut de la page. Sur les appareils iOS ou macOS, cela vous invite automatiquement à vous abonner. Sur Google Agenda, copiez le lien <code>{link}</code>, accédez à l'application Web Google Agenda &rarr; Autres agendas &rarr; Ajouter par URL, puis collez l'adresse.",
-    "q2": "À quelle fréquence ce calendrier de lancement est-il mis à jour ?",
-    "a2": "Les horaires sont <b>automatiquement mis à jour</b>. Notre moteur Edge interroge les API officielles de SpaceX toutes les 5 minutes et stocke les dernières informations dans Cloudflare KV, actualisant les comptes à rebours et le calendrier en temps réel.",
-    "q3": "Quels lanceurs et sites de lancement sont suivis ?",
-    "a3": "Le calendrier suit tous les systèmes de lancement SpaceX actifs, notamment <b>Falcon 9</b>, <b>Falcon Heavy</b> et le vaisseau spatial <b>Starship</b>. Les sites de lancement couvrent les rampes commerciales de la base de Cape Canaveral (Floride), de la base de Vandenberg (Californie) et de la Starbase à Boca Chica (Texas).",
-    "q4": "Puis-je regarder les diffusions en direct des lancements directement depuis le calendrier ?",
-    "a4": "Oui. Dès que SpaceX publie les liens de diffusion officiels, notre système associe les informations et ajoute les URL des webcasts (comme YouTube ou X.com) dans la description du calendrier et le panneau de détails."
   }
 }

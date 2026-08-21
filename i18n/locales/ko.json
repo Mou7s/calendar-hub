@@ -4,9 +4,6 @@
     "description": "발사 일정, 레이스 및 다양한 주제의 캘린더를 Webcal 또는 ICS 링크로 구독하세요."
   },
   "header": {
-    "copy": "공개 캘린더를 구독하고 관심 있는 일정을 자동으로 동기화하세요.",
-    "github": "GitHub",
-    "githubAriaLabel": "GitHub에서 프로젝트 보기",
     "themeToggleAria": "다크/라이트 모드 전환"
   },
   "subscribe": {
@@ -21,21 +18,10 @@
   },
   "hero": {
     "eyebrow": "실시간 캘린더 피드",
-    "loadingTitle": "발사 캘린더 불러오는 중",
-    "loadingDescription": "선택한 캘린더 피드에서 최신 이벤트를 가져오고 있습니다.",
-    "noMissionsTitle": "예정된 미션 없음",
-    "noMissionsDescription": "실시간 미션 피드에서 예정된 발사를 반환하지 않았습니다.",
-    "unavailableTitle": "발사 데이터를 사용할 수 없음",
-    "unavailableDescription": "지금은 선택한 캘린더 피드에 연결할 수 없습니다.",
     "meta": {
       "nextLaunch": "다음 발사",
       "countdown": "카운트다운"
-    },
-    "pending": "대기 중",
-    "syncing": "동기화 중",
-    "retryLater": "나중에 다시 시도",
-    "unavailable": "사용 불가",
-    "nextLaunchDescription": "{vehicle}이(가) {launchSite}에서 발사되며 {returnSite}에서 회수될 예정입니다."
+    }
   },
   "overview": {
     "cadenceEyebrow": "일정 개요",
@@ -57,7 +43,6 @@
       "subscriptions": "구독",
       "language": "언어"
     },
-    "eyebrow": "Calendar Hub",
     "title": "월별 캘린더 및 이벤트 보기",
     "viewDay": "일",
     "viewWeek": "주",
@@ -81,64 +66,20 @@
       "winner": "승자",
       "games": "세트 스코어"
     },
-    "moreEvents": "+{count}개 더보기...",
-    "previousMonthAria": "이전 달 보기",
-    "nextMonthAria": "다음 달 보기",
     "noLaunches": "이 달에는 날짜가 있는 발사가 아직 없습니다.",
     "dataLoadError": "SpaceX 발사 데이터를 불러오지 못했습니다.",
     "retry": "다시 시도",
     "refreshing": "새로 고치는 중...",
-    "dayLabel": "{month}월 {day}일",
-    "untimed": "시간 미정",
-    "weekdayShort": [
-      "일",
-      "월",
-      "화",
-      "수",
-      "목",
-      "금",
-      "토"
-    ]
-  },
-  "manifest": {
-    "eyebrow": "매니페스트",
-    "title": "예정된 미션",
-    "waiting": "데이터 대기 중",
-    "refreshedAt": "{value} 업데이트"
-  },
-  "history": {
-    "eyebrow": "기록",
-    "title": "최근 발사",
-    "waiting": "기록 데이터 대기 중",
-    "refreshedAt": "{value} 기록 업데이트",
-    "unavailable": "발사 기록을 사용할 수 없습니다",
-    "emptyState": "최근 SpaceX 발사가 반환되지 않았습니다.",
-    "noDetails": "이 발사에 대한 미션 세부 정보가 없습니다.",
-    "detailsLabel": "세부 정보",
-    "detailsAvailable": "세부 정보 있음",
-    "noLink": "외부 페이지 없음",
-    "detailsLink": "발사 세부 정보",
-    "status": {
-      "success": "성공",
-      "failure": "실패",
-      "unknown": "알 수 없음"
-    }
+    "untimed": "시간 미정"
   },
   "mission": {
     "vehicle": "발사체",
     "launchSite": "발사장",
     "returnSite": "회수 지점",
     "watchLive": "라이브 보기",
-    "detailsLink": "미션 페이지",
-    "emptyState": "실시간 데이터 피드에서 예정된 SpaceX 미션을 반환하지 않았습니다.",
     "live": "라이브",
     "unspecified": "지정되지 않음",
     "tbd": "미정",
-    "sitePending": "발사장 미정",
-    "recoveryPending": "공개되지 않은 회수 지점",
-    "launchTimingUnavailable": "발사 시간이 아직 공개되지 않았습니다.",
-    "window": "발사 시간: {open} - {close}",
-    "launchTarget": "목표 발사 시간: {local} · {utc}",
     "types": {
       "starlink": "Starlink",
       "nssl": "국가 안보 발사",
@@ -147,48 +88,21 @@
     "detailsHeading": "미션 브리핑",
     "preLaunchTimeline": "발사 전 타임라인",
     "postLaunchTimeline": "발사 후 타임라인",
-    "webcastLink": "웹캐스트",
     "infographicLink": "인포그래픽",
     "selectionEyebrow": "미션 세부 정보",
     "selectionTitle": "캘린더에서 미션 선택",
     "selectionCopy": "캘린더 목록에서 발사를 선택하여 SpaceX 미션 상세 정보, 웹캐스트 링크 및 발사 타임라인을 여기에서 확인하세요.",
     "detailsLoading": "미션 상세 정보 로딩 중...",
-    "detailsUnavailable": "현재 미션 상세 정보를 불러올 수 없습니다.",
-    "infographicAlt": "SpaceX 미션 인포그래픽",
     "infographicTitle": "미션 발사 도해",
     "clickToViewInfographic": "클릭하여 고해상도 인포그래픽 보기",
     "clickToShrink": "클릭하여 축소",
     "clickToZoom": "클릭하여 원본 크기로 보기",
     "viewOriginal": "새 탭에서 원본 이미지 열기",
-    "infographicLabel": "{title} 미션 도해",
     "viewOfficialDetails": "공식 상세 보기"
-  },
-  "countdown": {
-    "awaitingTime": "시간 대기 중",
-    "windowOpen": "발사 시간 시작",
-    "format": "{days}일 {hours}시간 {minutes}분 {seconds}초",
-    "units": {
-      "days": "일",
-      "hours": "시",
-      "minutes": "분",
-      "seconds": "초"
-    }
   },
   "status": {
     "upcoming": "예정",
     "live": "라이브",
     "liveNow": "LIVE 생중계"
-  },
-  "faq": {
-    "title": "자주 묻는 질문 및 가이드",
-    "subtitle": "FAQ & 가이드",
-    "q1": "SpaceX 발사 일정을 Google 캘린더나 Apple 캘린더에 어떻게 추가하나요?",
-    "a1": "매우 간단합니다! 페이지 상단의 \"<b>캘린더 구독</b>\" 버튼을 클릭하기만 하면 됩니다. iOS 또는 macOS 기기에서는 자동으로 구독을 제안하는 팝업이 뜹니다. Google 캘린더의 경우 <code>{link}</code> 링크를 복사한 다음, 웹 캘린더에서 \"다른 캘린더 &rarr; URL로 추가\"로 이동하여 복사한 주소를 붙여넣으세요.",
-    "q2": "이 발사 캘린더는 얼마나 자주 업데이트되나요?",
-    "a2": "일정은 <b>자동으로 최신 상태로 유지</b>됩니다. 서버 측 엣지 엔진이 5분마다 SpaceX 공식 API를 조회하고 최신 정보를 Cloudflare KV에 캐싱하여 카운트다운과 캘린더 피드를 실시간으로 업데이트합니다.",
-    "q3": "어떤 발사체와 발사장을 추적하나요?",
-    "a3": "캘린더는 <b>팰컨 9 (Falcon 9)</b>, <b>팰컨 헤비 (Falcon Heavy)</b> 및 심우주용 <b>스타쉽 (Starship)</b>을 포함한 모든 활성 SpaceX 발사 시스템을 추적합니다. 발사장 위치는 플로리다의 케이프커내버럴 우주군 기지, 캘리포니아의 반덴버그 우주군 기지, 텍사스의 보카치카 스타베이스를 모두 포함합니다.",
-    "q4": "캘린더에서 발사 라이브 방송을 바로 시청할 수 있나요?",
-    "a4": "네, 가능합니다. SpaceX가 공식 웹캐스트 링크를 게시하면 시스템이 정보를 자동으로 대조하여 YouTube 또는 X.com 라이브 링크를 캘린더 설명 및 상세 패널에 추가합니다."
   }
 }
