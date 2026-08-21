@@ -70,6 +70,19 @@ export async function syncCalendars(env, fetchImpl = fetch, now = new Date()) {
   return status
 }
 
+/**
+ * 定时任务入口的统一守卫：
+ * 本地开发（无 Cloudflare 绑定且 hubKV 不可用）时优雅跳过而不是抛错；
+ * 生产环境（SPACEX_KV 存在）时行为与直接调用 syncCalendars 完全一致。
+ */
+export async function runCalendarSyncTask(context = {}) {
+  const env = context.cloudflare?.env || {}
+  if (!getKvStorage(env)) {
+    return { skipped: true, reason: 'Calendar KV binding is unavailable' }
+  }
+  return { result: await syncCalendars(env) }
+}
+
 export async function getCalendarFromKv(event, topic, fallbackLoader) {
   const env = event.context.cloudflare?.env || {}
   const kv = getKvStorage(env)

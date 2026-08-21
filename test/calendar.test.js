@@ -19,7 +19,11 @@ import {
   parseDota2Matches,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
-import { CALENDAR_KEYS, syncCalendars } from "../server/utils/calendar-sync.js";
+import {
+  CALENDAR_KEYS,
+  runCalendarSyncTask,
+  syncCalendars,
+} from "../server/utils/calendar-sync.js";
 import { getCalendarEventPresentation } from "../app/utils/calendar-event-presentation.js";
 import {
   buildCalendarMonthKeys,
@@ -1688,4 +1692,17 @@ test("calendar event presentation uses F1 semantics without changing SpaceX defa
     vehicleIcon: "i-lucide-trophy",
     locationIcon: "i-lucide-map-pin",
   });
+});
+
+test("runCalendarSyncTask skips gracefully when no KV binding is available", async () => {
+  const outcome = await runCalendarSyncTask({});
+  assert.equal(outcome.skipped, true);
+  assert.match(outcome.reason, /KV binding is unavailable/);
+
+  // 有 KV stub 时不应走 skipped 分支：证明它真的尝试执行了同步（fetch 外网会 reject，
+  // 但关键是不能命中 skipped 分支——锁定"有绑定就走真同步"的契约）
+  const attempted = await runCalendarSyncTask({
+    cloudflare: { env: { SPACEX_KV: { get: async () => null, put: async () => {} } } },
+  }).catch((e) => e);
+  assert.equal(attempted?.skipped, undefined);
 });
