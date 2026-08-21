@@ -1179,6 +1179,10 @@ const getEventStyleClass = (event) => {
   if (event.isLive) {
     return 'bg-white text-black font-extrabold shadow-md shadow-white/20'
   }
+  // 已完场比赛（带比分）降低视觉权重，与未赛区分
+  if (event.status === 'Finished' && event.scores) {
+    return 'bg-[#1d1d1d] hover:bg-[#2a2a2a] text-neutral-400'
+  }
   return 'bg-[#262626] hover:bg-[#333333] text-[#ffffff]'
 }
 </script>

@@ -193,6 +193,9 @@ export function parseDota2Matches(html, now = new Date()) {
   const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
   if (Number.isNaN(nowMs)) return []
 
+  // 已结束比赛保留 48 小时，让用户能在日历上回看结果
+  const FINISHED_RETENTION_MS = 48 * 60 * 60 * 1000
+
   const matches = []
   const seenIds = new Set()
 
@@ -201,8 +204,10 @@ export function parseDota2Matches(html, now = new Date()) {
     if (!Number.isFinite(timestamp)) continue
 
     const launchAt = new Date(timestamp * 1000).toISOString()
-    if (Date.parse(launchAt) < nowMs) continue
+    const isFinished = Date.parse(launchAt) < nowMs
+    if (isFinished && nowMs - Date.parse(launchAt) > FINISHED_RETENTION_MS) continue
 
+    // 宽容匹配：name span 可携带任意属性（style 等）
     const opponents = Array.from(
       block.matchAll(/<span class="name"[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/span>/gi),
       match => decodeHtmlText(match[1])
@@ -229,6 +234,29 @@ export function parseDota2Matches(html, now = new Date()) {
     seenIds.add(id)
 
     const bestOf = block.match(/\bBo([1-5])\b/i)?.[0]?.toUpperCase() || 'Match'
+
+    // 完场数据：比分 + 胜者（Liquipedia 用 winner class 标记胜方一侧）
+    let scores = null
+    let winner = null
+    if (isFinished) {
+      const scoreDigits = Array.from(
+        block.matchAll(/match-info-header-scoreholder-score[^"]*">(\d+)<\/span>/gi),
+        match => match[1]
+      )
+      if (scoreDigits.length >= 2 && (scoreDigits[0] !== '0' || scoreDigits[1] !== '0')) {
+        scores = `${scoreDigits[0]}:${scoreDigits[1]}`
+      }
+      const leftWinner = /match-info-header-opponent-left[^"]*match-info-header-winner/.test(block)
+      const rightWinner = /match-info-header-opponent-right[^"]*match-info-header-winner/.test(block)
+      if (!leftWinner && !rightWinner && scores) {
+        // 兜底：比分高者为胜
+        const [a, b] = scores.split(':').map(Number)
+        winner = a > b ? opponents[0] : b > a ? opponents[1] : null
+      } else {
+        winner = leftWinner ? opponents[0] : rightWinner ? opponents[1] : null
+      }
+    }
+
     const titleEn = `${opponents[0]} vs ${opponents[1]} · ${tournamentName}`
     const titleZh = `${opponents[0]} 对阵 ${opponents[1]} · ${tournamentName}`
 
@@ -247,10 +275,12 @@ export function parseDota2Matches(html, now = new Date()) {
       launchAt,
       launchWindow: { open: launchAt, close: null },
       isLive: false,
-      status: 'Confirmed',
-      calendarGroup: 'upcoming',
-      competitor1: { name: opponents[0] },
-      competitor2: { name: opponents[1] }
+      status: isFinished ? 'Finished' : 'Confirmed',
+      calendarGroup: isFinished ? 'history' : 'upcoming',
+      scores,
+      winner,
+      competitor1: { name: opponents[0], isWinner: winner === opponents[0] },
+      competitor2: { name: opponents[1], isWinner: winner === opponents[1] }
     })
   }
 
@@ -926,7 +956,7 @@ export function buildTopicCalendarFeed(topicId, data) {
       const uid = `${mission.correlationId || mission.id}@${uidDomain}`;
 
       let summary = mission.title;
-      if (topicId === 'wtt' && mission.status === 'Finished' && mission.scores) {
+      if ((topicId === 'wtt' || topicId === 'dota2') && mission.status === 'Finished' && mission.scores) {
         summary = `[${mission.scores}] ${mission.title}`;
       }
 

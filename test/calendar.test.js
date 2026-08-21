@@ -1364,8 +1364,8 @@ const sampleDota2MatchHtml = `
   <div class="match-info">
     <span class="timer-object" data-timestamp="1787000000"></span>
     <div class="match-info-header">
-      <div class="match-info-header-opponent"><span class="name"><a>Past Team A</a></span></div>
-      <div>Bo1</div>
+      <div class="match-info-header-opponent match-info-header-winner"><span class="name" style="white-space:pre"><a>Past Team A</a></span></div>
+      <div><span class="match-info-header-scoreholder-score">2</span>:<span class="match-info-header-scoreholder-score">1</span> (Bo3)</div>
       <div class="match-info-header-opponent"><span class="name"><a>Past Team B</a></span></div>
     </div>
     <div class="match-info-tournament">
@@ -1386,6 +1386,30 @@ test("Dota 2 parser keeps future Liquipedia matches with named opponents", () =>
   assert.equal(matches[0].vehicle, "BO3");
   assert.equal(matches[0].missionUrl, "https://liquipedia.net/dota2/The_International/2026");
   assert.equal(matches[0].launchAt, "2026-08-21T06:15:00.000Z");
+});
+
+test("Dota 2 parser keeps finished matches for 48h with scores and winner", () => {
+  // Past Team A 2:1 Past Team B 开赛于 1787000000 = 2026-08-17T20:53:20Z
+  const now = new Date("2026-08-18T12:00:00.000Z"); // 完场后约 15 小时
+  const matches = parseDota2Matches(sampleDota2MatchHtml, now);
+
+  assert.equal(matches.length, 2);
+  const finished = matches.find((m) => m.status === "Finished");
+  assert.ok(finished, "finished match should be kept");
+  assert.equal(finished.scores, "2:1");
+  assert.equal(finished.winner, "Past Team A");
+  assert.equal(finished.calendarGroup, "history");
+  assert.equal(finished.competitor1.isWinner, true);
+  assert.equal(finished.competitor2.isWinner, false);
+
+  // 超过 48h 后完场场次不再保留；原未来场此时也已过期转为 Finished（无比分，数据源未更新）
+  const later = parseDota2Matches(
+    sampleDota2MatchHtml,
+    new Date("2026-08-22T00:00:00.000Z"),
+  );
+  assert.equal(later.length, 1);
+  assert.equal(later[0].status, "Finished");
+  assert.equal(later[0].scores, null);
 });
 
 test("Dota 2 loader uses Liquipedia's MediaWiki API and builds a topic calendar", async () => {

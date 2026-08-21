@@ -207,7 +207,7 @@ const sortedCalendarMissions = computed(() => {
       shortTitle: isChinese
         ? (m.shortTitleZh || m.shortTitle || m.titleZh || m.title)
         : (m.shortTitleEn || m.shortTitle || m.titleEn || m.title),
-      calendarGroup: "upcoming",
+      calendarGroup: m.calendarGroup || (m.status === "Finished" ? "history" : "upcoming"),
       key: `dota2:${m.id}`,
     };
   });
