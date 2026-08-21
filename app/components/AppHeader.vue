@@ -26,7 +26,7 @@
         :items="localeItems"
         value-key="value"
         label-key="label"
-        icon="i-heroicons-language"
+        icon="i-heroicons-globe-alt"
         size="xs"
         color="neutral"
         variant="subtle"
