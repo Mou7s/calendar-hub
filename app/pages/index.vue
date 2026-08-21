@@ -30,7 +30,6 @@
         @update:active-month-index="setActiveMonthIndex"
         @update:selected-date-iso="setSelectedDateIso"
         @update:active-calendar-ids="activeCalendarIds = $event"
-        @select-mission="selectMission"
       />
     </main>
   </div>
@@ -370,12 +369,6 @@ const gridDays = computed(() => {
 
   return days;
 });
-
-const selectedMission = ref(null);
-
-const selectMission = (mission) => {
-  selectedMission.value = mission;
-};
 
 useSeoMeta({
   title: computedTitle,
