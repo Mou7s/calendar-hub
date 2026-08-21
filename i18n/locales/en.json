@@ -79,7 +79,8 @@
     "dataLoadError": "SpaceX launch data could not be loaded.",
     "retry": "Retry",
     "refreshing": "Refreshing...",
-    "untimed": "Time TBD"
+    "untimed": "Time TBD",
+    "moreEvents": "See {count} more"
   },
   "mission": {
     "vehicle": "Vehicle",

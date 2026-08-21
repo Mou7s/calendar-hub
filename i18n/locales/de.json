@@ -70,7 +70,8 @@
     "dataLoadError": "SpaceX-Startdaten konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
     "refreshing": "Aktualisierung...",
-    "untimed": "Zeit offen"
+    "untimed": "Zeit offen",
+    "moreEvents": "+{count} mehr..."
   },
   "mission": {
     "vehicle": "Träger",

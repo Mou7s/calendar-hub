@@ -70,7 +70,8 @@
     "dataLoadError": "SpaceX 발사 데이터를 불러오지 못했습니다.",
     "retry": "다시 시도",
     "refreshing": "새로 고치는 중...",
-    "untimed": "시간 미정"
+    "untimed": "시간 미정",
+    "moreEvents": "+{count}개 더보기..."
   },
   "mission": {
     "vehicle": "발사체",

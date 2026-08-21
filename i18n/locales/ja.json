@@ -70,7 +70,8 @@
     "dataLoadError": "SpaceX の打ち上げデータを読み込めませんでした。",
     "retry": "再試行",
     "refreshing": "更新中...",
-    "untimed": "時刻未定"
+    "untimed": "時刻未定",
+    "moreEvents": "+{count} 件..."
   },
   "mission": {
     "vehicle": "機体",

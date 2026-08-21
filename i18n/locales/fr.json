@@ -70,7 +70,8 @@
     "dataLoadError": "Impossible de charger les données de lancement SpaceX.",
     "retry": "Réessayer",
     "refreshing": "Actualisation...",
-    "untimed": "Heure à confirmer"
+    "untimed": "Heure à confirmer",
+    "moreEvents": "+{count} de plus..."
   },
   "mission": {
     "vehicle": "Véhicule",

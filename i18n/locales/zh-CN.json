@@ -78,7 +78,8 @@
     "dataLoadError": "SpaceX 发射数据暂时加载失败。",
     "retry": "重试",
     "refreshing": "刷新中...",
-    "untimed": "时间待定"
+    "untimed": "时间待定",
+    "moreEvents": "+{count} 更多..."
   },
   "mission": {
     "vehicle": "火箭",
