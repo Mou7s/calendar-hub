@@ -1,8 +1,8 @@
 const SPACE_X_PRESENTATION = Object.freeze({
   vehicleLabelKey: 'mission.vehicle',
   locationLabelKey: 'mission.launchSite',
-  vehicleIcon: 'i-heroicons-rocket-launch',
-  locationIcon: 'i-heroicons-map-pin'
+  vehicleIcon: 'i-lucide-rocket',
+  locationIcon: 'i-lucide-map-pin'
 })
 
 const EVENT_PRESENTATIONS = Object.freeze({

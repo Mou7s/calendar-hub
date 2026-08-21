@@ -9,7 +9,7 @@
     <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
       <!-- Subscribe Button -->
       <UButton
-        icon="i-heroicons-rss"
+        icon="i-lucide-rss"
         color="primary"
         variant="solid"
         size="xs"
@@ -26,7 +26,7 @@
         :items="localeItems"
         value-key="value"
         label-key="label"
-        icon="i-heroicons-globe-alt"
+        icon="i-lucide-globe"
         size="xs"
         color="neutral"
         variant="subtle"
@@ -37,7 +37,7 @@
       <!-- Theme Toggle -->
       <UButton
         ref="themeBtnRef"
-        :icon="colorMode.value === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'"
+        :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
         color="neutral"
         variant="subtle"
         size="xs"

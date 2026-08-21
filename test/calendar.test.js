@@ -1679,8 +1679,8 @@ test("calendar event presentation uses F1 semantics without changing SpaceX defa
   assert.deepEqual(getCalendarEventPresentation({ calendarId: "spacex" }), {
     vehicleLabelKey: "mission.vehicle",
     locationLabelKey: "mission.launchSite",
-    vehicleIcon: "i-heroicons-rocket-launch",
-    locationIcon: "i-heroicons-map-pin",
+    vehicleIcon: "i-lucide-rocket",
+    locationIcon: "i-lucide-map-pin",
   });
 
   assert.deepEqual(getCalendarEventPresentation({ calendarId: "wtt" }), {

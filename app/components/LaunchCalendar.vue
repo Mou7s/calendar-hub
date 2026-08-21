@@ -10,7 +10,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-baseline gap-2.5">
             <div class="w-7 h-7 rounded-none bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
-              <UIcon name="i-heroicons-calendar" class="w-4.5 h-4.5" />
+              <UIcon name="i-lucide-calendar" class="w-4.5 h-4.5" />
             </div>
             <span class="text-lg font-extrabold tracking-wider text-white font-mono">CALENDAR</span>
             <span class="text-[8px] tracking-[0.2em] text-[#737373] font-bold">HUB</span>
@@ -40,7 +40,7 @@
                   :class="isCalendarActive(layer.id) ? 'text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
                   :style="isCalendarActive(layer.id) ? { backgroundColor: layer.color } : undefined"
                 >
-                  <UIcon name="i-heroicons-check-16-solid" class="w-3.5 h-3.5 stroke-[3]" />
+                  <UIcon name="i-lucide-check" class="w-3.5 h-3.5 stroke-[3]" />
                 </div>
                 <span
                   class="text-xs font-semibold tracking-wide transition-colors truncate"
@@ -56,7 +56,7 @@
                 :title="t('subscribe.subscribeLink')"
                 @click.stop
               >
-                <UIcon name="i-heroicons-rss-16-solid" class="w-3.5 h-3.5" />
+                <UIcon name="i-lucide-rss" class="w-3.5 h-3.5" />
                 <span>{{ t('subscribe.buttonShort') || 'Subscribe' }}</span>
               </a>
             </div>
@@ -73,7 +73,7 @@
             :items="languageOptions"
             value-key="value"
             label-key="label"
-            icon="i-heroicons-globe-alt"
+            icon="i-lucide-globe"
             size="sm"
             color="neutral"
             variant="subtle"
@@ -100,7 +100,7 @@
             :title="`${t('calendar.timezone')}: ${timezoneDisplay}`"
             :aria-label="`${t('calendar.timezone')}: ${timezoneDisplay}`"
           >
-            <UIcon name="i-heroicons-globe-alt" class="h-3 w-3 shrink-0" />
+            <UIcon name="i-lucide-globe" class="h-3 w-3 shrink-0" />
             <span class="truncate">{{ timezoneDisplay }}</span>
           </span>
         </div>
@@ -152,7 +152,7 @@
               :disabled="activeCalendarView === 'month' && activeMonthIndex <= 0"
               @click="navigateCalendar(-1)"
             >
-              <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
+              <UIcon name="i-lucide-chevron-left" class="w-5 h-5" />
             </button>
             
             <button
@@ -169,7 +169,7 @@
               :disabled="activeCalendarView === 'month' && activeMonthIndex >= monthKeys.length - 1"
               @click="navigateCalendar(1)"
             >
-              <UIcon name="i-heroicons-chevron-right" class="w-5 h-5" />
+              <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -225,7 +225,7 @@
             class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-blue-500/60 bg-blue-600 text-[11px] font-bold text-white transition-colors hover:bg-blue-500"
             @click="openSubscribeModal(activeCalendarIds[0] || 'spacex')"
           >
-            <UIcon name="i-heroicons-rss-16-solid" class="w-3.5 h-3.5 shrink-0" />
+            <UIcon name="i-lucide-rss" class="w-3.5 h-3.5 shrink-0" />
             <span class="truncate">{{ t('subscribe.buttonShort') || 'Subscribe' }}</span>
           </button>
           <USelectMenu
@@ -233,7 +233,7 @@
             :items="languageOptions"
             value-key="value"
             label-key="label"
-            icon="i-heroicons-globe-alt"
+            icon="i-lucide-globe"
             size="xs"
             color="neutral"
             variant="subtle"
@@ -340,7 +340,7 @@
           <!-- Week Header Row (带左侧 56px 时间轴占位 + 7 列日期头) -->
           <div class="flex border-b border-[#262626] bg-[#141414] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
             <div class="w-14 shrink-0 border-r border-[#262626] flex items-center justify-center text-[10px] text-[#737373] font-mono">
-              <UIcon name="i-heroicons-clock" class="w-3.5 h-3.5 opacity-60" />
+              <UIcon name="i-lucide-clock" class="w-3.5 h-3.5 opacity-60" />
             </div>
             <div class="flex-1 grid grid-cols-7 gap-px">
               <div
@@ -465,7 +465,7 @@
 
           <!-- Empty Day State -->
           <div v-if="!currentDayFocus?.events?.length" class="flex-1 py-16 text-center text-[#737373] space-y-2">
-            <UIcon name="i-heroicons-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
+            <UIcon name="i-lucide-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
             <p class="text-sm font-semibold">{{ t('calendar.noLaunches') }}</p>
           </div>
 
@@ -544,7 +544,7 @@
           @click.stop="popoverEvent = null"
           aria-label="Close Floating Card"
         >
-          <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+          <UIcon name="i-lucide-x" class="w-4 h-4" />
         </button>
       </div>
 
@@ -568,7 +568,7 @@
       <!-- Direct Details Content (移除深色嵌套内盒) -->
       <div class="space-y-2 text-xs text-[#d4d4d4] pt-2 border-t border-[#262626]">
         <div class="flex items-center gap-2.5">
-          <UIcon name="i-heroicons-clock" class="w-4 h-4 text-[#737373] shrink-0" />
+          <UIcon name="i-lucide-clock" class="w-4 h-4 text-[#737373] shrink-0" />
           <span class="font-bold text-white font-mono">{{ formatFullDateTime(popoverEvent.launchAt) }}</span>
         </div>
 
@@ -578,7 +578,7 @@
         </div>
 
         <div v-if="popoverEvent.gameScores?.length" class="flex items-start gap-2.5">
-          <UIcon name="i-heroicons-list-bullet" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
+          <UIcon name="i-lucide-list" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
           <span class="leading-relaxed text-[#e5e5e5]">{{ t('calendar.wtt.games') || 'Games' }}: <strong class="text-white font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
         </div>
 
@@ -596,7 +596,7 @@
           class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-[#262626] hover:bg-[#333333] border border-[#333333] rounded-none transition-colors"
         >
           <span>{{ t('mission.viewOfficialDetails') }}</span>
-          <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5 text-[#a3a3a3]" />
+          <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5 text-[#a3a3a3]" />
         </NuxtLink>
       </div>
     </div>
@@ -624,7 +624,7 @@
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <span class="p-2 rounded-none bg-blue-600/20 text-blue-400 flex items-center justify-center">
-                    <UIcon name="i-heroicons-rss-16-solid" class="w-5 h-5" />
+                    <UIcon name="i-lucide-rss" class="w-5 h-5" />
                   </span>
                   <h3 class="text-base font-bold tracking-tight text-white">
                     {{ t('subscribe.title') }}
@@ -639,7 +639,7 @@
                 class="p-1.5 text-[#71717a] hover:text-white rounded-none transition-colors cursor-pointer shrink-0"
                 @click="showSubscribeModal = false"
               >
-                <UIcon name="i-heroicons-x-mark-20-solid" class="w-5 h-5" />
+                <UIcon name="i-lucide-x" class="w-5 h-5" />
               </button>
             </div>
 
@@ -662,7 +662,7 @@
               :href="activeSubscribeWebcalUrl"
               class="w-full py-3 px-4 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
             >
-              <UIcon name="i-heroicons-calendar-days-20-solid" class="w-4 h-4" />
+              <UIcon name="i-lucide-calendar-days" class="w-4 h-4" />
               <span>{{ t('subscribe.subscribeLink') }}</span>
             </a>
 
@@ -683,7 +683,7 @@
                   class="px-3 py-2 text-xs font-bold rounded-none bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                   @click="copyIcsUrl"
                 >
-                  <UIcon :name="isCopied ? 'i-heroicons-check-20-solid' : 'i-heroicons-clipboard-document-20-solid'" class="w-4 h-4 text-blue-400" />
+                  <UIcon :name="isCopied ? 'i-lucide-check' : 'i-lucide-clipboard'" class="w-4 h-4 text-blue-400" />
                   <span>{{ isCopied ? t('subscribe.copied') : t('subscribe.copyBtn') }}</span>
                 </button>
               </div>

@@ -78,7 +78,7 @@
           size="sm"
           class="rounded-none font-bold uppercase tracking-wider text-[10px] px-6 py-2.5 shadow-lg"
           @click="$emit('select-mission', nextLaunch)"
-          icon="i-heroicons-information-circle"
+          icon="i-lucide-info"
         >
           {{ t("history.detailsLink") }}
         </UButton>

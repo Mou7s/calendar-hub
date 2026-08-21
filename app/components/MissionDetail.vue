@@ -20,7 +20,7 @@
         <div>
           <!-- Back button inside content -->
           <UButton
-            icon="i-heroicons-arrow-left"
+            icon="i-lucide-arrow-left"
             size="xs"
             color="neutral"
             variant="subtle"
@@ -208,7 +208,7 @@
                 <!-- Premium Glass Hover Scrim -->
                 <div class="absolute inset-0 bg-neutral-950/30 group-hover:bg-neutral-950/50 backdrop-blur-[1px] group-hover:backdrop-blur-[2px] transition-all duration-300 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100">
                   <div class="bg-neutral-900/90 border border-neutral-700 text-white rounded-none px-4 py-2.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-2xl backdrop-blur-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    <span class="iconify i-heroicons-magnifying-glass-plus size-4 text-primary-400 animate-pulse"></span>
+                    <span class="iconify i-lucide-zoom-in size-4 text-primary-400 animate-pulse"></span>
                     <span>{{ t('mission.clickToViewInfographic') }}</span>
                   </div>
                 </div>
@@ -228,7 +228,7 @@
             variant="subtle"
             size="sm"
             class="rounded-none font-bold uppercase text-xs px-4"
-            icon="i-heroicons-play-circle"
+            icon="i-lucide-circle-play"
           >
             {{ webcast.title || t('mission.watchLive') }}
           </UButton>
@@ -239,7 +239,7 @@
             variant="subtle"
             size="sm"
             class="rounded-none font-bold uppercase text-xs px-4"
-            icon="i-heroicons-photo"
+            icon="i-lucide-image"
           >
             {{ t('mission.infographicLink') }}
           </UButton>
@@ -276,13 +276,13 @@
                 variant="subtle"
                 size="xs"
                 class="rounded-none text-[10px] font-mono"
-                icon="i-heroicons-arrow-top-right-on-square"
+                icon="i-lucide-external-link"
               >
                 {{ t('mission.viewOriginal') }}
               </UButton>
               
               <UButton
-                icon="i-heroicons-x-mark"
+                icon="i-lucide-x"
                 color="neutral"
                 variant="ghost"
                 class="rounded-none text-neutral-400 hover:text-white"

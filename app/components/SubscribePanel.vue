@@ -14,7 +14,7 @@
         <div class="flex flex-col gap-3 w-full lg:max-w-md shrink-0">
           <UButton id="subscribe-btn" :to="webcalLink" color="primary" size="md" block
             class="rounded-none font-bold uppercase tracking-wider text-xs py-3 transition-all duration-300 hover:scale-[1.02] hover:brightness-110 hover:shadow-lg hover:shadow-primary-500/20 active:scale-[0.98] cursor-pointer"
-            icon="i-heroicons-calendar-days">
+            icon="i-lucide-calendar-days">
             {{ t('subscribe.subscribeLink') }}
           </UButton>
           <div class="flex flex-col gap-2">
@@ -28,7 +28,7 @@
                 color="neutral"
                 variant="subtle"
                 class="rounded-none px-3 py-2 shrink-0 font-bold"
-                icon="i-heroicons-clipboard-document"
+                icon="i-lucide-clipboard"
                 @click="copyIcsLink"
               >
                 {{ copied ? t('subscribe.copied') : t('subscribe.copyBtn') }}
