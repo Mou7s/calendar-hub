@@ -11,6 +11,9 @@ export const F1_2026_SOURCE_URL = 'https://www.formula1.com/en/latest/article/fo
 export const WTT_EVENTS_SOURCE_URL = 'https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/general/wtt_upcoming_only_events_list.json'
 export const WTT_SCHEDULE_SOURCE_URL = 'https://wtt-website-api-vm-frontdoor-hhaec5epbhdyfugz.a01.azurefd.net/liveeventsapi/api/cms/GetEventSchedule'
 export const WTT_MAIN_SERIES_TIER = 'WTT Series'
+export const DOTA2_MATCHES_SOURCE_URL = 'https://liquipedia.net/dota2/api.php'
+export const DOTA2_MATCHES_PAGE = 'Liquipedia:Matches'
+export const DOTA2_MATCHES_USER_AGENT = 'CalendarHub/1.0 (https://calendarhub.mou7s.com/)'
 
 export const CALENDAR_TOPICS = [
   {
@@ -58,6 +61,18 @@ export const CALENDAR_TOPICS = [
     descriptionEn: 'Scheduled matchups from the main WTT Series with confirmed players and start times.',
     icsPath: '/ics/wtt.ics',
     sourceUrl: 'https://www.worldtabletennis.com/events_calendar'
+  },
+  {
+    id: 'dota2',
+    name: 'Dota 2 大赛比赛日历',
+    nameEn: 'Dota 2 Major Matches Calendar',
+    category: 'sports',
+    icon: 'i-heroicons-command-line',
+    color: 'violet',
+    description: '同步 Liquipedia 已公布时间的 Dota 2 大型赛事对阵与比赛开始时间。',
+    descriptionEn: 'Upcoming Dota 2 tournament matches with announced start times from Liquipedia.',
+    icsPath: '/ics/dota2.ics',
+    sourceUrl: 'https://liquipedia.net/dota2/Liquipedia:Matches'
   },
   {
     id: 'games',
@@ -153,7 +168,94 @@ const decodeHtmlText = (value) => String(value || '')
   .replace(/&amp;/g, '&')
   .replace(/&#39;|&apos;/g, "'")
   .replace(/&quot;/g, '"')
+  .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+  .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)))
   .trim()
+
+const slugifyDota2Value = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+
+const getDota2MatchBlocks = (html) => {
+  const starts = Array.from(String(html || '').matchAll(/<div class="match-info">/gi), match => match.index)
+  return starts.map((start, index) => {
+    const end = starts[index + 1] ?? String(html || '').length
+    return String(html || '').slice(start, end)
+  })
+}
+
+/**
+ * Parse the rendered match ticker returned by Liquipedia's MediaWiki API.
+ * The API response contains match cards, not a direct HTML page request.
+ */
+export function parseDota2Matches(html, now = new Date()) {
+  const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
+  if (Number.isNaN(nowMs)) return []
+
+  const matches = []
+  const seenIds = new Set()
+
+  for (const block of getDota2MatchBlocks(html)) {
+    const timestamp = Number(block.match(/data-timestamp="(\d+)"/i)?.[1])
+    if (!Number.isFinite(timestamp)) continue
+
+    const launchAt = new Date(timestamp * 1000).toISOString()
+    if (Date.parse(launchAt) < nowMs) continue
+
+    const opponents = Array.from(
+      block.matchAll(/<span class="name"[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>\s*<\/span>/gi),
+      match => decodeHtmlText(match[1])
+    ).filter(Boolean)
+    if (opponents.length < 2) continue
+
+    const tournamentMatch = block.match(
+      /<span class="match-info-tournament-name"[^>]*>[\s\S]*?<a href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i
+    )
+    const tournamentName = decodeHtmlText(tournamentMatch?.[2])
+    if (!tournamentName) continue
+
+    const tournamentPath = tournamentMatch?.[1]
+      ? tournamentMatch[1].replace(/&amp;/g, '&')
+      : ''
+    const missionUrl = tournamentPath
+      ? new URL(tournamentPath, 'https://liquipedia.net').toString()
+      : `https://liquipedia.net/dota2/${encodeURIComponent(DOTA2_MATCHES_PAGE)}`
+
+    const matchId = block.match(/(?:[?&]title=|title=)Match:([^&"\s]+)/i)?.[1]
+    const matchKey = matchId || [timestamp, opponents[0], opponents[1], tournamentName].join('-')
+    const id = `dota2-${slugifyDota2Value(matchKey)}`
+    if (seenIds.has(id)) continue
+    seenIds.add(id)
+
+    const bestOf = block.match(/\bBo([1-5])\b/i)?.[0]?.toUpperCase() || 'Match'
+    const titleEn = `${opponents[0]} vs ${opponents[1]} · ${tournamentName}`
+    const titleZh = `${opponents[0]} 对阵 ${opponents[1]} · ${tournamentName}`
+
+    matches.push({
+      id,
+      title: titleEn,
+      titleEn,
+      titleZh,
+      shortTitle: `${opponents[0]} vs ${opponents[1]}`,
+      shortTitleEn: `${opponents[0]} vs ${opponents[1]}`,
+      shortTitleZh: `${opponents[0]} 对阵 ${opponents[1]}`,
+      missionType: `Dota 2 ${bestOf}`,
+      vehicle: bestOf,
+      launchSite: 'Online',
+      missionUrl,
+      launchAt,
+      launchWindow: { open: launchAt, close: null },
+      isLive: false,
+      status: 'Confirmed',
+      calendarGroup: 'upcoming',
+      competitor1: { name: opponents[0] },
+      competitor2: { name: opponents[1] }
+    })
+  }
+
+  return matches
+}
 
 export function parseF1OfficialStartTimes(html) {
   const tableStart = html.indexOf('2026 F1 start times')
@@ -591,6 +693,34 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
   return buildTopicCalendarData('wtt', items)
 }
 
+export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date()) {
+  const params = new URLSearchParams({
+    action: 'parse',
+    format: 'json',
+    formatversion: '2',
+    page: DOTA2_MATCHES_PAGE,
+    prop: 'text',
+    disabletoc: '1'
+  })
+  const response = await fetchImpl(`${DOTA2_MATCHES_SOURCE_URL}?${params.toString()}`, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': DOTA2_MATCHES_USER_AGENT
+    }
+  })
+  if (!response.ok) {
+    throw new Error(`Unable to load Liquipedia Dota 2 matches: ${response.status}`)
+  }
+
+  const payload = await response.json()
+  const html = payload?.parse?.text
+  if (typeof html !== 'string' || !html) {
+    throw new Error('Liquipedia Dota 2 match response did not contain parsed match data')
+  }
+
+  return buildTopicCalendarData('dota2', parseDota2Matches(html, now))
+}
+
 // 内置预设的非 SpaceX 主题静态/精选日历事件数据
 const STATIC_TOPIC_DATA = {
   'tech-events': [
@@ -689,6 +819,10 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
 
   if (topicId === 'wtt') {
     return await loadWttCalendarData(fetchImpl);
+  }
+
+  if (topicId === 'dota2') {
+    return await loadDota2CalendarData(fetchImpl)
   }
 
   return buildTopicCalendarData(topicId, STATIC_TOPIC_DATA[topicId] || []);
@@ -802,6 +936,9 @@ export function buildTopicCalendarFeed(topicId, data) {
         `Details: ${mission.vehicle || 'N/A'}`,
         `Location: ${mission.launchSite || 'Online'}`,
       ];
+      if (topicId === 'dota2') {
+        descLines.push(`Source: ${DOTA2_MATCHES_SOURCE_URL}`);
+      }
       if (mission.scores) {
         descLines.push(`Score: ${mission.scores}`);
       }

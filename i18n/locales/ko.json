@@ -63,12 +63,14 @@
     "viewWeek": "주",
     "viewMonth": "월",
     "today": "오늘",
+    "timezone": "시간대",
     "filterF1": "F1",
     "f1": {
       "vehicle": "레이싱카",
       "track": "서킷"
     },
     "filterWTT": "WTT 탁구",
+    "filterDota2": "Dota 2",
     "wtt": {
       "match": "경기 종목",
       "venue": "경기장",

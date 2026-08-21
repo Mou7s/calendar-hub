@@ -90,11 +90,19 @@
       <!-- Top Header Toolbar (黑白灰极简工具栏) -->
       <header class="h-auto min-h-14 border-b border-[#262626] px-3 py-2 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 shrink-0 bg-[#141414] md:h-14 md:px-4 md:py-0 md:flex md:items-center md:justify-between">
         <!-- Left: Month Title + Lunar Year -->
-        <div class="flex items-center gap-3">
-          <h1 class="text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none truncate">
+        <div class="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+          <h1 class="w-full min-w-0 text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none truncate sm:w-auto">
             <span>{{ monthTitleEnglish }}</span>
             <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden md:inline">{{ lunarYearLabel }}</span>
           </h1>
+          <span
+            class="inline-flex min-w-0 max-w-[9.5rem] shrink items-center gap-1 text-[9px] font-mono font-bold tracking-tight text-[#737373] md:max-w-[13rem]"
+            :title="`${t('calendar.timezone')}: ${timezoneDisplay}`"
+            :aria-label="`${t('calendar.timezone')}: ${timezoneDisplay}`"
+          >
+            <UIcon name="i-heroicons-globe-alt" class="h-3 w-3 shrink-0" />
+            <span class="truncate">{{ timezoneDisplay }}</span>
+          </span>
         </div>
 
         <!-- Center: Day / Week / Month Switcher (Apple Style Segmented Slider) -->
@@ -136,7 +144,7 @@
         </div>
 
         <!-- Right: Controls < Today > -->
-        <div class="flex items-center justify-self-end gap-2">
+        <div class="flex self-start items-center justify-self-end gap-2 sm:self-auto">
           <div class="flex h-8 items-center text-white text-sm font-semibold gap-1">
             <button
               type="button"
@@ -712,6 +720,24 @@ const activeLocaleCode = computed({
   }
 })
 
+const timezoneDisplay = ref('UTC')
+
+const updateTimezoneDisplay = () => {
+  if (!import.meta.client) return
+
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  try {
+    const offsetPart = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'longOffset',
+    }).formatToParts(new Date()).find(part => part.type === 'timeZoneName')?.value || 'GMT'
+    const utcOffset = offsetPart === 'GMT' ? 'UTC+00:00' : offsetPart.replace(/^GMT/, 'UTC')
+    timezoneDisplay.value = `${utcOffset} · ${timeZone}`
+  } catch {
+    timezoneDisplay.value = timeZone
+  }
+}
+
 const languageOptions = computed(() => {
   if (Array.isArray(locales?.value)) {
     return locales.value.map(l => {
@@ -737,7 +763,7 @@ const props = defineProps({
   todayIso: { type: String, required: true },
   selectedDateIso: { type: String, default: null },
   calendarLayers: { type: Array, default: () => [] },
-  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1', 'wtt'] }
+  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1', 'wtt', 'dota2'] }
 })
 
 const emit = defineEmits([
@@ -752,6 +778,7 @@ const providerList = [
   { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#ffffff' },
   { id: 'f1', nameKey: 'calendar.filterF1', defaultName: 'F1', color: '#ef4444' },
   { id: 'wtt', nameKey: 'calendar.filterWTT', defaultName: 'WTT', color: '#f59e0b' },
+  { id: 'dota2', nameKey: 'calendar.filterDota2', defaultName: 'Dota 2', color: '#8b5cf6' },
   { id: 'rocketlab', nameKey: 'calendar.filterRocketLab', defaultName: 'Rocket Lab', color: '#e5e5e5' },
   { id: 'nasa', nameKey: 'calendar.filterNasa', defaultName: 'NASA', color: '#d4d4d4' },
   { id: 'casc', nameKey: 'calendar.filterCasc', defaultName: 'CASC', color: '#a3a3a3' },
@@ -1040,6 +1067,7 @@ const getWeekEventStyle = (event, eventsInDay) => {
 
 onMounted(() => {
   if (import.meta.client) {
+    updateTimezoneDisplay()
     window.addEventListener('click', handleGlobalClick)
 
     if (window.ResizeObserver && timelineContainer.value) {

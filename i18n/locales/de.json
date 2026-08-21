@@ -63,12 +63,14 @@
     "viewWeek": "Woche",
     "viewMonth": "Monat",
     "today": "Heute",
+    "timezone": "Zeitzone",
     "filterF1": "F1",
     "f1": {
       "vehicle": "Rennwagen",
       "track": "Rennstrecke"
     },
     "filterWTT": "WTT Tischtennis",
+    "filterDota2": "Dota 2",
     "wtt": {
       "match": "Disziplin",
       "venue": "Austragungsort",

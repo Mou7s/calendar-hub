@@ -63,12 +63,14 @@
     "viewWeek": "周",
     "viewMonth": "月",
     "today": "今天",
+    "timezone": "时区",
     "filterF1": "F1",
     "f1": {
       "vehicle": "赛车",
       "track": "赛道"
     },
     "filterWTT": "WTT 乒乓球",
+    "filterDota2": "Dota 2",
     "wtt": {
       "match": "比赛项目",
       "venue": "场馆",

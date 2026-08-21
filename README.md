@@ -14,7 +14,7 @@
   - `/spacex.ics` / `/calendar.ics` 导出标准的 RFC-compliant ICS 日历数据。
   - `/ics/:topic.ics` 为每个主题提供独立的 ICS / Webcal 订阅链接。
   - 支持 `webcal://` 协议，可在 Apple Calendar 等设备中实现一键订阅与自动同步。
-  - 内置 SpaceX、F1 和 WTT 乒乓球比赛日历，其中 WTT 仅显示主系列赛事里已经公布双方选手和开赛时间的具体比赛。
+  - 内置 SpaceX、F1、WTT 乒乓球和 Dota 2 比赛日历，其中 WTT 仅显示主系列赛事里已经公布双方选手和开赛时间的具体比赛，Dota 2 同步 Liquipedia 已公布时间的未来赛事对阵。
 - **⚡️ 边缘架构与高性能缓存**：
   - 基于 **Nuxt Hub KV** (Cloudflare KV) 缓存上游 SpaceX 双数据源。
   - 采用 **SWR (Stale-While-Revalidate)** 异步后台刷新技术，前端响应时间降至毫秒级，同时杜绝频繁请求导致上游封禁的风险。
@@ -29,6 +29,7 @@
   - 自动聚合 SpaceX 官方 upcoming API 模块的板块卡片信息与高精度的 timings 倒计时数据。
   - 支持 F1 赛程及 WTT 主系列赛事的比赛级日程，并可以继续扩展更多公共日程源。
   - WTT 比赛从官方赛程中提取双方选手、项目、轮次、场馆和开赛时间；未公布对阵的比赛不会生成日历事件。
+  - Dota 2 比赛通过 Liquipedia MediaWiki API 获取已公布的比赛时间、双方队伍、赛制和赛事链接，并以独立日历层展示。
   - **优雅降级机制**：即使 Timing API 临时故障，仍能依据磁贴基础数据生成日历。
   - **直播任务保活**：当发射任务正处于 Live 直播流状态时，即使当前时间已过原定发射时刻，系统仍会智能地在 Upcoming 列表和日历订阅中予以保留，防止用户在观看直播期间因日程过期被移出而错失跳转入口。
 - **🌐 全球多语言支持 (i18n)**：
@@ -58,6 +59,7 @@
 | SpaceX | `/spacex.ics` |
 | F1 | `/ics/f1.ics` |
 | WTT 乒乓球 | `/ics/wtt.ics` |
+| Dota 2 大赛 | `/ics/dota2.ics` |
 
 ---
 
@@ -82,17 +84,17 @@
 │   ├── api/                 # 结构化 JSON 接口
 │   │   ├── launches.get.js          # 获取即将发射的列表（对接 SWR 缓存）
 │   │   ├── history-launches.get.js  # 获取历史已发射列表（限制 50 条）
-│   │   ├── calendar/[topic].get.js  # 获取 F1、WTT 等主题日历数据
+│   │   ├── calendar/[topic].get.js  # 获取 F1、WTT、Dota 2 等主题日历数据
 │   │   └── launches/
 │   │       └── [slug].get.js        # 获取某特定发射任务的深度图文详情
 │   ├── routes/              # ICS 标准订阅路由
 │   │   ├── spacex.ics.js            # 主日历源
 │   │   ├── calendar.ics.js          # 别名日历源
-│   │   └── ics/[topic].ics.js       # F1、WTT 等主题订阅源
+│   │   └── ics/[topic].ics.js       # F1、WTT、Dota 2 等主题订阅源
 │   └── utils/               # 后端工具库
 │       ├── kv.js                    # 缓存及 SWR 分布式版本控制逻辑
 │       ├── spacex.js                # SpaceX 数据拉取、图解解析与 ICS 组装
-│       └── calendars.js             # F1/WTT 数据标准化及通用 ICS 组装
+│       └── calendars.js             # F1/WTT/Dota 2 数据标准化及通用 ICS 组装
 ├── i18n/                    # 国际化翻译资源包
 │   └── locales/             # 7国语言的 .json 字典及支持配置
 ├── public/                  # 网站纯静态资源（字体、网站图标、robots、sitemap）
@@ -133,13 +135,15 @@ npm run dev
 - 历史任务接口：`http://localhost:3000/api/history-launches`
 - WTT 比赛接口：`http://localhost:3000/api/calendar/wtt`
 - WTT 订阅源：`http://localhost:3000/ics/wtt.ics`
+- Dota 2 比赛接口：`http://localhost:3000/api/calendar/dota2`
+- Dota 2 订阅源：`http://localhost:3000/ics/dota2.ics`
 - 某任务细节接口：`http://localhost:3000/api/launches/starlink-group-10-1`
 
 ---
 
 ## 🧪 自动化测试
 
-项目内置了 **33** 项单元测试，覆盖 SpaceX 数据源降级、F1 赛程、WTT 主系列赛事筛选、比赛双方解析、ICS 文本安全转义、SWR 缓存、时区转换以及**直播状态保活逻辑**。
+项目内置了 **39** 项单元测试，覆盖 SpaceX 数据源降级、F1 赛程、WTT 主系列赛事筛选、Dota 2 Liquipedia 比赛解析、比赛双方解析、ICS 文本安全转义、SWR 缓存、时区转换以及**直播状态保活逻辑**。
 
 运行命令：
 ```bash
@@ -208,5 +212,6 @@ content-disposition: inline; filename="spacex-launches.ics"
 
 - 本项目的数据源均拉取自 SpaceX 官网暴露的真实前端 API，不受 SpaceX v4 历史 API 停止维护的影响。
 - WTT 数据来自 [World Table Tennis 官方赛历](https://www.worldtabletennis.com/events_calendar)，仅同步 `WTT Series` 中已经公布对阵和开赛时间的未来比赛。
+- Dota 2 数据来自 [Liquipedia Dota 2 比赛列表](https://liquipedia.net/dota2/Liquipedia:Matches)，通过 [Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use) 获取，并缓存 30 分钟以降低上游请求频率。
 - 本项目日历数据只专注于即将到来的/计划中的航天发射任务（Upcoming Launches），详情卡片支持查询最近 50 次已完成发射（History Launches）的元数据。
 - 日历事件时间依据浏览器时区或日历客户端设定自动换算，无需手动调整。

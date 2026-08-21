@@ -160,6 +160,9 @@ export async function getCachedData(
   // 具体的详情翻译卡片属于静态数据，变动极慢，采用 24小时 (86400秒) 的超长缓存 TTL，最大化降低首屏 API 延迟与 AI 消耗！
   const isDetailsKey = cacheKey.startsWith("spacex_mission_details_");
   let currentTTL = isDetailsKey ? 86400 : CACHE_TTL;
+  if (cacheKey === "calendar_topic_dota2") {
+    currentTTL = 1800;
+  }
 
   // 优化：针对任务列表实施动态 TTL 策略以节省 KV 资源额度。
   // 若当前没有进行中的直播任务，且下一次发射时间尚远（大于3小时）或已发射完毕（过去大于3小时），

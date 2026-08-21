@@ -59,6 +59,7 @@ const {
 const { data: historyPayload } = await useFetch("/api/history-launches");
 const { data: f1Payload } = await useFetch("/api/calendar/f1");
 const { data: wttPayload, refresh: refreshWtt } = await useFetch("/api/calendar/wtt");
+const { data: dota2Payload, refresh: refreshDota2 } = await useFetch("/api/calendar/dota2");
 
 const LAUNCH_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const isRefreshingLaunches = ref(false);
@@ -69,7 +70,7 @@ const refreshLaunches = async () => {
 
   isRefreshingLaunches.value = true;
   try {
-    await Promise.allSettled([refreshUpcoming(), refreshWtt()]);
+    await Promise.allSettled([refreshUpcoming(), refreshWtt(), refreshDota2()]);
   } finally {
     isRefreshingLaunches.value = false;
   }
@@ -107,7 +108,7 @@ const computedTitle = computed(() => {
 });
 
 // ─── Calendar Layers ───
-const activeCalendarIds = ref(["spacex", "f1", "wtt"]);
+const activeCalendarIds = ref(["spacex", "f1", "wtt", "dota2"]);
 const calendarLayers = computed(() => [
   {
     id: "spacex",
@@ -126,6 +127,12 @@ const calendarLayers = computed(() => [
     name: t("calendar.filterWTT"),
     color: "#f59e0b",
     icsPath: "/ics/wtt.ics",
+  },
+  {
+    id: "dota2",
+    name: t("calendar.filterDota2"),
+    color: "#8b5cf6",
+    icsPath: "/ics/dota2.ics",
   },
 ]);
 
@@ -190,7 +197,23 @@ const sortedCalendarMissions = computed(() => {
     };
   });
 
-  return [...upcoming, ...history, ...f1, ...wtt]
+  const dota2 = (dota2Payload.value?.missions || []).map((m) => {
+    const isChinese = locale.value === "zh-CN";
+    return {
+      ...m,
+      calendarId: "dota2",
+      provider: "dota2",
+      providerName: "Dota 2",
+      title: isChinese ? (m.titleZh || m.title) : (m.titleEn || m.title),
+      shortTitle: isChinese
+        ? (m.shortTitleZh || m.shortTitle || m.titleZh || m.title)
+        : (m.shortTitleEn || m.shortTitle || m.titleEn || m.title),
+      calendarGroup: "upcoming",
+      key: `dota2:${m.id}`,
+    };
+  });
+
+  return [...upcoming, ...history, ...f1, ...wtt, ...dota2]
     .filter((m) => activeCalendarIds.value.includes(m.calendarId))
     .filter((m) => m.launchAt)
     .sort((a, b) => {

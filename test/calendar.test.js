@@ -11,10 +11,12 @@ import fixUrlMiddleware from "../server/middleware/fix-url.js";
 import {
   buildTopicCalendarFeed,
   getTopicCalendarData,
+  loadDota2CalendarData,
   loadWttCalendarData,
   normalizeWttDate,
   normalizeWttOfficialResult,
   normalizeWttScheduleUnit,
+  parseDota2Matches,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
 import { CALENDAR_KEYS, syncCalendars } from "../server/utils/calendar-sync.js";
@@ -1340,6 +1342,69 @@ test("WTT loader filters to the main series and includes completed official resu
   assert.match(feed, /11-8/);
   assert.match(feed, /DTSTART:20260815T121500Z/);
   assert.match(feed, /DTEND:20260815T130000Z/);
+});
+
+const sampleDota2MatchHtml = `
+  <div class="match-info">
+    <span class="timer-object" data-timestamp="1787292900"></span>
+    <div class="match-info-header">
+      <div class="match-info-header-opponent"><span class="name"><a>Liquid</a></span></div>
+      <div>Bo3</div>
+      <div class="match-info-header-opponent"><span class="name"><a>Falcons</a></span></div>
+    </div>
+    <div class="match-info-tournament">
+      <span class="match-info-tournament-name"><a href="/dota2/The_International/2026">TI 2026 - Main Event</a></span>
+    </div>
+    <a href="/dota2/index.php?title=Match:ID_TI2026Main_R01-M006&amp;action=edit"></a>
+  </div>
+  <div class="match-info">
+    <span class="timer-object" data-timestamp="1787000000"></span>
+    <div class="match-info-header">
+      <div class="match-info-header-opponent"><span class="name"><a>Past Team A</a></span></div>
+      <div>Bo1</div>
+      <div class="match-info-header-opponent"><span class="name"><a>Past Team B</a></span></div>
+    </div>
+    <div class="match-info-tournament">
+      <span class="match-info-tournament-name"><a href="/dota2/Old_Tournament">Old Tournament</a></span>
+    </div>
+  </div>
+`;
+
+test("Dota 2 parser keeps future Liquipedia matches with named opponents", () => {
+  const matches = parseDota2Matches(
+    sampleDota2MatchHtml,
+    new Date("2026-08-20T00:00:00.000Z"),
+  );
+
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
+  assert.equal(matches[0].titleZh, "Liquid 对阵 Falcons · TI 2026 - Main Event");
+  assert.equal(matches[0].vehicle, "BO3");
+  assert.equal(matches[0].missionUrl, "https://liquipedia.net/dota2/The_International/2026");
+  assert.equal(matches[0].launchAt, "2026-08-21T06:15:00.000Z");
+});
+
+test("Dota 2 loader uses Liquipedia's MediaWiki API and builds a topic calendar", async () => {
+  const requests = [];
+  const data = await loadDota2CalendarData(async (input, options) => {
+    requests.push({ input: String(input), options });
+    return new Response(JSON.stringify({ parse: { text: sampleDota2MatchHtml } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  }, new Date("2026-08-20T00:00:00.000Z"));
+
+  assert.equal(data.topic.id, "dota2");
+  assert.equal(data.missions.length, 1);
+  assert.match(requests[0].input, /action=parse/);
+  assert.match(requests[0].input, /page=Liquipedia%3AMatches/);
+  assert.match(requests[0].options.headers["User-Agent"], /CalendarHub/);
+
+  const feed = buildTopicCalendarFeed("dota2", data);
+  const unfoldedFeed = feed.replace(/\r\n[ ]/g, "");
+  assert.match(feed, /X-WR-CALNAME:Dota 2 Major Matches Calendar/);
+  assert.match(feed, /SUMMARY:Liquid vs Falcons/);
+  assert.match(unfoldedFeed, /Source: https:\/\/liquipedia\.net\/dota2\/api\.php/);
 });
 
 const officialF1Rows = [
