@@ -9,7 +9,7 @@
         <!-- Top App Title -->
         <div class="flex items-center justify-between">
           <div class="flex items-baseline gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
+            <div class="w-7 h-7 rounded-none bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
               <UIcon name="i-heroicons-calendar" class="w-4.5 h-4.5" />
             </div>
             <span class="text-lg font-extrabold tracking-wider text-white font-mono">CALENDAR</span>
@@ -27,7 +27,7 @@
             <div
               v-for="layer in calendarLayers"
               :key="layer.id"
-              class="w-full flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-[#262626] transition-colors group"
+              class="w-full flex items-center justify-between px-2 py-1.5 rounded-none hover:bg-[#262626] transition-colors group"
             >
               <button
                 type="button"
@@ -36,7 +36,7 @@
                 @click="toggleCalendarLayer(layer.id)"
               >
                 <div
-                  class="w-4.5 h-4.5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0"
+                  class="w-4.5 h-4.5 rounded-none flex items-center justify-center transition-all duration-200 shrink-0"
                   :class="isCalendarActive(layer.id) ? 'text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
                   :style="isCalendarActive(layer.id) ? { backgroundColor: layer.color } : undefined"
                 >
@@ -52,7 +52,7 @@
 
               <a
                 :href="getWebcalUrl(layer.id)"
-                class="px-2 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
+                class="px-2 py-1 text-[11px] font-bold rounded-none bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
                 :title="t('subscribe.subscribeLink')"
                 @click.stop
               >
@@ -88,20 +88,20 @@
     <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#181818]">
       
       <!-- Top Header Toolbar (黑白灰极简工具栏) -->
-      <header class="h-auto min-h-14 border-b border-[#262626] px-3 py-2 grid grid-cols-[1fr_auto] gap-x-2 gap-y-2 shrink-0 bg-[#141414] sm:h-14 sm:px-4 sm:py-0 sm:flex sm:items-center sm:justify-between">
+      <header class="h-auto min-h-14 border-b border-[#262626] px-3 py-2 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 shrink-0 bg-[#141414] md:h-14 md:px-4 md:py-0 md:flex md:items-center md:justify-between">
         <!-- Left: Month Title + Lunar Year -->
         <div class="flex items-center gap-3">
-          <h1 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none truncate">
+          <h1 class="text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none truncate">
             <span>{{ monthTitleEnglish }}</span>
-            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden sm:inline">{{ lunarYearLabel }}</span>
+            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden md:inline">{{ lunarYearLabel }}</span>
           </h1>
         </div>
 
         <!-- Center: Day / Week / Month Switcher (Apple Style Segmented Slider) -->
-        <div class="relative hidden sm:flex items-center bg-[#262626] p-0.5 rounded-lg text-xs font-semibold select-none border border-[#333333]">
+        <div class="relative hidden md:flex items-center bg-[#262626] p-0.5 rounded-none text-xs font-semibold select-none border border-[#333333]">
           <!-- Active Sliding Background -->
           <div
-            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-2px)] bg-[#404040] rounded-md shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-2px)] bg-[#404040] rounded-none shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
             :style="{
               left: activeCalendarView === 'day' ? '2px' : activeCalendarView === 'week' ? 'calc(33.333% + 1px)' : 'calc(66.666% + 0px)'
             }"
@@ -109,7 +109,7 @@
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'day' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'day'"
           >
@@ -118,7 +118,7 @@
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'week' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'week'"
           >
@@ -127,7 +127,7 @@
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-md transition-colors cursor-pointer"
+            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'month' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'month'"
           >
@@ -136,11 +136,11 @@
         </div>
 
         <!-- Right: Controls < Today > -->
-        <div class="flex items-center gap-2">
-          <div class="flex items-center text-white text-sm font-semibold gap-1">
+        <div class="flex items-center justify-self-end gap-2">
+          <div class="flex h-8 items-center text-white text-sm font-semibold gap-1">
             <button
               type="button"
-              class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
+              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[#262626] rounded-none transition-colors text-[#a3a3a3] hover:text-white"
               :disabled="activeCalendarView === 'month' && activeMonthIndex <= 0"
               @click="navigateCalendar(-1)"
             >
@@ -149,7 +149,7 @@
             
             <button
               type="button"
-              class="px-2.5 py-1 hover:bg-[#262626] rounded-lg transition-colors font-bold text-white"
+              class="flex h-8 items-center justify-center px-2.5 py-1 hover:bg-[#262626] rounded-none transition-colors font-bold text-white"
               @click="jumpToToday"
             >
               {{ t('calendar.today') }}
@@ -157,7 +157,7 @@
 
             <button
               type="button"
-              class="p-1 hover:bg-[#262626] rounded-lg transition-colors text-[#a3a3a3] hover:text-white"
+              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[#262626] rounded-none transition-colors text-[#a3a3a3] hover:text-white"
               :disabled="activeCalendarView === 'month' && activeMonthIndex >= monthKeys.length - 1"
               @click="navigateCalendar(1)"
             >
@@ -167,10 +167,10 @@
         </div>
 
         <!-- Mobile View Switcher -->
-        <div class="col-span-2 flex sm:hidden items-center bg-[#262626] p-0.5 rounded-lg text-[11px] font-semibold select-none border border-[#333333]">
+        <div class="col-span-2 flex md:hidden items-center bg-[#262626] p-0.5 rounded-none text-[11px] font-semibold select-none border border-[#333333]">
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'day' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'day'"
           >
@@ -178,7 +178,7 @@
           </button>
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'week' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'week'"
           >
@@ -186,7 +186,7 @@
           </button>
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
             :class="activeCalendarView === 'month' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'month'"
           >
@@ -195,12 +195,12 @@
         </div>
 
         <!-- Mobile Calendar Layers -->
-        <div class="col-span-2 flex sm:hidden items-center gap-1.5 min-w-0">
+        <div class="col-span-2 flex md:hidden items-center gap-1.5 min-w-0 overflow-x-auto scrollbar-none">
           <button
             v-for="layer in calendarLayers"
             :key="`mobile-${layer.id}`"
             type="button"
-            class="flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition-colors cursor-pointer"
+            class="flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1 rounded-none border text-[10px] font-bold transition-colors cursor-pointer"
             :class="isCalendarActive(layer.id) ? 'bg-[#262626] border-[#525252] text-white' : 'bg-transparent border-[#2c2c2c] text-[#737373]'"
             :aria-pressed="isCalendarActive(layer.id)"
             @click="toggleCalendarLayer(layer.id)"
@@ -208,6 +208,30 @@
             <span class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: layer.color }"></span>
             <span class="truncate">{{ layer.name }}</span>
           </button>
+        </div>
+
+        <!-- Mobile Subscription & Language Actions -->
+        <div class="col-span-2 flex md:hidden items-center gap-2 min-w-0">
+          <button
+            type="button"
+            class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-blue-500/60 bg-blue-600 text-[11px] font-bold text-white transition-colors hover:bg-blue-500"
+            @click="openSubscribeModal(activeCalendarIds[0] || 'spacex')"
+          >
+            <UIcon name="i-heroicons-rss-16-solid" class="w-3.5 h-3.5 shrink-0" />
+            <span class="truncate">{{ t('subscribe.buttonShort') || 'Subscribe' }}</span>
+          </button>
+          <USelectMenu
+            v-model="activeLocaleCode"
+            :items="languageOptions"
+            value-key="value"
+            label-key="label"
+            icon="i-heroicons-language"
+            size="xs"
+            color="neutral"
+            variant="subtle"
+            class="w-32 shrink-0"
+            aria-label="Select Language"
+          />
         </div>
       </header>
 
@@ -274,11 +298,10 @@
                 @click="handleEventClick(event, $event)"
               >
                 <span
-                  v-if="!event.isLive && !(event.scores && (event.provider === 'wtt' || event.calendarId === 'wtt'))"
+                  v-if="!event.isLive"
                   class="calendar-event-dot w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full shrink-0"
                   :style="{ backgroundColor: getProviderColor(event.provider) }"
                 ></span>
-                <span v-else-if="event.scores && (event.provider === 'wtt' || event.calendarId === 'wtt')" class="text-[8px] sm:text-[9px] leading-none shrink-0" title="Completed Match">🏆</span>
                 <span v-else class="calendar-event-live inline-flex items-center gap-1 shrink-0">
                   <span class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
                   <span class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
@@ -351,7 +374,7 @@
               <!-- Current Time Badge on Timeline Left -->
               <div
                 v-if="isTodayInCurrentWeek"
-                class="absolute right-1 z-30 -translate-y-1/2 px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-red-500 text-white shadow-sm shadow-red-500/50"
+                    class="absolute right-1 z-30 -translate-y-1/2 px-1 py-0.5 rounded-none text-[9px] font-mono font-bold bg-red-500 text-white shadow-sm shadow-red-500/50"
                 :style="{ top: `${currentTimeTopPct}%` }"
               >
                 {{ currentTimeLabel }}
@@ -483,7 +506,7 @@
               >
                 <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
                   <span v-if="event.isLive" class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
-                  <span v-else-if="event.scores" class="text-[10px] font-bold text-amber-400 font-mono shrink-0">🏆 {{ event.scores }}</span>
+                  <span v-else-if="event.scores" class="text-[10px] font-bold text-amber-400 font-mono shrink-0">{{ event.scores }}</span>
                   <span v-else class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
                   <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
                 </div>
@@ -498,7 +521,7 @@
     <!-- 3. Minimalist Event Detail Floating Card (极简气泡卡片 - 消除嵌套圆角框，专注内容) -->
     <div
       v-if="popoverEvent"
-      class="fixed z-50 w-[calc(100vw-20px)] max-w-[300px] bg-[#161616] text-white border border-[#262626] rounded-xl shadow-2xl p-4 space-y-3 font-sans animate-fadeIn"
+      class="fixed z-50 w-[calc(100vw-20px)] max-w-[300px] bg-[#161616] text-white border border-[#262626] rounded-none shadow-2xl p-4 space-y-3 font-sans animate-fadeIn"
       :style="popoverStyle"
       @click.stop
     >
@@ -509,7 +532,7 @@
         </span>
         <button
           type="button"
-          class="text-[#737373] hover:text-white p-1 rounded transition-colors"
+          class="text-[#737373] hover:text-white p-1 rounded-none transition-colors"
           @click.stop="popoverEvent = null"
           aria-label="Close Floating Card"
         >
@@ -523,8 +546,8 @@
           <span class="w-2 h-2 rounded-full bg-[#ef4444] animate-ping"></span>
           <span>{{ t('status.liveNow') }}</span>
         </div>
-        <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 rounded-lg bg-[#202020] border border-[#333333] mb-2">
-          <span class="text-amber-400 font-bold font-mono text-xs">🏆 {{ t('calendar.wtt.finalScore') || 'Final' }}: {{ popoverEvent.scores }}</span>
+        <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 bg-[#202020] border border-[#333333] mb-2">
+          <span class="text-amber-400 font-bold font-mono text-xs">{{ t('calendar.wtt.finalScore') || 'Final' }}: {{ popoverEvent.scores }}</span>
           <span v-if="popoverEvent.winner" class="text-[10px] text-neutral-300 font-semibold truncate max-w-[130px]">
             {{ t('calendar.wtt.winner') || 'Winner' }}: <strong class="text-white">{{ popoverEvent.winner }}</strong>
           </span>
@@ -562,7 +585,7 @@
         <NuxtLink
           :to="popoverEvent.missionUrl"
           target="_blank"
-          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-[#262626] hover:bg-[#333333] border border-[#333333] rounded-lg transition-colors"
+          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-[#262626] hover:bg-[#333333] border border-[#333333] rounded-none transition-colors"
         >
           <span>{{ t('mission.viewOfficialDetails') }}</span>
           <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5 text-[#a3a3a3]" />
@@ -586,13 +609,13 @@
           @click.self="showSubscribeModal = false"
         >
           <div
-            class="relative w-full max-w-md bg-[#1c1c1e] border border-[#2c2c2e] rounded-3xl p-6 shadow-2xl text-white space-y-5"
+            class="relative w-full max-w-md bg-[#1c1c1e] border border-[#2c2c2e] rounded-none p-6 shadow-2xl text-white space-y-5"
           >
             <!-- 头部说明与关闭按钮 -->
             <div class="flex items-start justify-between">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                  <span class="p-2 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                  <span class="p-2 rounded-none bg-blue-600/20 text-blue-400 flex items-center justify-center">
                     <UIcon name="i-heroicons-rss-16-solid" class="w-5 h-5" />
                   </span>
                   <h3 class="text-base font-bold tracking-tight text-white">
@@ -605,7 +628,7 @@
               </div>
               <button
                 type="button"
-                class="p-1.5 text-[#71717a] hover:text-white rounded-lg transition-colors cursor-pointer shrink-0"
+                class="p-1.5 text-[#71717a] hover:text-white rounded-none transition-colors cursor-pointer shrink-0"
                 @click="showSubscribeModal = false"
               >
                 <UIcon name="i-heroicons-x-mark-20-solid" class="w-5 h-5" />
@@ -613,9 +636,23 @@
             </div>
 
             <!-- 核心一键订阅按钮 -->
+            <div class="grid grid-cols-3 gap-1.5">
+              <button
+                v-for="layer in calendarLayers"
+                :key="`subscribe-${layer.id}`"
+                type="button"
+                class="min-w-0 px-2 py-1.5 border text-[10px] font-bold truncate transition-colors"
+                :class="subscribeProvider === layer.id ? 'border-blue-500 bg-blue-600/20 text-white' : 'border-[#3a3a3c] text-[#a1a1aa] hover:text-white hover:border-[#5a5a5c]'"
+                :aria-pressed="subscribeProvider === layer.id"
+                @click="subscribeProvider = layer.id; isCopied = false"
+              >
+                {{ layer.name }}
+              </button>
+            </div>
+
             <a
               :href="activeSubscribeWebcalUrl"
-              class="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
+              class="w-full py-3 px-4 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
             >
               <UIcon name="i-heroicons-calendar-days-20-solid" class="w-4 h-4" />
               <span>{{ t('subscribe.subscribeLink') }}</span>
@@ -631,11 +668,11 @@
                   type="text"
                   readonly
                   :value="activeSubscribeIcsUrl"
-                  class="flex-1 bg-[#121212] border border-[#2c2c2e] rounded-xl px-3 py-2 text-xs font-mono text-[#e4e4e7] focus:outline-none select-all"
+                  class="flex-1 bg-[#121212] border border-[#2c2c2e] rounded-none px-3 py-2 text-xs font-mono text-[#e4e4e7] focus:outline-none select-all"
                 />
                 <button
                   type="button"
-                  class="px-3 py-2 text-xs font-bold rounded-xl bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                  class="px-3 py-2 text-xs font-bold rounded-none bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                   @click="copyIcsUrl"
                 >
                   <UIcon :name="isCopied ? 'i-heroicons-check-20-solid' : 'i-heroicons-clipboard-document-20-solid'" class="w-4 h-4 text-blue-400" />

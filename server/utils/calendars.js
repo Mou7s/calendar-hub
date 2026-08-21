@@ -793,7 +793,7 @@ export function buildTopicCalendarFeed(topicId, data) {
 
       let summary = mission.title;
       if (topicId === 'wtt' && mission.status === 'Finished' && mission.scores) {
-        summary = `🏆 [${mission.scores}] ${mission.title}`;
+        summary = `[${mission.scores}] ${mission.title}`;
       }
 
       const descLines = [

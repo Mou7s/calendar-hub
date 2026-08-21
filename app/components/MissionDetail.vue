@@ -1,14 +1,14 @@
 <template>
   <section class="mb-8 selected-mission-panel" id="selected-mission-panel" aria-live="polite">
     <!-- Empty State -->
-    <UCard v-if="!selectedMission" class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-3xl p-6 text-center">
+    <UCard v-if="!selectedMission" class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-none p-6 text-center">
       <p class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-1">{{ t('mission.selectionEyebrow') }}</p>
       <h3 class="text-2xl font-bold text-neutral-900 dark:text-white uppercase mb-2">{{ t('mission.selectionTitle') }}</h3>
       <p class="text-neutral-500 dark:text-neutral-400 text-sm max-w-xl mx-auto leading-relaxed">{{ t('mission.selectionCopy') }}</p>
     </UCard>
     
     <!-- Detailed Card -->
-    <div v-else class="bg-white/80 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-5 min-h-[420px] backdrop-blur-md">
+    <div v-else class="bg-white/80 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 rounded-none shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-5 min-h-[420px] backdrop-blur-md">
       <!-- Left Column: Mission High-Res Background Image -->
       <div 
         class="md:col-span-2 min-h-[260px] md:min-h-full bg-center bg-cover bg-no-repeat bg-neutral-50 dark:bg-neutral-950 transition-all duration-300 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800/80"
@@ -24,7 +24,7 @@
             size="xs"
             color="neutral"
             variant="subtle"
-            class="mb-6 rounded-lg uppercase tracking-wider text-[9px]"
+            class="mb-6 rounded-none uppercase tracking-wider text-[9px]"
             @click="$emit('close')"
           >
             {{ t('calendar.title') }}
@@ -36,7 +36,7 @@
           
           <div class="flex items-center gap-2 mb-4">
             <span 
-              class="px-2 py-0.5 rounded text-[9px] uppercase font-extrabold text-neutral-950" 
+              class="px-2 py-0.5 rounded-none text-[9px] uppercase font-extrabold text-neutral-950"
               :class="{ 
                 'bg-red-400 animate-pulse': selectedMission.isLive,
                 'bg-primary-500': selectedMission.calendarGroup === 'history' && selectedMission.success === true,
@@ -61,7 +61,7 @@
           </p>
 
           <!-- WTT Match Scoreboard Card (when scores available) -->
-          <div v-if="selectedMission.scores || selectedMission.competitor1" class="mb-6 p-5 rounded-2xl bg-neutral-100/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/80">
+          <div v-if="selectedMission.scores || selectedMission.competitor1" class="mb-6 p-5 rounded-none bg-neutral-100/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/80">
             <div class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-3 flex items-center justify-between">
               <span>{{ t('calendar.wtt.scoreboard') || 'MATCH SCOREBOARD' }}</span>
               <span v-if="selectedMission.status === 'Finished'" class="text-amber-500 font-extrabold flex items-center gap-1">
@@ -73,12 +73,11 @@
             <!-- Players Matchup & Big Score -->
             <div class="grid grid-cols-1 sm:grid-cols-7 gap-3 items-center text-center">
               <!-- Player 1 -->
-              <div class="sm:col-span-3 p-3 rounded-xl bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
+              <div class="sm:col-span-3 p-3 rounded-none bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
                 <div class="flex items-center gap-1.5 mb-1">
-                  <span v-if="selectedMission.competitor1?.isWinner" class="text-amber-400 text-sm">🏆</span>
                   <strong class="text-sm sm:text-base font-black text-neutral-900 dark:text-white">{{ selectedMission.competitor1?.name || selectedMission.title?.split(' vs ')[0] }}</strong>
                 </div>
-                <span v-if="selectedMission.competitor1?.org" class="px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                <span v-if="selectedMission.competitor1?.org" class="px-1.5 py-0.5 rounded-none bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
                   {{ selectedMission.competitor1.org }}
                 </span>
               </div>
@@ -92,12 +91,11 @@
               </div>
 
               <!-- Player 2 -->
-              <div class="sm:col-span-3 p-3 rounded-xl bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
+              <div class="sm:col-span-3 p-3 rounded-none bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800/60 flex flex-col items-center justify-center">
                 <div class="flex items-center gap-1.5 mb-1">
-                  <span v-if="selectedMission.competitor2?.isWinner" class="text-amber-400 text-sm">🏆</span>
                   <strong class="text-sm sm:text-base font-black text-neutral-900 dark:text-white">{{ selectedMission.competitor2?.name || selectedMission.title?.split(' vs ')[1] }}</strong>
                 </div>
-                <span v-if="selectedMission.competitor2?.org" class="px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                <span v-if="selectedMission.competitor2?.org" class="px-1.5 py-0.5 rounded-none bg-neutral-200 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
                   {{ selectedMission.competitor2.org }}
                 </span>
               </div>
@@ -109,7 +107,7 @@
               <span
                 v-for="(gameScore, idx) in selectedMission.gameScores"
                 :key="idx"
-                class="px-2 py-1 rounded-lg bg-white/80 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200 shadow-sm"
+                class="px-2 py-1 rounded-none bg-white/80 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200 shadow-sm"
               >
                 <span class="text-neutral-400 text-[10px] mr-1">G{{ idx + 1 }}</span>
                 <span>{{ gameScore }}</span>
@@ -160,7 +158,7 @@
               class="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
               <!-- Pre-Launch Timeline -->
-              <div v-if="details.timelines?.preLaunch?.entries?.length" class="bg-neutral-50/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/60 p-5 rounded-2xl">
+              <div v-if="details.timelines?.preLaunch?.entries?.length" class="bg-neutral-50/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/60 p-5 rounded-none">
                 <h4 class="text-xs uppercase tracking-widest text-primary-600 dark:text-primary-400 font-bold mb-3">{{ t('mission.preLaunchTimeline') }}</h4>
                 <p v-if="details.timelines.preLaunch.disclaimer" class="text-[10px] text-neutral-500 dark:text-neutral-400 mb-2 italic">
                   {{ details.timelines.preLaunch.disclaimer }}
@@ -174,7 +172,7 @@
               </div>
 
               <!-- Post-Launch Timeline -->
-              <div v-if="details.timelines?.postLaunch?.entries?.length" class="bg-neutral-50/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/60 p-5 rounded-2xl">
+              <div v-if="details.timelines?.postLaunch?.entries?.length" class="bg-neutral-50/80 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/60 p-5 rounded-none">
                 <h4 class="text-xs uppercase tracking-widest text-primary-600 dark:text-primary-400 font-bold mb-3">{{ t('mission.postLaunchTimeline') }}</h4>
                 <p v-if="details.timelines.postLaunch.disclaimer" class="text-[10px] text-neutral-500 dark:text-neutral-400 mb-2 italic">
                   {{ details.timelines.postLaunch.disclaimer }}
@@ -195,7 +193,7 @@
               </div>
               
               <div 
-                class="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-transparent dark:bg-neutral-950/40 cursor-pointer group shadow-lg transition-all duration-300 hover:border-neutral-400 dark:hover:border-neutral-700 max-h-[300px] flex justify-center items-center"
+                class="relative rounded-none overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-transparent dark:bg-neutral-950/40 cursor-pointer group shadow-lg transition-all duration-300 hover:border-neutral-400 dark:hover:border-neutral-700 max-h-[300px] flex justify-center items-center"
                 @click="$emit('update:isInfographicOpen', true)"
               >
                 <!-- Preview Image -->
@@ -209,7 +207,7 @@
                 
                 <!-- Premium Glass Hover Scrim -->
                 <div class="absolute inset-0 bg-neutral-950/30 group-hover:bg-neutral-950/50 backdrop-blur-[1px] group-hover:backdrop-blur-[2px] transition-all duration-300 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100">
-                  <div class="bg-neutral-900/90 border border-neutral-700 text-white rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-2xl backdrop-blur-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  <div class="bg-neutral-900/90 border border-neutral-700 text-white rounded-none px-4 py-2.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider shadow-2xl backdrop-blur-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     <span class="iconify i-heroicons-magnifying-glass-plus size-4 text-primary-400 animate-pulse"></span>
                     <span>{{ t('mission.clickToViewInfographic') }}</span>
                   </div>
@@ -229,7 +227,7 @@
             color="primary"
             variant="subtle"
             size="sm"
-            class="rounded-xl font-bold uppercase text-xs px-4"
+            class="rounded-none font-bold uppercase text-xs px-4"
             icon="i-heroicons-play-circle"
           >
             {{ webcast.title || t('mission.watchLive') }}
@@ -240,7 +238,7 @@
             color="neutral"
             variant="subtle"
             size="sm"
-            class="rounded-xl font-bold uppercase text-xs px-4"
+            class="rounded-none font-bold uppercase text-xs px-4"
             icon="i-heroicons-photo"
           >
             {{ t('mission.infographicLink') }}
@@ -257,7 +255,7 @@
       :ui="{ content: 'max-w-5xl sm:max-w-6xl lg:max-w-7xl xl:max-w-[95vw] w-full' }"
     >
       <template #content>
-        <div class="relative bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden p-2 flex flex-col items-center w-full max-h-[90vh] shadow-2xl backdrop-blur-md">
+        <div class="relative bg-neutral-900 border border-neutral-800 rounded-none overflow-hidden p-2 flex flex-col items-center w-full max-h-[90vh] shadow-2xl backdrop-blur-md">
           <!-- Header -->
           <div class="w-full flex justify-between items-center px-4 py-3 border-b border-neutral-800/80 shrink-0">
             <strong class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider font-mono">
@@ -266,7 +264,7 @@
             
             <div class="flex items-center gap-2">
               <!-- Click-to-Zoom Hint Badge -->
-              <span class="text-[9px] uppercase tracking-wider bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded font-mono hidden sm:inline-block">
+              <span class="text-[9px] uppercase tracking-wider bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded-none font-mono hidden sm:inline-block">
                 {{ isZoomed ? t('mission.clickToShrink') : t('mission.clickToZoom') }}
               </span>
               
@@ -277,7 +275,7 @@
                 color="neutral"
                 variant="subtle"
                 size="xs"
-                class="rounded-lg text-[10px] font-mono"
+                class="rounded-none text-[10px] font-mono"
                 icon="i-heroicons-arrow-top-right-on-square"
               >
                 {{ t('mission.viewOriginal') }}
@@ -287,7 +285,7 @@
                 icon="i-heroicons-x-mark"
                 color="neutral"
                 variant="ghost"
-                class="rounded-lg text-neutral-400 hover:text-white"
+                class="rounded-none text-neutral-400 hover:text-white"
                 @click="$emit('update:isInfographicOpen', false)"
                 aria-label="Close"
               />
@@ -296,13 +294,13 @@
           
           <!-- Interactive Image Container with click-to-zoom -->
           <div 
-            class="w-full flex-1 min-h-0 p-2 bg-neutral-950 rounded-2xl transition-all duration-300"
+            class="w-full flex-1 min-h-0 p-2 bg-neutral-950 rounded-none transition-all duration-300"
             :class="isZoomed ? 'overflow-auto block' : 'overflow-hidden flex justify-center items-center'"
           >
             <img
               :src="details.media.infographicDesktop.originalUrl || details.media.infographicDesktop.url"
               :alt="selectedMission?.title"
-              class="rounded-xl select-none transition-all duration-300"
+              class="rounded-none select-none transition-all duration-300"
               :class="isZoomed ? 'w-[150%] sm:w-[130%] md:w-[115%] lg:w-full max-w-none h-auto cursor-zoom-out mx-auto block' : 'max-w-full max-h-[70vh] object-contain cursor-zoom-in'"
               draggable="false"
               @click="$emit('update:isZoomed', !isZoomed)"

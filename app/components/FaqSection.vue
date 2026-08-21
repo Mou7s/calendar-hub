@@ -1,6 +1,6 @@
 <template>
   <section class="mt-8">
-    <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-3xl backdrop-blur-md p-2">
+  <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-none backdrop-blur-md p-2">
       <template #header>
         <div class="pb-1">
           <p class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-0.5">{{ t('faq.subtitle') }}</p>

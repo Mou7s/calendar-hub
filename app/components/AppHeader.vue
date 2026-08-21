@@ -13,7 +13,7 @@
         color="primary"
         variant="solid"
         size="xs"
-        class="rounded-full font-bold px-3 sm:px-4 py-1.5 shadow-md shadow-primary-500/20"
+        class="rounded-none font-bold px-3 sm:px-4 py-1.5 shadow-md shadow-primary-500/20"
         @click="$emit('open-subscribe')"
       >
         <span class="hidden sm:inline">{{ t('subscribe.buttonLabel') }}</span>
@@ -41,7 +41,7 @@
         color="neutral"
         variant="subtle"
         size="xs"
-        class="rounded-full"
+        class="rounded-none"
         @click="toggleTheme($event)"
         :aria-label="t('header.themeToggleAria')"
       />
@@ -52,7 +52,7 @@
         color="neutral"
         variant="outline"
         size="xs"
-        class="rounded-full font-semibold uppercase tracking-wider text-[10px] hidden md:inline-flex"
+        class="rounded-none font-semibold uppercase tracking-wider text-[10px] hidden md:inline-flex"
         to="https://github.com/Mou7s/calendar-hub"
         target="_blank"
         aria-label="GitHub Repository"

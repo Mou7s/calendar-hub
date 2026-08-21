@@ -1334,7 +1334,7 @@ test("WTT loader filters to the main series and includes completed official resu
   assert.equal(futureMatch.launchWindow.close, "2026-08-15T13:00:00.000Z");
 
   const feed = buildTopicCalendarFeed("wtt", data);
-  assert.match(feed, /SUMMARY:🏆 \[3-1\] FAN Zhendong vs HARIMOTO Tomokazu/);
+  assert.match(feed, /SUMMARY:\[3-1\] FAN Zhendong vs HARIMOTO Tomokazu/);
   assert.match(feed, /Score: 3-1/);
   assert.match(feed, /FAN Zhendong/);
   assert.match(feed, /11-8/);

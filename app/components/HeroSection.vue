@@ -1,6 +1,6 @@
 <template>
   <section
-    class="hero relative min-h-[50vh] flex items-end overflow-hidden p-8 sm:p-12 border border-neutral-800 rounded-3xl shadow-2xl mb-8 transition-all duration-500"
+    class="hero relative min-h-[50vh] flex items-end overflow-hidden p-8 sm:p-12 border border-neutral-800 rounded-none shadow-2xl mb-8 transition-all duration-500"
     id="hero"
     :style="heroStyle"
   >
@@ -29,7 +29,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Next Launch Target Time -->
         <UCard
-          class="bg-neutral-950/60 border-neutral-800/40 backdrop-blur-md ring-0 rounded-2xl"
+          class="bg-neutral-950/60 border-neutral-800/40 backdrop-blur-md ring-0 rounded-none"
         >
           <span
             class="text-[10px] uppercase tracking-wider text-neutral-400 font-bold"
@@ -43,7 +43,7 @@
 
         <!-- Countdown Timer -->
         <UCard
-          class="bg-neutral-950/60 border-neutral-800/40 backdrop-blur-md ring-0 rounded-2xl"
+          class="bg-neutral-950/60 border-neutral-800/40 backdrop-blur-md ring-0 rounded-none"
         >
           <span
             class="text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-2 block"
@@ -76,7 +76,7 @@
           color="neutral"
           variant="solid"
           size="sm"
-          class="rounded-full font-bold uppercase tracking-wider text-[10px] px-6 py-2.5 shadow-lg"
+          class="rounded-none font-bold uppercase tracking-wider text-[10px] px-6 py-2.5 shadow-lg"
           @click="$emit('select-mission', nextLaunch)"
           icon="i-heroicons-information-circle"
         >

@@ -1,7 +1,7 @@
 <template>
   <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
     <!-- Near Cadence Count Summary -->
-    <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-3xl backdrop-blur-md">
+    <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-none backdrop-blur-md">
       <template #header>
         <div class="pb-1">
           <p class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-0.5">{{ t('overview.cadenceEyebrow') }}</p>
@@ -14,7 +14,7 @@
         <div 
           v-for="item in monthSummary" 
           :key="item.isoMonth || item.label" 
-          class="flex-1 min-w-[120px] max-w-[200px] bg-neutral-50/50 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/80 px-6 py-5 rounded-2xl flex flex-col items-center justify-center text-center transition-all duration-300 hover:scale-[1.02] hover:border-primary-500/50 shadow-sm"
+          class="flex-1 min-w-[120px] max-w-[200px] bg-neutral-50/50 dark:bg-neutral-950/60 border border-neutral-200 dark:border-neutral-800/80 px-6 py-5 rounded-none flex flex-col items-center justify-center text-center transition-all duration-300 hover:scale-[1.02] hover:border-primary-500/50 shadow-sm"
         >
           <span class="text-[10px] text-neutral-500 dark:text-neutral-400 uppercase font-bold tracking-wider mb-2">{{ formatMonthPillLabel(item) }}</span>
           <strong class="text-3xl font-extrabold text-neutral-900 dark:text-white font-mono leading-none">{{ item.count }}</strong>
@@ -24,7 +24,7 @@
     </UCard>
 
     <!-- Stats Tracker -->
-    <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-3xl backdrop-blur-md">
+    <UCard class="bg-white/80 dark:bg-neutral-900/40 border-neutral-200 dark:border-neutral-800/80 ring-0 rounded-none backdrop-blur-md">
       <template #header>
         <div class="pb-1">
           <p class="text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mb-0.5">{{ t('overview.statusEyebrow') }}</p>
@@ -57,7 +57,7 @@
           v-for="opt in timezoneOptions" 
           :key="opt.key"
           size="xs"
-          class="rounded-lg font-bold uppercase text-[9px] tracking-wide"
+          class="rounded-none font-bold uppercase text-[9px] tracking-wide"
           :color="activeTimezone === opt.tz ? 'primary' : 'neutral'"
           :variant="activeTimezone === opt.tz ? 'solid' : 'subtle'"
           @click="$emit('set-timezone', opt.tz)"
