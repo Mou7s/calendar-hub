@@ -1,7 +1,7 @@
 # Calendar Hub
 
 <p align="center">
-  <img src="./public/icon-512.png" width="128" height="128" alt="Calendar Hub Icon" />
+  <img src="public/icon-512.png" width="128" height="128" alt="Calendar Hub Icon" />
 </p>
 
 一个基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 构建的多类型日历订阅中心。它将发射、赛事及其他主题的日程转换为符合 RFC 5545 标准的 **ICS / Webcal 订阅链接**，适配 Apple Calendar、iCloud、Google Calendar、Outlook 等日历客户端。
