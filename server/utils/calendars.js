@@ -792,29 +792,40 @@ async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
 
   await Promise.all(limitedPaths.map(async path => {
     try {
-      const params = new URLSearchParams({
-        action: 'parse',
-        format: 'json',
-        formatversion: '2',
-        page: path.replace(/^\/dota2\//, ''),
-        prop: 'text',
-        disabletoc: '1'
-      })
-      const response = await fetchImpl(`${DOTA2_MATCHES_SOURCE_URL}?${params.toString()}`, {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': DOTA2_MATCHES_USER_AGENT
+      // 子页（如 .../2026/Main_Event）的 infobox 往往没有 Location，
+      // 真实举办地写在父页（如 .../2026）。逐级向上最多回退一次。
+      const segments = path.replace(/^\/dota2\//, '').split('/')
+      const pagesToTry = segments.length > 1
+        ? [segments.join('/'), segments.slice(0, -1).join('/')]
+        : [segments.join('/')]
+
+      for (const page of pagesToTry) {
+        const params = new URLSearchParams({
+          action: 'parse',
+          format: 'json',
+          formatversion: '2',
+          page,
+          prop: 'text',
+          disabletoc: '1'
+        })
+        const response = await fetchImpl(`${DOTA2_MATCHES_SOURCE_URL}?${params.toString()}`, {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': DOTA2_MATCHES_USER_AGENT
+          }
+        })
+        if (!response.ok) continue
+
+        const payload = await response.json()
+        const html = payload?.parse?.text
+        if (typeof html !== 'string') continue
+
+        const venue = extractDota2VenueFromInfobox(html)
+        if (venue) {
+          // 命中后同时记录原始子页路径，保证 parseDota2Matches 查表命中
+          venues.set(path, venue)
+          break
         }
-      })
-      if (!response.ok) return
-
-      const payload = await response.json()
-      const html = payload?.parse?.text
-      if (typeof html !== 'string') return
-
-      const venue = extractDota2VenueFromInfobox(html)
-      if (venue) {
-        venues.set(path, venue)
       }
     } catch {
       // 单个锦标赛页面失败不影响其余场次
