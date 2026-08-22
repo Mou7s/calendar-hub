@@ -1414,18 +1414,32 @@ test("Dota 2 parser keeps finished matches for 48h with scores and winner", () =
 
 test("Dota 2 loader uses Liquipedia's MediaWiki API and builds a topic calendar", async () => {
   const requests = [];
+  const tournamentInfoboxHtml = `
+    <div><div class="infobox-cell-2 infobox-description">Location:</div>
+    <div style="width:50%"><span class="flag"><img alt="China" src="cn.png" /></span> Shanghai</div></div>
+    <div><div class="infobox-cell-2 infobox-description">Venue:</div>
+    <div style="width:50%"><a href="x">Oriental Sports Center</a></div></div>`;
   const data = await loadDota2CalendarData(async (input, options) => {
     requests.push({ input: String(input), options });
-    return new Response(JSON.stringify({ parse: { text: sampleDota2MatchHtml } }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    });
+    const isTournamentPage = /page=The_International%2F2026/.test(String(input));
+    return new Response(
+      JSON.stringify({
+        parse: { text: isTournamentPage ? tournamentInfoboxHtml : sampleDota2MatchHtml },
+      }),
+      {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      },
+    );
   }, new Date("2026-08-20T00:00:00.000Z"));
 
   assert.equal(data.topic.id, "dota2");
   assert.equal(data.missions.length, 1);
+  // 举办地来自锦标赛页 infobox Location，而非硬编码 Online
+  assert.equal(data.missions[0].launchSite, "Shanghai");
   assert.match(requests[0].input, /action=parse/);
   assert.match(requests[0].input, /page=Liquipedia%3AMatches/);
+  assert.match(requests[1].input, /page=The_International%2F2026/);
   assert.match(requests[0].options.headers["User-Agent"], /CalendarHub/);
 
   const feed = buildTopicCalendarFeed("dota2", data);
@@ -1433,6 +1447,19 @@ test("Dota 2 loader uses Liquipedia's MediaWiki API and builds a topic calendar"
   assert.match(feed, /X-WR-CALNAME:Dota 2 Major Matches Calendar/);
   assert.match(feed, /SUMMARY:Liquid vs Falcons/);
   assert.match(unfoldedFeed, /Source: https:\/\/liquipedia\.net\/dota2\/api\.php/);
+});
+
+test("Dota 2 venue extraction falls back to Online when the tournament page has no Location", async () => {
+  const data = await loadDota2CalendarData(async (input) => {
+    const isMatchesPage = /page=Liquipedia%3AMatches/.test(String(input));
+    return new Response(
+      JSON.stringify({ parse: { text: isMatchesPage ? sampleDota2MatchHtml : "<div>No infobox here</div>" } }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }, new Date("2026-08-20T00:00:00.000Z"));
+
+  assert.equal(data.missions.length, 1);
+  assert.equal(data.missions[0].launchSite, "Online");
 });
 
 const officialF1Rows = [

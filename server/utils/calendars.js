@@ -189,7 +189,7 @@ const getDota2MatchBlocks = (html) => {
  * Parse the rendered match ticker returned by Liquipedia's MediaWiki API.
  * The API response contains match cards, not a direct HTML page request.
  */
-export function parseDota2Matches(html, now = new Date()) {
+export function parseDota2Matches(html, now = new Date(), venuesByTournamentPath = new Map()) {
   const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
   if (Number.isNaN(nowMs)) return []
 
@@ -226,6 +226,10 @@ export function parseDota2Matches(html, now = new Date()) {
     const missionUrl = tournamentPath
       ? new URL(tournamentPath, 'https://liquipedia.net').toString()
       : `https://liquipedia.net/dota2/${encodeURIComponent(DOTA2_MATCHES_PAGE)}`
+
+    // 举办地：优先用锦标赛页 infobox 的 Location，未抓到时回退 Online
+    const venueLookupKey = decodeURIComponent(tournamentPath.split('#')[0])
+    const launchSite = venuesByTournamentPath.get(venueLookupKey) || 'Online'
 
     const matchId = block.match(/(?:[?&]title=|title=)Match:([^&"\s]+)/i)?.[1]
     const matchKey = matchId || [timestamp, opponents[0], opponents[1], tournamentName].join('-')
@@ -270,7 +274,7 @@ export function parseDota2Matches(html, now = new Date()) {
       shortTitleZh: `${opponents[0]} 对阵 ${opponents[1]}`,
       missionType: `Dota 2 ${bestOf}`,
       vehicle: bestOf,
-      launchSite: 'Online',
+      launchSite,
       missionUrl,
       launchAt,
       launchWindow: { open: launchAt, close: null },
@@ -748,7 +752,91 @@ export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date())
     throw new Error('Liquipedia Dota 2 match response did not contain parsed match data')
   }
 
-  return buildTopicCalendarData('dota2', parseDota2Matches(html, now))
+  // Matches 页的 match 卡片不携带举办地。按锦标赛页面并发抓取 infobox Location 补齐，
+  // 失败的比赛回退 'Online'，不影响主数据。
+  let venuesByTournamentPath = new Map()
+  try {
+    venuesByTournamentPath = await loadDota2TournamentVenues(html, fetchImpl)
+  } catch {
+    venuesByTournamentPath = new Map()
+  }
+
+  return buildTopicCalendarData('dota2', parseDota2Matches(html, now, venuesByTournamentPath))
+}
+
+/**
+ * Liquipedia match ticker 只给锦标赛链接（如 /dota2/The_International/2026/Main_Event）。
+ * 举办地在各锦标赛页面的 infobox "Location:" 字段。这里去重后并发抓取并解析，
+ * 返回 锦标赛路径 -> 举办地文本（如 "Shanghai"） 的映射。
+ */
+const DOTA2_VENUE_FETCH_LIMIT = 4
+
+async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
+  const tournamentPaths = new Set()
+
+  for (const block of getDota2MatchBlocks(matchTickerHtml)) {
+    const match = block.match(
+      /<span class="match-info-tournament-name"[^>]*>[\s\S]*?<a href="([^"]+)"/i
+    )
+    if (match?.[1]) {
+      // 剥掉 #锚点：Main Event / Group Stage 共用同一锦标赛页面
+      const path = decodeURIComponent(match[1].replace(/&amp;/g, '&').split('#')[0])
+      if (path.startsWith('/dota2/')) {
+        tournamentPaths.add(path)
+      }
+    }
+  }
+
+  const limitedPaths = Array.from(tournamentPaths).slice(0, DOTA2_VENUE_FETCH_LIMIT)
+  const venues = new Map()
+
+  await Promise.all(limitedPaths.map(async path => {
+    try {
+      const params = new URLSearchParams({
+        action: 'parse',
+        format: 'json',
+        formatversion: '2',
+        page: path.replace(/^\/dota2\//, ''),
+        prop: 'text',
+        disabletoc: '1'
+      })
+      const response = await fetchImpl(`${DOTA2_MATCHES_SOURCE_URL}?${params.toString()}`, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': DOTA2_MATCHES_USER_AGENT
+        }
+      })
+      if (!response.ok) return
+
+      const payload = await response.json()
+      const html = payload?.parse?.text
+      if (typeof html !== 'string') return
+
+      const venue = extractDota2VenueFromInfobox(html)
+      if (venue) {
+        venues.set(path, venue)
+      }
+    } catch {
+      // 单个锦标赛页面失败不影响其余场次
+    }
+  }))
+
+  return venues
+}
+
+/** 从锦标赛页 HTML 的 infobox 中提取 "Location:" 值（纯文本），如 "Shanghai, China"。 */
+export function extractDota2VenueFromInfobox(pageHtml) {
+  const locationIndex = pageHtml.search(/infobox-description[^>]*>\s*Location\s*:/i)
+  if (locationIndex < 0) return ''
+
+  const segmentStart = pageHtml.indexOf('</div>', locationIndex)
+  if (segmentStart < 0) return ''
+  const valueEnd = pageHtml.indexOf('</div></div>', segmentStart)
+  const raw = pageHtml.slice(segmentStart + '</div>'.length, valueEnd > 0 ? valueEnd : segmentStart + 400)
+
+  return decodeHtmlText(raw.replace(/<img[^>]*>/gi, '').replace(/<br\s*\/?>/gi, ', '))
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 // 内置预设的非 SpaceX 主题静态/精选日历事件数据
