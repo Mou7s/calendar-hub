@@ -555,9 +555,9 @@
           <span>{{ t('status.liveNow') }}</span>
         </div>
         <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 bg-[#202020] border border-[#333333] mb-2">
-          <span class="text-amber-400 font-bold font-mono text-xs">{{ t('calendar.wtt.finalScore') || 'Final' }}: {{ popoverEvent.scores }}</span>
+          <span class="text-amber-400 font-bold font-mono text-xs">{{ t(getCalendarEventPresentation(popoverEvent).scoreLabelKey || 'calendar.wtt.finalScore') }}: {{ popoverEvent.scores }}</span>
           <span v-if="popoverEvent.winner" class="text-[10px] text-neutral-300 font-semibold truncate max-w-[130px]">
-            {{ t('calendar.wtt.winner') || 'Winner' }}: <strong class="text-white">{{ popoverEvent.winner }}</strong>
+            {{ t(getCalendarEventPresentation(popoverEvent).winnerLabelKey || 'calendar.wtt.winner') }}: <strong class="text-white">{{ popoverEvent.winner }}</strong>
           </span>
         </div>
         <h3 class="text-base font-black text-white uppercase font-mono leading-snug">
@@ -579,7 +579,7 @@
 
         <div v-if="popoverEvent.gameScores?.length" class="flex items-start gap-2.5">
           <UIcon name="i-lucide-list" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
-          <span class="leading-relaxed text-[#e5e5e5]">{{ t('calendar.wtt.games') || 'Games' }}: <strong class="text-white font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
+          <span class="leading-relaxed text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).gamesLabelKey || 'calendar.wtt.games') }}: <strong class="text-white font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
         </div>
 
         <div v-if="popoverEvent.launchSite" class="flex items-start gap-2.5">

@@ -20,6 +20,15 @@ const EVENT_PRESENTATIONS = Object.freeze({
     gamesLabelKey: 'calendar.wtt.games',
     vehicleIcon: 'i-lucide-trophy',
     locationIcon: 'i-lucide-map-pin'
+  }),
+  dota2: Object.freeze({
+    vehicleLabelKey: 'calendar.dota2.format',
+    locationLabelKey: 'calendar.dota2.venue',
+    scoreLabelKey: 'calendar.dota2.score',
+    winnerLabelKey: 'calendar.dota2.winner',
+    gamesLabelKey: 'calendar.dota2.games',
+    vehicleIcon: 'i-lucide-swords',
+    locationIcon: 'i-lucide-map-pin'
   })
 })
 

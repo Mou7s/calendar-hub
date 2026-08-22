@@ -66,6 +66,16 @@
       "winner": "Winner",
       "games": "Game Scores"
     },
+    "dota2": {
+      "format": "Format",
+      "venue": "Location",
+      "scoreboard": "Match Scoreboard",
+      "finished": "Official Result",
+      "finalScore": "Final Score",
+      "score": "Score",
+      "winner": "Winner",
+      "games": "Game Scores"
+    },
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",
     "filterRocketLab": "Rocket Lab",

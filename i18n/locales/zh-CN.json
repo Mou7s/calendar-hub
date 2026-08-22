@@ -65,6 +65,16 @@
       "winner": "获胜者",
       "games": "每局小分"
     },
+    "dota2": {
+      "format": "赛制",
+      "venue": "举办地",
+      "scoreboard": "比赛比分看板",
+      "finished": "完赛",
+      "finalScore": "完赛大比分",
+      "score": "比分",
+      "winner": "获胜者",
+      "games": "每局小分"
+    },
     "filterAll": "全部机构",
     "filterSpaceX": "SpaceX",
     "filterRocketLab": "Rocket Lab",
