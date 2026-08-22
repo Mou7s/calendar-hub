@@ -23,7 +23,7 @@
   - 使用 **Nuxt UI** (Tailwind CSS) 构建的极简、未来感日历界面。
   - 原生支持系统级 **深色模式 (Dark Mode)** 切换，流转顺滑。
   - 内置实时高精度 **发射倒计时** 计时器。
-  - **交互式日历组件**：包含一个迷你日历网格、今日聚焦、事件时间轴，以及可直接交互的发射任务详情卡片。
+  - **交互式日历组件**：包含日/周/月三视图、迷你日历网格、今日聚焦、事件时间轴，以及可直接交互的发射任务详情卡片；中文环境额外提供农历与二十四节气标注。
   - **高清互动图解**：支持在详情页中一键打开超高清任务发射图解（Infographic），配备带磨砂玻璃背景的 Lightbox 弹窗和双击/点击自适应缩放查看原图功能。
 - **🔄 多源日历与实时同步**：
   - 自动聚合 SpaceX 官方 upcoming API 模块的板块卡片信息与高精度的 timings 倒计时数据。
@@ -143,7 +143,7 @@ npm run dev
 
 ## 🧪 自动化测试
 
-项目内置了 **39** 项单元测试，覆盖 SpaceX 数据源降级、F1 赛程、WTT 主系列赛事筛选、Dota 2 Liquipedia 比赛解析、比赛双方解析、ICS 文本安全转义、SWR 缓存、时区转换以及**直播状态保活逻辑**。
+项目内置了 **41** 项单元测试，覆盖 SpaceX 数据源降级、F1 赛程、WTT 主系列赛事筛选、Dota 2 Liquipedia 比赛解析、比赛双方与比分解析、ICS 文本安全转义、SWR 缓存、时区转换、日历导航以及**直播状态保活逻辑**。
 
 运行命令：
 ```bash
@@ -215,3 +215,22 @@ content-disposition: inline; filename="spacex-launches.ics"
 - Dota 2 数据来自 [Liquipedia Dota 2 比赛列表](https://liquipedia.net/dota2/Liquipedia:Matches)，通过 [Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use) 获取，并缓存 30 分钟以降低上游请求频率。
 - 本项目日历数据只专注于即将到来的/计划中的航天发射任务（Upcoming Launches），详情卡片支持查询最近 50 次已完成发射（History Launches）的元数据。
 - 日历事件时间依据浏览器时区或日历客户端设定自动换算，无需手动调整。
+
+---
+
+## 🎨 前端对齐与 Hydration 守则（LaunchCalendar.vue）
+
+### 1. 表头基线对齐
+* 月份标题与时区徽章的容器必须使用 `sm:items-baseline`，禁止 `sm:items-center`（中线对齐会让小字号徽章视觉偏高）。
+* 大字号标题（`text-2xl`）配合 `!leading-none` 收紧行高盒；小徽章文字用 `leading-none` + `translate-y-px` 做 1px 光学下沉，图标加 `opacity-70` 弱化。
+
+### 2. 分段控件（Day/Week/Month）几何居中
+* 容器使用 `grid grid-cols-3` 等分（禁止 flex + 内容宽度），滑动背景宽度精确为 `w-[calc(33.333%-1.34px)]`，位移为 `2px` / `calc(33.333% + 0.67px)` / `calc(66.666% - 0.67px)`。
+* 按钮统一 `h-6`（桌面）/ `h-7`（移动）+ `flex items-center justify-center leading-none translate-y-[0.5px]`，并保留 `px-3.5` / `px-2` 横向留白——固定高度 + flex 居中替代 `py-* + line-height`，避免大写字母光学偏上。
+* 大写字母的光学中心比几何中心高约 0.5px，`translate-y-[0.5px]` 是校正值，不要放大到 `translate-y-px` 以上。
+
+### 3. SSR/客户端 Hydration 一致性
+* **首帧渲染必须与环境无关**：任何依赖 `window.location`、`localStorage`、浏览器时区、`Date.now()`、`Math.random()` 的值，禁止在首次渲染时直接输出。
+* 标准模式：ref 给环境无关初始值（如 `timezoneDisplay = ref('UTC')`、webcal 链接默认生产域名），在 `onMounted` 中通过就绪旗标（`isClientReady`）切换到真实客户端值。
+* 违反该约定会触发 Vue "Hydration attribute mismatch" 警告；**生产模式只警告不修正 DOM**，会导致页面显示值与代码逻辑值静默分叉。
+* 开发时控制台的每个 hydration warning 都必须修掉；`<Suspense> is an experimental feature` 为 Nuxt 固定提示，可忽略。
