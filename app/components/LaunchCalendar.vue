@@ -90,34 +90,34 @@
       <!-- Top Header Toolbar (黑白灰极简工具栏) -->
       <header class="h-auto min-h-14 border-b border-[#262626] px-3 py-2 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 shrink-0 bg-[#141414] md:h-14 md:px-4 md:py-0 md:flex md:items-center md:justify-between">
         <!-- Left: Month Title + Lunar Year -->
-        <div class="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-          <h1 class="w-full min-w-0 text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-normal !max-w-none truncate sm:w-auto">
+        <div class="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-baseline sm:gap-2.5">
+          <h1 class="w-full min-w-0 text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-none !max-w-none truncate sm:w-auto">
             <span>{{ monthTitleEnglish }}</span>
-            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden md:inline">{{ lunarYearLabel }}</span>
+            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden md:inline leading-none">{{ lunarYearLabel }}</span>
           </h1>
           <span
-            class="inline-flex min-w-0 max-w-[9.5rem] shrink items-center gap-1 text-[9px] font-mono font-bold tracking-tight text-[#737373] md:max-w-[13rem]"
+            class="inline-flex min-w-0 max-w-[9.5rem] shrink items-center gap-1.5 text-[10px] font-mono font-bold tracking-tight text-[#737373] md:max-w-[13rem] leading-none"
             :title="`${t('calendar.timezone')}: ${timezoneDisplay}`"
             :aria-label="`${t('calendar.timezone')}: ${timezoneDisplay}`"
           >
-            <UIcon name="i-lucide-globe" class="h-3 w-3 shrink-0" />
-            <span class="truncate">{{ timezoneDisplay }}</span>
+            <UIcon name="i-lucide-globe" class="h-3 w-3 shrink-0 opacity-70" />
+            <span class="truncate leading-none translate-y-px">{{ timezoneDisplay }}</span>
           </span>
         </div>
 
         <!-- Center: Day / Week / Month Switcher (Apple Style Segmented Slider) -->
-        <div class="relative hidden md:flex items-center bg-[#262626] p-0.5 rounded-none text-xs font-semibold select-none border border-[#333333]">
-          <!-- Active Sliding Background -->
+        <div class="relative hidden md:grid grid-cols-3 items-center bg-[#262626] p-0.5 rounded-none text-xs font-semibold select-none border border-[#333333]">
+          <!-- Active Sliding Background - 完美匹配 1/3 等分，避免 px 计算误差 -->
           <div
-            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-2px)] bg-[#404040] rounded-none shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-1.34px)] bg-[#404040] rounded-none shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
             :style="{
-              left: activeCalendarView === 'day' ? '2px' : activeCalendarView === 'week' ? 'calc(33.333% + 1px)' : 'calc(66.666% + 0px)'
+              left: activeCalendarView === 'day' ? '2px' : activeCalendarView === 'week' ? 'calc(33.333% + 0.67px)' : 'calc(66.666% - 0.67px)'
             }"
           ></div>
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
+            class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'day' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'day'"
           >
@@ -126,7 +126,7 @@
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
+            class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'week' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'week'"
           >
@@ -135,7 +135,7 @@
 
           <button
             type="button"
-            class="relative z-10 px-3.5 py-1 rounded-none transition-colors cursor-pointer"
+            class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'month' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'month'"
           >
@@ -175,10 +175,10 @@
         </div>
 
         <!-- Mobile View Switcher -->
-        <div class="col-span-2 flex md:hidden items-center bg-[#262626] p-0.5 rounded-none text-[11px] font-semibold select-none border border-[#333333]">
+        <div class="col-span-2 grid md:hidden grid-cols-3 items-center bg-[#262626] p-0.5 rounded-none text-[11px] font-semibold select-none border border-[#333333]">
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
+            class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'day' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'day'"
           >
@@ -186,7 +186,7 @@
           </button>
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
+            class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'week' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'week'"
           >
@@ -194,7 +194,7 @@
           </button>
           <button
             type="button"
-            class="flex-1 min-w-0 px-2 py-1 rounded-none transition-colors cursor-pointer"
+            class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'month' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
             @click="activeCalendarView = 'month'"
           >
