@@ -721,6 +721,7 @@ const activeLocaleCode = computed({
 })
 
 const timezoneDisplay = ref('UTC')
+const isClientReady = ref(false)
 
 const updateTimezoneDisplay = () => {
   if (!import.meta.client) return
@@ -842,7 +843,8 @@ const isCopied = ref(false)
 const calendarIcsPaths = Object.freeze({
   spacex: '/spacex.ics',
   f1: '/ics/f1.ics',
-  wtt: '/ics/wtt.ics'
+  wtt: '/ics/wtt.ics',
+  dota2: '/ics/dota2.ics'
 })
 
 const openSubscribeModal = (providerId = 'spacex') => {
@@ -854,7 +856,7 @@ const openSubscribeModal = (providerId = 'spacex') => {
 const activeSubscribeIcsUrl = computed(() => {
   const p = subscribeProvider.value
   const path = calendarIcsPaths[p] || calendarIcsPaths.spacex
-  if (import.meta.client) {
+  if (isClientReady.value && import.meta.client) {
     return `${window.location.origin}${path}`
   }
   return `https://calendarhub.mou7s.com${path}`
@@ -866,7 +868,7 @@ const activeSubscribeWebcalUrl = computed(() => {
 
 const getWebcalUrl = (providerId = 'spacex') => {
   const path = calendarIcsPaths[providerId] || calendarIcsPaths.spacex
-  if (import.meta.client) {
+  if (isClientReady.value && import.meta.client) {
     const origin = window.location.origin.replace(/^https?:\/\//, '')
     return `webcal://${origin}${path}`
   }
@@ -1067,6 +1069,7 @@ const getWeekEventStyle = (event, eventsInDay) => {
 
 onMounted(() => {
   if (import.meta.client) {
+    isClientReady.value = true
     updateTimezoneDisplay()
     window.addEventListener('click', handleGlobalClick)
 
