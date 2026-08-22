@@ -29,7 +29,7 @@
   - 自动聚合 SpaceX 官方 upcoming API 模块的板块卡片信息与高精度的 timings 倒计时数据。
   - 支持 F1 赛程及 WTT 主系列赛事的比赛级日程，并可以继续扩展更多公共日程源。
   - WTT 比赛从官方赛程中提取双方选手、项目、轮次、场馆和开赛时间；未公布对阵的比赛不会生成日历事件。
-  - Dota 2 比赛通过 Liquipedia MediaWiki API 获取已公布的比赛时间、双方队伍、赛制和赛事链接，并以独立日历层展示。
+  - Dota 2 比赛通过 Liquipedia MediaWiki API 获取已公布的比赛时间、双方队伍、赛制和赛事链接，并以独立日历层展示；举办地自动从对应锦标赛页面的 infobox 提取（如 TI 2026 → Shanghai），完赛场次保留 48 小时并附带比分与获胜者。
   - **优雅降级机制**：即使 Timing API 临时故障，仍能依据磁贴基础数据生成日历。
   - **直播任务保活**：当发射任务正处于 Live 直播流状态时，即使当前时间已过原定发射时刻，系统仍会智能地在 Upcoming 列表和日历订阅中予以保留，防止用户在观看直播期间因日程过期被移出而错失跳转入口。
 - **🌐 全球多语言支持 (i18n)**：
@@ -212,7 +212,7 @@ content-disposition: inline; filename="spacex-launches.ics"
 
 - 本项目的数据源均拉取自 SpaceX 官网暴露的真实前端 API，不受 SpaceX v4 历史 API 停止维护的影响。
 - WTT 数据来自 [World Table Tennis 官方赛历](https://www.worldtabletennis.com/events_calendar)，仅同步 `WTT Series` 中已经公布对阵和开赛时间的未来比赛。
-- Dota 2 数据来自 [Liquipedia Dota 2 比赛列表](https://liquipedia.net/dota2/Liquipedia:Matches)，通过 [Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use) 获取，并缓存 30 分钟以降低上游请求频率。
+- Dota 2 数据来自 [Liquipedia Dota 2 比赛列表](https://liquipedia.net/dota2/Liquipedia:Matches)，通过 [Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use) 获取，并缓存 30 分钟以降低上游请求频率。举办地按场次对应的锦标赛页面 infobox `Location:` 字段解析（子页无 Location 时自动回退父页，如 `The_International/2026/Main_Event` → `The_International/2026` → Shanghai），仍无法获取时才显示 Online。
 - 本项目日历数据只专注于即将到来的/计划中的航天发射任务（Upcoming Launches），详情卡片支持查询最近 50 次已完成发射（History Launches）的元数据。
 - 日历事件时间依据浏览器时区或日历客户端设定自动换算，无需手动调整。
 
@@ -234,3 +234,15 @@ content-disposition: inline; filename="spacex-launches.ics"
 * 标准模式：ref 给环境无关初始值（如 `timezoneDisplay = ref('UTC')`、webcal 链接默认生产域名），在 `onMounted` 中通过就绪旗标（`isClientReady`）切换到真实客户端值。
 * 违反该约定会触发 Vue "Hydration attribute mismatch" 警告；**生产模式只警告不修正 DOM**，会导致页面显示值与代码逻辑值静默分叉。
 * 开发时控制台的每个 hydration warning 都必须修掉；`<Suspense> is an experimental feature` 为 Nuxt 固定提示，可忽略。
+
+### 4. Liquipedia（Dota 2）数据抓取守则
+* **必须携带 gzip**：Liquipedia API 对不带 `Accept-Encoding: gzip` 的请求直接返回 406。浏览器 fetch 自动处理，curl 调试时记得 `--compressed`。
+* **必须带合规 User-Agent**：使用项目常量 `DOTA2_MATCHES_USER_AGENT`，匿名请求会被限流。
+* **举办地解析路径**：match 卡片只有锦标赛链接 → 锦标赛子页 infobox 常无 Location → 回退父页解析（见上）。去重后最多并发 4 个锦标赛页请求。
+* **上游结构是渲染后 HTML**：用正则解析 `match-info` / `infobox-description` 区块，改版时会静默失配——改动解析逻辑必须先用真实页面数据验证（参考测试里的 sample HTML 与真实 TI 2026 页面）。
+
+---
+
+## 🧪 测试基线
+
+当前测试数量为 **42** 项（`bun test` 全绿为准，本文档与 AGENTS.md 中其他数字过期时以此为准）。新增功能必须同步补测试，特别是涉及外部数据源解析的部分。
