@@ -782,7 +782,9 @@ function isDota2Tier1(tier) {
 }
 
 export function extractDota2TierFromInfobox(pageHtml) {
-  const tierIndex = pageHtml.search(/infobox-description[^>]*>\s*Tier\s*:/i)
+  // 优先匹配 Liquipedia Tier，兼容 Valve Tier / 普通 Tier 的写法
+  let tierIndex = pageHtml.search(/infobox-description[^>]*>[^<]*Liquipedia\s+Tier\s*:/i)
+  if (tierIndex < 0) tierIndex = pageHtml.search(/infobox-description[^>]*>[^<]*Tier\s*:/i)
   if (tierIndex < 0) return ''
   const segmentStart = pageHtml.indexOf('</div>', tierIndex)
   if (segmentStart < 0) return ''
