@@ -1415,6 +1415,7 @@ test("Dota 2 parser keeps finished matches for 48h with scores and winner", () =
 test("Dota 2 loader uses Liquipedia's MediaWiki API and builds a topic calendar", async () => {
   const requests = [];
   const tournamentInfoboxHtml = `
+    <div><div class="infobox-cell-2 infobox-description">Tier:</div><div style="width:50%">Tier 1</div></div>
     <div><div class="infobox-cell-2 infobox-description">Location:</div>
     <div style="width:50%"><span class="flag"><img alt="China" src="cn.png" /></span> Shanghai</div></div>
     <div><div class="infobox-cell-2 infobox-description">Venue:</div>
@@ -1453,7 +1454,7 @@ test("Dota 2 venue extraction falls back to Online when the tournament page has 
   const data = await loadDota2CalendarData(async (input) => {
     const isMatchesPage = /page=Liquipedia%3AMatches/.test(String(input));
     return new Response(
-      JSON.stringify({ parse: { text: isMatchesPage ? sampleDota2MatchHtml : "<div>No infobox here</div>" } }),
+      JSON.stringify({ parse: { text: isMatchesPage ? sampleDota2MatchHtml : "<div><div class=\"infobox-cell-2 infobox-description\">Tier:</div><div>Tier 1</div></div>" } }),
       { status: 200, headers: { "content-type": "application/json" } },
     );
   }, new Date("2026-08-20T00:00:00.000Z"));

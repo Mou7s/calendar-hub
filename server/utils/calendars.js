@@ -228,8 +228,12 @@ export function parseDota2Matches(html, now = new Date(), venuesByTournamentPath
       : `https://liquipedia.net/dota2/${encodeURIComponent(DOTA2_MATCHES_PAGE)}`
 
     // 举办地：优先用锦标赛页 infobox 的 Location，未抓到时回退 Online
+    // 仅保留 Tier 1（当有 Tier 元数据时；无元数据时为兼容旧测试不过滤）
     const venueLookupKey = decodeURIComponent(tournamentPath.split('#')[0])
-    const launchSite = venuesByTournamentPath.get(venueLookupKey) || 'Online'
+    const metaRaw = venuesByTournamentPath.get(venueLookupKey)
+    const metaObj = typeof metaRaw === 'string' ? { venue: metaRaw, tier: '' } : (metaRaw || { venue: '', tier: '' })
+    if (venuesByTournamentPath.size > 0 && !isDota2Tier1(metaObj.tier)) continue
+    const launchSite = metaObj.venue || 'Online'
 
     const matchId = block.match(/(?:[?&]title=|title=)Match:([^&"\s]+)/i)?.[1]
     const matchKey = matchId || [timestamp, opponents[0], opponents[1], tournamentName].join('-')
@@ -769,7 +773,23 @@ export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date())
  * 举办地在各锦标赛页面的 infobox "Location:" 字段。这里去重后并发抓取并解析，
  * 返回 锦标赛路径 -> 举办地文本（如 "Shanghai"） 的映射。
  */
-const DOTA2_VENUE_FETCH_LIMIT = 4
+const DOTA2_VENUE_FETCH_LIMIT = 20
+const DOTA2_TIER1_RE = /^tier\s*1\b|^1$|^premier$/i
+
+function isDota2Tier1(tier) {
+  const t = String(tier || '').toLowerCase().trim()
+  return DOTA2_TIER1_RE.test(t) || t.includes('tier 1')
+}
+
+export function extractDota2TierFromInfobox(pageHtml) {
+  const tierIndex = pageHtml.search(/infobox-description[^>]*>\s*Tier\s*:/i)
+  if (tierIndex < 0) return ''
+  const segmentStart = pageHtml.indexOf('</div>', tierIndex)
+  if (segmentStart < 0) return ''
+  const valueEnd = pageHtml.indexOf('</div></div>', segmentStart)
+  const raw = pageHtml.slice(segmentStart + '</div>'.length, valueEnd > 0 ? valueEnd : segmentStart + 400)
+  return decodeHtmlText(raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
+}
 
 async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
   const tournamentPaths = new Set()
@@ -821,9 +841,15 @@ async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
         if (typeof html !== 'string') continue
 
         const venue = extractDota2VenueFromInfobox(html)
-        if (venue) {
-          // 命中后同时记录原始子页路径，保证 parseDota2Matches 查表命中
-          venues.set(path, venue)
+        const tier = extractDota2TierFromInfobox(html)
+        if (venue || tier) {
+          const existing = venues.get(path) || { venue: '', tier: '' }
+          const merged = { venue: venue || existing.venue, tier: tier || existing.tier }
+          venues.set(path, merged)
+          // 拿到 venue+ tier 就不用再回退父页
+          if (merged.venue && merged.tier) break
+          // 只拿到其中一个则继续尝试父页补全
+          if (!merged.venue || !merged.tier) continue
           break
         }
       }
