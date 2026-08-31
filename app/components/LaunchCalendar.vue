@@ -1,9 +1,9 @@
 <template>
-  <div class="h-full w-full flex min-h-0 overflow-hidden bg-[#121212] text-[#ffffff] font-sans select-none">
+  <div class="h-full w-full flex min-h-0 overflow-hidden bg-[var(--bg)] text-[var(--text)] font-sans select-none">
     
     <!-- 1. Left Sidebar (纯粹 iCloud 黑白灰侧边栏 - 移除左侧卡片) -->
     <aside
-      class="w-60 flex-shrink-0 bg-[#171717] border-r border-[#262626] flex flex-col justify-between p-4 min-h-0 overflow-y-auto hidden md:flex"
+      class="w-60 flex-shrink-0 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col justify-between p-4 min-h-0 overflow-y-auto hidden md:flex"
     >
       <div class="space-y-6">
         <!-- Top App Title -->
@@ -12,14 +12,14 @@
             <div class="w-7 h-7 rounded-none bg-white flex items-center justify-center text-black shadow-md shadow-white/10">
               <UIcon name="i-lucide-calendar" class="w-4.5 h-4.5" />
             </div>
-            <span class="text-lg font-extrabold tracking-wider text-white font-mono">CALENDAR</span>
-            <span class="text-[8px] tracking-[0.2em] text-[#737373] font-bold">HUB</span>
+            <span class="text-lg font-extrabold tracking-wider text-[var(--text)] font-mono">CALENDAR</span>
+            <span class="text-[8px] tracking-[0.2em] text-[var(--muted)] font-bold">HUB</span>
           </div>
         </div>
 
         <!-- Calendars Layer Checklist Section -->
-        <div class="space-y-2 pt-2 border-t border-[#262626]">
-          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#737373] px-1 block">
+        <div class="space-y-2 pt-2 border-t border-[var(--border)]">
+          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--muted)] px-1 block">
             {{ t('calendar.sidebar.calendars') }}
           </label>
 
@@ -27,7 +27,7 @@
             <div
               v-for="layer in calendarLayers"
               :key="layer.id"
-              class="w-full flex items-center justify-between px-2 py-1.5 rounded-none hover:bg-[#262626] transition-colors group"
+              class="w-full flex items-center justify-between px-2 py-1.5 rounded-none hover:bg-[var(--border)] transition-colors group"
             >
               <button
                 type="button"
@@ -37,14 +37,14 @@
               >
                 <div
                   class="w-4.5 h-4.5 rounded-none flex items-center justify-center transition-all duration-200 shrink-0"
-                  :class="isCalendarActive(layer.id) ? 'text-black shadow-sm shadow-white/20' : 'border border-[#404040] text-transparent hover:border-[#737373]'"
+                  :class="isCalendarActive(layer.id) ? 'text-black shadow-sm shadow-white/20' : 'border border-[var(--border)] text-transparent hover:border-[var(--border)]'"
                   :style="isCalendarActive(layer.id) ? { backgroundColor: layer.color } : undefined"
                 >
                   <UIcon name="i-lucide-check" class="w-3.5 h-3.5 stroke-[3]" />
                 </div>
                 <span
                   class="text-xs font-semibold tracking-wide transition-colors truncate"
-                  :class="isCalendarActive(layer.id) ? 'text-white font-bold' : 'text-[#737373] line-through'"
+                  :class="isCalendarActive(layer.id) ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] line-through'"
                 >
                   {{ layer.name }}
                 </span>
@@ -52,7 +52,7 @@
 
               <a
                 :href="getWebcalUrl(layer.id)"
-                class="px-2 py-1 text-[11px] font-bold rounded-none bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
+                class="px-2 py-1 text-[11px] font-bold rounded-none bg-blue-600 hover:bg-blue-500 text-[var(--text)] flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
                 :title="t('subscribe.subscribeLink')"
                 @click.stop
               >
@@ -64,8 +64,8 @@
         </div>
 
         <!-- Language Select in Sidebar -->
-        <div class="space-y-2 pt-2 border-t border-[#262626]">
-          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#737373] px-1 block">
+        <div class="space-y-2 pt-2 border-t border-[var(--border)]">
+          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--muted)] px-1 block">
             {{ t('calendar.sidebar.language') }}
           </label>
           <USelectMenu
@@ -85,18 +85,18 @@
     </aside>
 
     <!-- 2. Right Main Calendar Area (主界面) -->
-    <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#181818]">
+    <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]">
       
       <!-- Top Header Toolbar (黑白灰极简工具栏) -->
-      <header class="h-auto min-h-14 border-b border-[#262626] px-3 py-2 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 shrink-0 bg-[#141414] md:h-14 md:px-4 md:py-0 md:flex md:items-center md:justify-between">
+      <header class="h-auto min-h-14 border-b border-[var(--border)] px-3 py-2 grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-2 shrink-0 bg-[var(--surface)] md:h-14 md:px-4 md:py-0 md:flex md:items-center md:justify-between">
         <!-- Left: Month Title + Lunar Year -->
         <div class="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-baseline sm:gap-2.5">
-          <h1 class="w-full min-w-0 text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-none !max-w-none truncate sm:w-auto">
+          <h1 class="w-full min-w-0 text-lg md:text-2xl font-extrabold text-[var(--text)] tracking-tight flex items-baseline gap-2 font-mono !mb-0 !leading-none !max-w-none truncate sm:w-auto">
             <span>{{ monthTitleEnglish }}</span>
-            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[#737373] hidden md:inline leading-none">{{ lunarYearLabel }}</span>
+            <span v-if="showLunarCalendarLabels" class="text-xs font-medium text-[var(--muted)] hidden md:inline leading-none">{{ lunarYearLabel }}</span>
           </h1>
           <span
-            class="inline-flex min-w-0 max-w-[9.5rem] shrink items-center gap-1.5 text-[10px] font-mono font-bold tracking-tight text-[#737373] md:max-w-[13rem] leading-none"
+            class="inline-flex min-w-0 max-w-[9.5rem] shrink items-center gap-1.5 text-[10px] font-mono font-bold tracking-tight text-[var(--muted)] md:max-w-[13rem] leading-none"
             :title="`${t('calendar.timezone')}: ${timezoneDisplay}`"
             :aria-label="`${t('calendar.timezone')}: ${timezoneDisplay}`"
           >
@@ -106,10 +106,10 @@
         </div>
 
         <!-- Center: Day / Week / Month Switcher (Apple Style Segmented Slider) -->
-        <div class="relative hidden md:grid grid-cols-3 items-center bg-[#262626] p-0.5 rounded-none text-xs font-semibold select-none border border-[#333333]">
+        <div class="relative hidden md:grid grid-cols-3 items-center bg-[var(--border)] p-0.5 rounded-none text-xs font-semibold select-none border border-[var(--border)]">
           <!-- Active Sliding Background - 完美匹配 1/3 等分，避免 px 计算误差 -->
           <div
-            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-1.34px)] bg-[#404040] rounded-none shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            class="absolute top-0.5 bottom-0.5 w-[calc(33.333%-1.34px)] bg-[var(--btn-hover)] rounded-none shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
             :style="{
               left: activeCalendarView === 'day' ? '2px' : activeCalendarView === 'week' ? 'calc(33.333% + 0.67px)' : 'calc(66.666% - 0.67px)'
             }"
@@ -118,7 +118,7 @@
           <button
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'day' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'day' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'day'"
           >
             {{ t('calendar.viewDay') }}
@@ -127,7 +127,7 @@
           <button
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'week' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'week' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'week'"
           >
             {{ t('calendar.viewWeek') }}
@@ -136,7 +136,7 @@
           <button
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'month' ? 'text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'month' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'month'"
           >
             {{ t('calendar.viewMonth') }}
@@ -145,10 +145,10 @@
 
         <!-- Right: Controls < Today > -->
         <div class="flex self-start items-center justify-self-end gap-2 sm:self-auto">
-          <div class="flex h-8 items-center text-white text-sm font-semibold gap-1">
+          <div class="flex h-8 items-center text-[var(--text)] text-sm font-semibold gap-1">
             <button
               type="button"
-              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[#262626] rounded-none transition-colors text-[#a3a3a3] hover:text-white"
+              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[var(--border)] rounded-none transition-colors text-[var(--muted)] hover:text-[var(--text)]"
               :disabled="activeCalendarView === 'month' && activeMonthIndex <= 0"
               @click="navigateCalendar(-1)"
             >
@@ -157,7 +157,7 @@
             
             <button
               type="button"
-              class="flex h-8 items-center justify-center px-2.5 py-1 hover:bg-[#262626] rounded-none transition-colors font-bold text-white"
+              class="flex h-8 items-center justify-center px-2.5 py-1 hover:bg-[var(--border)] rounded-none transition-colors font-bold text-[var(--text)]"
               @click="jumpToToday"
             >
               {{ t('calendar.today') }}
@@ -165,7 +165,7 @@
 
             <button
               type="button"
-              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[#262626] rounded-none transition-colors text-[#a3a3a3] hover:text-white"
+              class="flex h-8 w-7 items-center justify-center p-1 hover:bg-[var(--border)] rounded-none transition-colors text-[var(--muted)] hover:text-[var(--text)]"
               :disabled="activeCalendarView === 'month' && activeMonthIndex >= monthKeys.length - 1"
               @click="navigateCalendar(1)"
             >
@@ -175,11 +175,11 @@
         </div>
 
         <!-- Mobile View Switcher -->
-        <div class="col-span-2 grid md:hidden grid-cols-3 items-center bg-[#262626] p-0.5 rounded-none text-[11px] font-semibold select-none border border-[#333333]">
+        <div class="col-span-2 grid md:hidden grid-cols-3 items-center bg-[var(--border)] p-0.5 rounded-none text-[11px] font-semibold select-none border border-[var(--border)]">
           <button
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'day' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'day' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'day'"
           >
             {{ t('calendar.viewDay') }}
@@ -187,7 +187,7 @@
           <button
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'week' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'week' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'week'"
           >
             {{ t('calendar.viewWeek') }}
@@ -195,7 +195,7 @@
           <button
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'month' ? 'bg-[#404040] text-white font-bold' : 'text-[#737373] hover:text-white'"
+            :class="activeCalendarView === 'month' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
             @click="activeCalendarView = 'month'"
           >
             {{ t('calendar.viewMonth') }}
@@ -209,7 +209,7 @@
             :key="`mobile-${layer.id}`"
             type="button"
             class="flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1 rounded-none border text-[10px] font-bold transition-colors cursor-pointer"
-            :class="isCalendarActive(layer.id) ? 'bg-[#262626] border-[#525252] text-white' : 'bg-transparent border-[#2c2c2c] text-[#737373]'"
+            :class="isCalendarActive(layer.id) ? 'bg-[var(--border)] border-[var(--border)] text-[var(--text)]' : 'bg-transparent border-[var(--border)] text-[var(--muted)]'"
             :aria-pressed="isCalendarActive(layer.id)"
             @click="toggleCalendarLayer(layer.id)"
           >
@@ -222,7 +222,7 @@
         <div class="col-span-2 flex md:hidden items-center gap-2 min-w-0">
           <button
             type="button"
-            class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-blue-500/60 bg-blue-600 text-[11px] font-bold text-white transition-colors hover:bg-blue-500"
+            class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-blue-500/60 bg-blue-600 text-[11px] font-bold text-[var(--text)] transition-colors hover:bg-blue-500"
             @click="openSubscribeModal(activeCalendarIds[0] || 'spacex')"
           >
             <UIcon name="i-lucide-rss" class="w-3.5 h-3.5 shrink-0" />
@@ -244,11 +244,11 @@
       </header>
 
       <!-- Weekday Header Row (Month View Only) -->
-      <div v-if="activeCalendarView === 'month'" class="grid grid-cols-7 border-b border-[#262626] bg-[#141414] shrink-0 text-center py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+      <div v-if="activeCalendarView === 'month'" class="grid grid-cols-7 border-b border-[var(--border)] bg-[var(--surface)] shrink-0 text-center py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
         <div
           v-for="(dayName, idx) in weekdayHeaders"
           :key="idx"
-          :class="idx >= 5 ? 'text-white font-extrabold' : 'text-[#737373]'"
+          :class="idx >= 5 ? 'text-[var(--text)] font-extrabold' : 'text-[var(--muted)]'"
         >
           {{ dayName }}
         </div>
@@ -257,14 +257,14 @@
       <!-- Main Dynamic Calendar View Switcher with Smooth Animations -->
       <Transition name="view-fade" mode="out-in">
         <!-- 1. Month View (月视图：7 Cols x 6 Rows) -->
-        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[#262626] gap-[1px]">
+        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[var(--border)] gap-[1px]">
           <div
             v-for="day in gridDays"
             :key="day.isoDate"
             class="calendar-cell h-full min-h-0 p-1 sm:p-1.5 flex flex-col justify-between overflow-hidden transition-colors"
             :class="{
-              'bg-[#141414]/80 text-[#525252]': !day.isCurrentMonth,
-              'bg-[#1b1b1b] text-[#ffffff]': day.isCurrentMonth
+              'bg-[var(--surface)]/80 text-[var(--muted)]': !day.isCurrentMonth,
+              'bg-[var(--surface)] text-[var(--text)]': day.isCurrentMonth
             }"
           >
             <!-- Cell Header: Date Number + Lunar Term -->
@@ -274,19 +274,19 @@
                   class="w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[10px] sm:text-xs font-bold flex items-center justify-center transition-all shrink-0"
                   :class="{
                     'bg-white text-black font-black shadow-md shadow-white/20': day.isoDate === todayIso,
-                    'text-white': day.isoDate !== todayIso && day.isCurrentMonth,
-                    'text-[#525252]': !day.isCurrentMonth
+                    'text-[var(--text)]': day.isoDate !== todayIso && day.isCurrentMonth,
+                    'text-[var(--muted)]': !day.isCurrentMonth
                   }"
                 >
                   {{ day.dayNumber }}
                 </span>
 
-                <span v-if="showLunarCalendarLabels" class="text-[10px] text-[#737373] font-normal truncate max-w-[60px] leading-none">
+                <span v-if="showLunarCalendarLabels" class="text-[10px] text-[var(--muted)] font-normal truncate max-w-[60px] leading-none">
                   {{ getLunarText(day.isoDate) }}
                 </span>
               </div>
 
-              <span v-if="day.events.length > 0" class="text-[8px] sm:text-[9px] font-bold text-[#737373] leading-none">
+              <span v-if="day.events.length > 0" class="text-[8px] sm:text-[9px] font-bold text-[var(--muted)] leading-none">
                 {{ day.events.length }}
               </span>
             </div>
@@ -300,7 +300,7 @@
                 class="calendar-event w-full min-w-0 text-left px-1 sm:px-1.5 py-0.5 rounded-none text-[9px] sm:text-[10px] font-semibold transition-all flex items-center justify-start cursor-pointer shrink-0"
                 :class="[
                   getEventStyleClass(event),
-                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[#303030] text-white font-bold' : ''
+                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[var(--btn-hover)] text-[var(--text)] font-bold' : ''
                 ]"
                 :aria-label="`${event.title} ${formatTimeShort(event.launchAt)}`"
                 @click="handleEventClick(event, $event)"
@@ -312,7 +312,7 @@
                 ></span>
                 <span v-else class="calendar-event-live inline-flex items-center gap-1 shrink-0">
                   <span class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
-                  <span class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                  <span class="text-[9px] font-extrabold text-[var(--text)] animate-pulse">● LIVE</span>
                 </span>
 
                 <span class="calendar-event-title min-w-0 truncate font-semibold flex-1">{{ event.title }}</span>
@@ -326,7 +326,7 @@
               <button
                 v-if="day.events.length > 3"
                 type="button"
-                class="text-[9px] font-bold text-white hover:underline px-1 text-left shrink-0"
+                class="text-[9px] font-bold text-[var(--text)] hover:underline px-1 text-left shrink-0"
                 @click="handleEventClick(day.events[3], $event)"
               >
                 {{ t('calendar.moreEvents', { count: day.events.length - 3 }) }}
@@ -336,10 +336,10 @@
         </div>
 
         <!-- 2. Week View (周视图：24小时刻度线纵向等分网格) -->
-        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#181818]">
+        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]">
           <!-- Week Header Row (带左侧 56px 时间轴占位 + 7 列日期头) -->
-          <div class="flex border-b border-[#262626] bg-[#141414] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
-            <div class="w-14 shrink-0 border-r border-[#262626] flex items-center justify-center text-[10px] text-[#737373] font-mono">
+          <div class="flex border-b border-[var(--border)] bg-[var(--surface)] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
+            <div class="w-14 shrink-0 border-r border-[var(--border)] flex items-center justify-center text-[10px] text-[var(--muted)] font-mono">
               <UIcon name="i-lucide-clock" class="w-3.5 h-3.5 opacity-60" />
             </div>
             <div class="flex-1 grid grid-cols-7 gap-px">
@@ -349,17 +349,17 @@
                 class="flex flex-col items-center justify-center py-1 gap-1"
               >
                 <div class="flex items-center gap-1.5">
-                  <span class="text-[11px] font-bold" :class="idx >= 5 ? 'text-white' : 'text-[#737373]'">
+                  <span class="text-[11px] font-bold" :class="idx >= 5 ? 'text-[var(--text)]' : 'text-[var(--muted)]'">
                     {{ weekdayHeaders[idx] }}
                   </span>
                   <span
                     class="w-5.5 h-5.5 rounded-full text-xs font-bold flex items-center justify-center transition-all shrink-0"
-                    :class="day.isoDate === todayIso ? 'bg-white text-black font-black shadow-md shadow-white/20' : 'text-white'"
+                    :class="day.isoDate === todayIso ? 'bg-white text-black font-black shadow-md shadow-white/20' : 'text-[var(--text)]'"
                   >
                     {{ day.dayNumber }}
                   </span>
                 </div>
-                <div v-if="showLunarCalendarLabels" class="text-[9px] text-[#737373] font-normal truncate max-w-[60px] leading-none">
+                <div v-if="showLunarCalendarLabels" class="text-[9px] text-[var(--muted)] font-normal truncate max-w-[60px] leading-none">
                   {{ getLunarText(day.isoDate) }}
                 </div>
               </div>
@@ -367,13 +367,13 @@
           </div>
 
           <!-- 24-Hour Non-Scrollable Adaptive Body -->
-          <div ref="timelineContainer" class="flex-1 flex min-h-0 bg-[#141414] relative overflow-hidden select-none">
+          <div ref="timelineContainer" class="flex-1 flex min-h-0 bg-[var(--surface)] relative overflow-hidden select-none">
             <!-- Left Adaptive 24-Hour Timeline Column -->
-            <div class="w-14 shrink-0 bg-[#141414] border-r border-[#262626] select-none relative z-20 pointer-events-none h-full">
+            <div class="w-14 shrink-0 bg-[var(--surface)] border-r border-[var(--border)] select-none relative z-20 pointer-events-none h-full">
               <div
                 v-for="hour in visibleHours"
                 :key="hour"
-                class="absolute right-0 pr-2 text-[10px] font-mono text-[#737373] -translate-y-1/2 flex items-center justify-end"
+                class="absolute right-0 pr-2 text-[10px] font-mono text-[var(--muted)] -translate-y-1/2 flex items-center justify-end"
                 :style="{ top: `${(hour / 24) * 100}%` }"
               >
                 <span>{{ formatHourLabel(hour) }}</span>
@@ -382,7 +382,7 @@
               <!-- Current Time Badge on Timeline Left -->
               <div
                 v-if="isTodayInCurrentWeek"
-                    class="absolute right-1 z-30 -translate-y-1/2 px-1 py-0.5 rounded-none text-[9px] font-mono font-bold bg-red-500 text-white shadow-sm shadow-red-500/50"
+                    class="absolute right-1 z-30 -translate-y-1/2 px-1 py-0.5 rounded-none text-[9px] font-mono font-bold bg-red-500 text-[var(--text)] shadow-sm shadow-red-500/50"
                 :style="{ top: `${currentTimeTopPct}%` }"
               >
                 {{ currentTimeLabel }}
@@ -390,13 +390,13 @@
             </div>
 
             <!-- Right 7-Day Adaptive Timeline Canvas -->
-            <div class="flex-1 grid grid-cols-7 relative bg-[#181818] min-w-0 h-full">
+            <div class="flex-1 grid grid-cols-7 relative bg-[var(--bg)] min-w-0 h-full">
               <!-- Background Hourly Lines (Highlighted on visible step hours) -->
               <div
                 v-for="hour in hours24"
                 :key="`line-${hour}`"
                 class="absolute left-0 right-0 border-b pointer-events-none transition-colors"
-                :class="hour % hourStep === 0 ? 'border-[#333333]/70' : 'border-[#262626]/30'"
+                :class="hour % hourStep === 0 ? 'border-[var(--border)]/70' : 'border-[var(--border)]/30'"
                 :style="{ top: `${(hour / 24) * 100}%` }"
               ></div>
 
@@ -404,7 +404,7 @@
               <div
                 v-for="day in currentWeekDays"
                 :key="`col-${day.isoDate}`"
-                class="relative h-full border-r border-[#262626]/80 last:border-r-0"
+                class="relative h-full border-r border-[var(--border)]/80 last:border-r-0"
               >
                 <!-- Current Time Indicator Line for Today -->
                 <div
@@ -422,7 +422,7 @@
                     v-for="event in day.events"
                     :key="event.id || event.slug"
                     type="button"
-                    class="absolute z-20 min-w-0 text-left px-1.5 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[#383838] hover:border-white hover:z-30 shadow-lg group overflow-hidden"
+                    class="absolute z-20 min-w-0 text-left px-1.5 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[var(--border)] hover:border-[var(--text)] hover:z-30 shadow-lg group overflow-hidden"
                     :class="[
                       getEventStyleClass(event),
                       selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'ring-2 ring-white z-30 font-bold' : ''
@@ -432,11 +432,11 @@
                   >
                     <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
                       <span v-if="!event.isLive" class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
-                      <span v-else class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                      <span v-else class="text-[9px] font-extrabold text-[var(--text)] animate-pulse">● LIVE</span>
                       <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
                     </div>
 
-                    <span class="truncate font-black text-[11px] leading-snug group-hover:text-white w-full">
+                    <span class="truncate font-black text-[11px] leading-snug group-hover:text-[var(--text)] w-full">
                       {{ event.title }}
                     </span>
                   </button>
@@ -447,47 +447,47 @@
         </div>
 
         <!-- 3. Day View (日视图：按 24 小时刻度定位) -->
-        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[#161616] gap-3 sm:gap-4">
-          <div class="flex items-center justify-between border-b border-[#262626] pb-4 shrink-0">
+        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4">
+          <div class="flex items-center justify-between border-b border-[var(--border)] pb-4 shrink-0">
             <div class="flex items-center gap-3">
               <span class="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shadow-white/20">
                 {{ currentDayFocus?.dayNumber }}
               </span>
-              <h2 class="text-xl font-bold text-white font-mono flex items-center gap-2">
+              <h2 class="text-xl font-bold text-[var(--text)] font-mono flex items-center gap-2">
                 <span>{{ currentDayFocus?.isoDate }}</span>
-                <span v-if="showLunarCalendarLabels" class="text-xs text-[#737373] font-normal">({{ getLunarText(currentDayFocus?.isoDate) }})</span>
+                <span v-if="showLunarCalendarLabels" class="text-xs text-[var(--muted)] font-normal">({{ getLunarText(currentDayFocus?.isoDate) }})</span>
               </h2>
             </div>
-            <span class="text-xs font-mono text-[#737373]">
+            <span class="text-xs font-mono text-[var(--muted)]">
               {{ currentDayFocus?.events?.length || 0 }} {{ t('overview.launches') }}
             </span>
           </div>
 
           <!-- Empty Day State -->
-          <div v-if="!currentDayFocus?.events?.length" class="flex-1 py-16 text-center text-[#737373] space-y-2">
+          <div v-if="!currentDayFocus?.events?.length" class="flex-1 py-16 text-center text-[var(--muted)] space-y-2">
             <UIcon name="i-lucide-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
             <p class="text-sm font-semibold">{{ t('calendar.noLaunches') }}</p>
           </div>
 
           <!-- Day Events Timeline -->
-          <div v-else ref="timelineContainer" class="flex-1 flex min-h-0 bg-[#141414] relative overflow-hidden select-none">
-            <div class="w-14 shrink-0 bg-[#141414] border-r border-[#262626] select-none relative z-20 pointer-events-none h-full">
+          <div v-else ref="timelineContainer" class="flex-1 flex min-h-0 bg-[var(--surface)] relative overflow-hidden select-none">
+            <div class="w-14 shrink-0 bg-[var(--surface)] border-r border-[var(--border)] select-none relative z-20 pointer-events-none h-full">
               <div
                 v-for="hour in visibleHours"
                 :key="`day-hour-${hour}`"
-                class="absolute right-0 pr-2 text-[10px] font-mono text-[#737373] -translate-y-1/2 flex items-center justify-end"
+                class="absolute right-0 pr-2 text-[10px] font-mono text-[var(--muted)] -translate-y-1/2 flex items-center justify-end"
                 :style="{ top: `${(hour / 24) * 100}%` }"
               >
                 <span>{{ formatHourLabel(hour) }}</span>
               </div>
             </div>
 
-            <div class="flex-1 relative bg-[#181818] min-w-0 h-full">
+            <div class="flex-1 relative bg-[var(--bg)] min-w-0 h-full">
               <div
                 v-for="hour in hours24"
                 :key="`day-line-${hour}`"
                 class="absolute left-0 right-0 border-b pointer-events-none"
-                :class="hour % hourStep === 0 ? 'border-[#333333]/70' : 'border-[#262626]/30'"
+                :class="hour % hourStep === 0 ? 'border-[var(--border)]/70' : 'border-[var(--border)]/30'"
                 :style="{ top: `${(hour / 24) * 100}%` }"
               ></div>
 
@@ -504,7 +504,7 @@
                 v-for="event in currentDayFocus.events"
                 :key="event.id || event.slug"
                 type="button"
-                class="absolute z-20 min-w-0 text-left px-2 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[#383838] hover:border-white hover:z-30 shadow-lg group overflow-hidden"
+                class="absolute z-20 min-w-0 text-left px-2 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[var(--border)] hover:border-[var(--text)] hover:z-30 shadow-lg group overflow-hidden"
                 :class="[
                   getEventStyleClass(event),
                   selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'ring-2 ring-white z-30 font-bold' : ''
@@ -513,12 +513,12 @@
                 @click="handleEventClick(event, $event)"
               >
                 <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
-                  <span v-if="event.isLive" class="text-[9px] font-extrabold text-white animate-pulse">● LIVE</span>
+                  <span v-if="event.isLive" class="text-[9px] font-extrabold text-[var(--text)] animate-pulse">● LIVE</span>
                   <span v-else-if="event.scores" class="text-[10px] font-bold text-amber-400 font-mono shrink-0">{{ event.scores }}</span>
                   <span v-else class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
                   <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
                 </div>
-                <span class="truncate font-black text-[11px] leading-snug group-hover:text-white w-full">{{ event.title }}</span>
+                <span class="truncate font-black text-[11px] leading-snug group-hover:text-[var(--text)] w-full">{{ event.title }}</span>
               </button>
             </div>
           </div>
@@ -529,18 +529,18 @@
     <!-- 3. Minimalist Event Detail Floating Card (极简气泡卡片 - 消除嵌套圆角框，专注内容) -->
     <div
       v-if="popoverEvent"
-      class="fixed z-50 w-[calc(100vw-20px)] max-w-[300px] bg-[#161616] text-white border border-[#262626] rounded-none shadow-2xl p-4 space-y-3 font-sans animate-fadeIn"
+      class="fixed z-50 w-[calc(100vw-20px)] max-w-[300px] bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] rounded-none shadow-2xl p-4 space-y-3 font-sans animate-fadeIn"
       :style="popoverStyle"
       @click.stop
     >
       <!-- Top Row: Provider Text & Close Button -->
       <div class="flex items-center justify-between">
-        <span class="text-[11px] font-mono font-bold tracking-widest text-[#a3a3a3] uppercase">
+        <span class="text-[11px] font-mono font-bold tracking-widest text-[var(--muted)] uppercase">
           {{ popoverEvent.providerName || popoverEvent.provider || 'SPACEX' }}
         </span>
         <button
           type="button"
-          class="text-[#737373] hover:text-white p-1 rounded-none transition-colors"
+          class="text-[var(--muted)] hover:text-[var(--text)] p-1 rounded-none transition-colors"
           @click.stop="popoverEvent = null"
           aria-label="Close Floating Card"
         >
@@ -554,37 +554,37 @@
           <span class="w-2 h-2 rounded-full bg-[#ef4444] animate-ping"></span>
           <span>{{ t('status.liveNow') }}</span>
         </div>
-        <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 bg-[#202020] border border-[#333333] mb-2">
+        <div v-else-if="popoverEvent.scores" class="flex items-center justify-between p-2 bg-[var(--surface)] border border-[var(--border)] mb-2">
           <span class="text-amber-400 font-bold font-mono text-xs">{{ t(getCalendarEventPresentation(popoverEvent).scoreLabelKey || 'calendar.wtt.finalScore') }}: {{ popoverEvent.scores }}</span>
           <span v-if="popoverEvent.winner" class="text-[10px] text-neutral-300 font-semibold truncate max-w-[130px]">
-            {{ t(getCalendarEventPresentation(popoverEvent).winnerLabelKey || 'calendar.wtt.winner') }}: <strong class="text-white">{{ popoverEvent.winner }}</strong>
+            {{ t(getCalendarEventPresentation(popoverEvent).winnerLabelKey || 'calendar.wtt.winner') }}: <strong class="text-[var(--text)]">{{ popoverEvent.winner }}</strong>
           </span>
         </div>
-        <h3 class="text-base font-black text-white uppercase font-mono leading-snug">
+        <h3 class="text-base font-black text-[var(--text)] uppercase font-mono leading-snug">
           {{ popoverEvent.title }}
         </h3>
       </div>
 
       <!-- Direct Details Content (移除深色嵌套内盒) -->
-      <div class="space-y-2 text-xs text-[#d4d4d4] pt-2 border-t border-[#262626]">
+      <div class="space-y-2 text-xs text-[var(--muted)] pt-2 border-t border-[var(--border)]">
         <div class="flex items-center gap-2.5">
-          <UIcon name="i-lucide-clock" class="w-4 h-4 text-[#737373] shrink-0" />
-          <span class="font-bold text-white font-mono">{{ formatFullDateTime(popoverEvent.launchAt) }}</span>
+          <UIcon name="i-lucide-clock" class="w-4 h-4 text-[var(--muted)] shrink-0" />
+          <span class="font-bold text-[var(--text)] font-mono">{{ formatFullDateTime(popoverEvent.launchAt) }}</span>
         </div>
 
         <div v-if="popoverEvent.vehicle" class="flex items-center gap-2.5">
-          <UIcon :name="getCalendarEventPresentation(popoverEvent).vehicleIcon" class="w-4 h-4 text-[#737373] shrink-0" />
-          <span class="truncate text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).vehicleLabelKey) }}: <strong class="text-white">{{ popoverEvent.vehicle }}</strong></span>
+          <UIcon :name="getCalendarEventPresentation(popoverEvent).vehicleIcon" class="w-4 h-4 text-[var(--muted)] shrink-0" />
+          <span class="truncate text-[var(--text)]">{{ t(getCalendarEventPresentation(popoverEvent).vehicleLabelKey) }}: <strong class="text-[var(--text)]">{{ popoverEvent.vehicle }}</strong></span>
         </div>
 
         <div v-if="popoverEvent.gameScores?.length" class="flex items-start gap-2.5">
-          <UIcon name="i-lucide-list" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
-          <span class="leading-relaxed text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).gamesLabelKey || 'calendar.wtt.games') }}: <strong class="text-white font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
+          <UIcon name="i-lucide-list" class="w-4 h-4 text-[var(--muted)] shrink-0 mt-0.5" />
+          <span class="leading-relaxed text-[var(--text)]">{{ t(getCalendarEventPresentation(popoverEvent).gamesLabelKey || 'calendar.wtt.games') }}: <strong class="text-[var(--text)] font-mono">{{ popoverEvent.gameScores.join(', ') }}</strong></span>
         </div>
 
         <div v-if="popoverEvent.launchSite" class="flex items-start gap-2.5">
-          <UIcon :name="getCalendarEventPresentation(popoverEvent).locationIcon" class="w-4 h-4 text-[#737373] shrink-0 mt-0.5" />
-          <span class="leading-relaxed text-[#e5e5e5]">{{ t(getCalendarEventPresentation(popoverEvent).locationLabelKey) }}: <strong class="text-white">{{ popoverEvent.launchSite }}</strong></span>
+          <UIcon :name="getCalendarEventPresentation(popoverEvent).locationIcon" class="w-4 h-4 text-[var(--muted)] shrink-0 mt-0.5" />
+          <span class="leading-relaxed text-[var(--text)]">{{ t(getCalendarEventPresentation(popoverEvent).locationLabelKey) }}: <strong class="text-[var(--text)]">{{ popoverEvent.launchSite }}</strong></span>
         </div>
       </div>
 
@@ -593,10 +593,10 @@
         <NuxtLink
           :to="popoverEvent.missionUrl"
           target="_blank"
-          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-[#262626] hover:bg-[#333333] border border-[#333333] rounded-none transition-colors"
+          class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-[var(--text)] bg-[var(--border)] hover:bg-[var(--border)] border border-[var(--border)] rounded-none transition-colors"
         >
           <span>{{ t('mission.viewOfficialDetails') }}</span>
-          <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5 text-[#a3a3a3]" />
+          <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5 text-[var(--muted)]" />
         </NuxtLink>
       </div>
     </div>
@@ -617,7 +617,7 @@
           @click.self="showSubscribeModal = false"
         >
           <div
-            class="relative w-full max-w-md bg-[#1c1c1e] border border-[#2c2c2e] rounded-none p-6 shadow-2xl text-white space-y-5"
+            class="relative w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-none p-6 shadow-2xl text-[var(--text)] space-y-5"
           >
             <!-- 头部说明与关闭按钮 -->
             <div class="flex items-start justify-between">
@@ -626,17 +626,17 @@
                   <span class="p-2 rounded-none bg-blue-600/20 text-blue-400 flex items-center justify-center">
                     <UIcon name="i-lucide-rss" class="w-5 h-5" />
                   </span>
-                  <h3 class="text-base font-bold tracking-tight text-white">
+                  <h3 class="text-base font-bold tracking-tight text-[var(--text)]">
                     {{ t('subscribe.title') }}
                   </h3>
                 </div>
-                <p class="text-xs text-[#a1a1aa] leading-relaxed pt-1">
+                <p class="text-xs text-[var(--muted)] leading-relaxed pt-1">
                   {{ t('subscribe.copy') }}
                 </p>
               </div>
               <button
                 type="button"
-                class="p-1.5 text-[#71717a] hover:text-white rounded-none transition-colors cursor-pointer shrink-0"
+                class="p-1.5 text-[var(--muted)] hover:text-[var(--text)] rounded-none transition-colors cursor-pointer shrink-0"
                 @click="showSubscribeModal = false"
               >
                 <UIcon name="i-lucide-x" class="w-5 h-5" />
@@ -650,7 +650,7 @@
                 :key="`subscribe-${layer.id}`"
                 type="button"
                 class="min-w-0 px-2 py-1.5 border text-[10px] font-bold truncate transition-colors"
-                :class="subscribeProvider === layer.id ? 'border-blue-500 bg-blue-600/20 text-white' : 'border-[#3a3a3c] text-[#a1a1aa] hover:text-white hover:border-[#5a5a5c]'"
+                :class="subscribeProvider === layer.id ? 'border-blue-500 bg-blue-600/20 text-[var(--text)]' : 'border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--border)]'"
                 :aria-pressed="subscribeProvider === layer.id"
                 @click="subscribeProvider = layer.id; isCopied = false"
               >
@@ -660,15 +660,15 @@
 
             <a
               :href="activeSubscribeWebcalUrl"
-              class="w-full py-3 px-4 rounded-none bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
+              class="w-full py-3 px-4 rounded-none bg-blue-600 hover:bg-blue-500 text-[var(--text)] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer no-underline"
             >
               <UIcon name="i-lucide-calendar-days" class="w-4 h-4" />
               <span>{{ t('subscribe.subscribeLink') }}</span>
             </a>
 
             <!-- 复制 ICS 链接 -->
-            <div class="space-y-2 pt-3 border-t border-[#2c2c2e]">
-              <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a1a1aa] block">
+            <div class="space-y-2 pt-3 border-t border-[var(--border)]">
+              <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--muted)] block">
                 {{ t('subscribe.eyebrow') }} (Google / Web)
               </label>
               <div class="flex items-center gap-2">
@@ -676,11 +676,11 @@
                   type="text"
                   readonly
                   :value="activeSubscribeIcsUrl"
-                  class="flex-1 bg-[#121212] border border-[#2c2c2e] rounded-none px-3 py-2 text-xs font-mono text-[#e4e4e7] focus:outline-none select-all"
+                  class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded-none px-3 py-2 text-xs font-mono text-[var(--text)] focus:outline-none select-all"
                 />
                 <button
                   type="button"
-                  class="px-3 py-2 text-xs font-bold rounded-none bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                  class="px-3 py-2 text-xs font-bold rounded-none bg-[var(--surface-strong)] hover:bg-[var(--surface-strong)] text-[var(--text)] flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                   @click="copyIcsUrl"
                 >
                   <UIcon :name="isCopied ? 'i-lucide-check' : 'i-lucide-clipboard'" class="w-4 h-4 text-blue-400" />
@@ -1184,9 +1184,9 @@ const getEventStyleClass = (event) => {
   }
   // 已完场比赛（带比分）降低视觉权重，与未赛区分
   if (event.status === 'Finished' && event.scores) {
-    return 'bg-[#1d1d1d] hover:bg-[#2a2a2a] text-neutral-400'
+    return 'bg-[var(--surface)] hover:bg-[var(--surface-strong)] text-neutral-400'
   }
-  return 'bg-[#262626] hover:bg-[#333333] text-[#ffffff]'
+  return 'bg-[var(--border)] hover:bg-[var(--border)] text-[var(--text)]'
 }
 </script>
 
