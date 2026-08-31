@@ -75,7 +75,8 @@
 
 /* 跟随系统浅色/深色自动切换（无 JS 也生效） */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root,
+  html {
     --bg: #f2f2f7;
     --surface: #ffffff;
     --surface-strong: #e5e5ea;
@@ -107,6 +108,7 @@
 }
 
 /* 显式 .dark / .light 覆盖系统偏好（供后续手动切换使用，优先级最高） */
+html.dark,
 :root.dark {
   --bg: #121212;
   --surface: #1e1e1e;
@@ -137,6 +139,7 @@
   color-scheme: dark;
 }
 
+html.light,
 :root.light {
   --bg: #f2f2f7;
   --surface: #ffffff;
