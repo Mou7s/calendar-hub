@@ -11,7 +11,10 @@ export default defineNuxtConfig({
         { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=3" },
         { rel: "manifest", href: "/manifest.json" },
       ],
-      meta: [{ name: "theme-color", content: "#080d1c" }],
+      meta: [
+        { name: "theme-color", content: "#080d1c", media: "(prefers-color-scheme: dark)" },
+        { name: "theme-color", content: "#f2f2f7", media: "(prefers-color-scheme: light)" },
+      ],
     },
   },
   // 启用的 Nuxt 核心与第三方扩展模块列表
