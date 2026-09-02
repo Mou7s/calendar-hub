@@ -550,6 +550,7 @@ export function normalizeWttOfficialResult(event, resultItem) {
   const venue = matchCard?.venueName || event?.venueName || ''
   const discipline = matchCard?.subEventName || resultItem?.subEventType || 'Table Tennis Match'
   const roundDesc = matchCard?.subEventDescription || `${discipline} Official Result`
+  if (!isWttMainDrawR32Plus(roundDesc)) return null
 
   return {
     id,
@@ -584,6 +585,17 @@ export function normalizeWttOfficialResult(event, resultItem) {
   }
 }
 
+export function isWttMainDrawR32Plus(description) {
+  const text = String(description || '')
+  if (/qualifying/i.test(text)) return false
+  const roundMatch = text.match(/Round of (\d+)/i)
+  if (roundMatch) {
+    const size = Number(roundMatch[1])
+    if (Number.isFinite(size) && size > 32) return false
+  }
+  return true
+}
+
 export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const timeZoneId = event?.timeZoneId
   const launchAt = normalizeWttDate(unit?.StartDate, timeZoneId)
@@ -608,6 +620,9 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const id = `wtt-${event.eventId}-${matchCode}`
   const venue = unit.VenueDescription?.VenueName || event.venueName || ''
   const discipline = unit.SubEvent || 'Table Tennis Match'
+  const roundDescription = unit.ItemDescription?.find(item => item.Language === 'ENG')?.Value
+    || `${discipline} ${unit.Round || ''}`.trim()
+  if (!isWttMainDrawR32Plus(roundDescription)) return null
 
   return {
     id,
@@ -617,8 +632,7 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
     shortTitle: titleEn,
     shortTitleEn: titleEn,
     shortTitleZh: titleZh,
-    missionType: unit.ItemDescription?.find(item => item.Language === 'ENG')?.Value
-      || `${discipline} ${unit.Round || ''}`.trim(),
+    missionType: roundDescription,
     vehicle: discipline,
     launchSite: venue,
     missionUrl: `https://www.worldtabletennis.com/eventInfo?eventId=${encodeURIComponent(event.eventId)}`,
