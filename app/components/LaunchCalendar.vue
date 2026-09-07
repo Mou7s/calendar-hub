@@ -145,6 +145,15 @@
 
         <!-- Right: Controls < Today > -->
         <div class="flex self-start items-center justify-self-end gap-2 sm:self-auto">
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-none text-[var(--muted)] transition-colors hover:bg-[var(--border)] hover:text-[var(--text)]"
+            :aria-label="t('header.themeToggleAria')"
+            :title="t('header.themeToggleAria')"
+            @click="toggleColorMode"
+          >
+            <UIcon :name="themeToggleIcon" class="h-4 w-4" />
+          </button>
           <div class="flex h-8 items-center text-[var(--text)] text-sm font-semibold gap-1">
             <button
               type="button"
@@ -273,7 +282,7 @@
                 <span
                   class="w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[10px] sm:text-xs font-bold flex items-center justify-center transition-all shrink-0"
                   :class="{
-                    'bg-white text-black font-black shadow-md shadow-white/20': day.isoDate === todayIso,
+                    'bg-[var(--text)] text-[var(--surface)] font-black shadow-md': day.isoDate === todayIso,
                     'text-[var(--text)]': day.isoDate !== todayIso && day.isCurrentMonth,
                     'text-[var(--muted)]': !day.isCurrentMonth
                   }"
@@ -354,7 +363,7 @@
                   </span>
                   <span
                     class="w-5.5 h-5.5 rounded-full text-xs font-bold flex items-center justify-center transition-all shrink-0"
-                    :class="day.isoDate === todayIso ? 'bg-white text-black font-black shadow-md shadow-white/20' : 'text-[var(--text)]'"
+                    :class="day.isoDate === todayIso ? 'bg-[var(--text)] text-[var(--surface)] font-black shadow-md' : 'text-[var(--text)]'"
                   >
                     {{ day.dayNumber }}
                   </span>
@@ -707,6 +716,13 @@ import {
 
 const { getLunarText } = useLunar()
 const { t, locale, locales, setLocale } = useI18n()
+const colorMode = useColorMode()
+
+const themeToggleIcon = computed(() => colorMode.value === 'dark' ? 'i-lucide-moon' : 'i-lucide-sun')
+
+const toggleColorMode = () => {
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+}
 
 const showLunarCalendarLabels = computed(() => locale.value === 'zh-CN')
 const displayLocale = computed(() => locale.value === 'zh' ? 'en-US' : (locale.value || 'en-US'))
