@@ -52,7 +52,7 @@
 
               <a
                 :href="getWebcalUrl(layer.id)"
-                class="px-2 py-1 text-[11px] font-bold rounded-none bg-blue-600 hover:bg-blue-500 text-[var(--text)] flex items-center gap-1 transition-all shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 shrink-0 cursor-pointer ml-2 no-underline"
+                class="px-2 py-1 text-[11px] font-bold rounded-sm border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)] hover:bg-[var(--btn-hover)] hover:border-[var(--text)] flex items-center gap-1 transition-colors active:translate-y-px shrink-0 cursor-pointer ml-2 no-underline"
                 :title="t('subscribe.subscribeLink')"
                 @click.stop
               >
@@ -231,7 +231,7 @@
         <div class="col-span-2 flex md:hidden items-center gap-2 min-w-0">
           <button
             type="button"
-            class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none border border-blue-500/60 bg-blue-600 text-[11px] font-bold text-[var(--text)] transition-colors hover:bg-blue-500"
+            class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border)] bg-[var(--surface-strong)] text-[11px] font-bold text-[var(--text)] transition-colors hover:bg-[var(--btn-hover)] hover:border-[var(--text)] active:translate-y-px"
             @click="openSubscribeModal(activeCalendarIds[0] || 'spacex')"
           >
             <UIcon name="i-lucide-rss" class="w-3.5 h-3.5 shrink-0" />
@@ -266,7 +266,7 @@
       <!-- Main Dynamic Calendar View Switcher with Smooth Animations -->
       <Transition :name="viewTransitionName" mode="out-in">
         <!-- 1. Month View (月视图：7 Cols x 6 Rows) -->
-        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[var(--border)] gap-[1px]">
+        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[var(--border)] gap-[1px]" @wheel="handleCalendarWheel">
           <div
             v-for="day in gridDays"
             :key="day.isoDate"
@@ -309,7 +309,7 @@
                 class="calendar-event w-full min-w-0 text-left px-1 sm:px-1.5 py-0.5 rounded-none text-[9px] sm:text-[10px] font-semibold transition-all flex items-center justify-start cursor-pointer shrink-0"
                 :class="[
                   getEventStyleClass(event),
-                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-white bg-[var(--btn-hover)] text-[var(--text)] font-bold' : ''
+                  selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'border-b-2 border-b-[var(--text)] bg-[var(--btn-hover)] text-[var(--text)] font-bold' : ''
                 ]"
                 :aria-label="`${event.title} ${formatTimeShort(event.launchAt)}`"
                 @click="handleEventClick(event, $event)"
@@ -345,7 +345,7 @@
         </div>
 
         <!-- 2. Week View (周视图：24小时刻度线纵向等分网格) -->
-        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]">
+        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]" @wheel="handleCalendarWheel">
           <!-- Week Header Row (带左侧 56px 时间轴占位 + 7 列日期头) -->
           <div class="flex border-b border-[var(--border)] bg-[var(--surface)] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
             <div class="w-14 shrink-0 border-r border-[var(--border)] flex items-center justify-center text-[10px] text-[var(--muted)] font-mono">
@@ -456,7 +456,7 @@
         </div>
 
         <!-- 3. Day View (日视图：按 24 小时刻度定位) -->
-        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4">
+        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4" @wheel="handleCalendarWheel">
           <div class="flex items-center justify-between border-b border-[var(--border)] pb-4 shrink-0">
             <div class="flex items-center gap-3">
               <span class="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shadow-white/20">
@@ -853,6 +853,7 @@ const providerList = [
 const activeCalendarView = ref('month') // 'day' | 'week' | 'month'
 const viewTransitionName = ref('view-forward')
 const calendarViewOrder = ['month', 'week', 'day']
+let wheelNavigationTimer = null
 
 const setCalendarView = (nextView) => {
   if (!calendarViewOrder.includes(nextView) || nextView === activeCalendarView.value) return
@@ -898,6 +899,20 @@ const navigateCalendar = (direction) => {
   if (nextDate) {
     emit('update:selected-date-iso', nextDate)
   }
+}
+
+const handleCalendarWheel = (event) => {
+  if (event.ctrlKey || event.metaKey || event.shiftKey || Math.abs(event.deltaY) < Math.abs(event.deltaX) || Math.abs(event.deltaY) < 8) {
+    return
+  }
+
+  event.preventDefault()
+  if (wheelNavigationTimer) return
+
+  navigateCalendar(event.deltaY > 0 ? 1 : -1)
+  wheelNavigationTimer = setTimeout(() => {
+    wheelNavigationTimer = null
+  }, 400)
 }
 
 const isCalendarActive = (calendarId) => props.activeCalendarIds.includes(calendarId)
@@ -1201,6 +1216,7 @@ onUnmounted(() => {
     if (timerId) clearInterval(timerId)
     if (resizeObserver) resizeObserver.disconnect()
   }
+  if (wheelNavigationTimer) clearTimeout(wheelNavigationTimer)
 })
 
 watch(activeCalendarView, (val) => {
