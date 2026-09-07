@@ -119,7 +119,7 @@
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'day' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'day'"
+            @click="setCalendarView('day')"
           >
             {{ t('calendar.viewDay') }}
           </button>
@@ -128,7 +128,7 @@
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'week' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'week'"
+            @click="setCalendarView('week')"
           >
             {{ t('calendar.viewWeek') }}
           </button>
@@ -137,7 +137,7 @@
             type="button"
             class="relative z-10 flex items-center justify-center h-6 px-3.5 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'month' ? 'text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'month'"
+            @click="setCalendarView('month')"
           >
             {{ t('calendar.viewMonth') }}
           </button>
@@ -189,7 +189,7 @@
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'day' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'day'"
+            @click="setCalendarView('day')"
           >
             {{ t('calendar.viewDay') }}
           </button>
@@ -197,7 +197,7 @@
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'week' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'week'"
+            @click="setCalendarView('week')"
           >
             {{ t('calendar.viewWeek') }}
           </button>
@@ -205,7 +205,7 @@
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
             :class="activeCalendarView === 'month' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="activeCalendarView = 'month'"
+            @click="setCalendarView('month')"
           >
             {{ t('calendar.viewMonth') }}
           </button>
@@ -264,7 +264,7 @@
       </div>
 
       <!-- Main Dynamic Calendar View Switcher with Smooth Animations -->
-      <Transition name="view-fade" mode="out-in">
+      <Transition :name="viewTransitionName" mode="out-in">
         <!-- 1. Month View (月视图：7 Cols x 6 Rows) -->
         <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[var(--border)] gap-[1px]">
           <div
@@ -336,7 +336,7 @@
                 v-if="day.events.length > 3"
                 type="button"
                 class="text-[9px] font-bold text-[var(--text)] hover:underline px-1 text-left shrink-0"
-                @click="handleEventClick(day.events[3], $event)"
+                @click="showDayEvents(day, $event)"
               >
                 {{ t('calendar.moreEvents', { count: day.events.length - 3 }) }}
               </button>
@@ -472,14 +472,8 @@
             </span>
           </div>
 
-          <!-- Empty Day State -->
-          <div v-if="!currentDayFocus?.events?.length" class="flex-1 py-16 text-center text-[var(--muted)] space-y-2">
-            <UIcon name="i-lucide-calendar-days" class="w-10 h-10 mx-auto opacity-40" />
-            <p class="text-sm font-semibold">{{ t('calendar.noLaunches') }}</p>
-          </div>
-
           <!-- Day Events Timeline -->
-          <div v-else ref="timelineContainer" class="flex-1 flex min-h-0 bg-[var(--surface)] relative overflow-hidden select-none">
+          <div ref="timelineContainer" class="flex-1 flex min-h-0 bg-[var(--surface)] relative overflow-hidden select-none">
             <div class="w-14 shrink-0 bg-[var(--surface)] border-r border-[var(--border)] select-none relative z-20 pointer-events-none h-full">
               <div
                 v-for="hour in visibleHours"
@@ -488,6 +482,13 @@
                 :style="{ top: `${(hour / 24) * 100}%` }"
               >
                 <span>{{ formatHourLabel(hour) }}</span>
+              </div>
+              <div
+                v-if="currentDayFocus.isoDate === todayIso"
+                class="absolute right-1 z-30 -translate-y-1/2 bg-red-500 px-1 py-0.5 text-[9px] font-mono font-bold text-white shadow-sm shadow-red-500/50"
+                :style="{ top: `${currentTimeTopPct}%` }"
+              >
+                {{ currentTimeLabel }}
               </div>
             </div>
 
@@ -529,6 +530,14 @@
                 </div>
                 <span class="truncate font-black text-[11px] leading-snug group-hover:text-[var(--text)] w-full">{{ event.title }}</span>
               </button>
+            </div>
+
+            <div
+              v-if="!currentDayFocus?.events?.length"
+              class="absolute inset-y-0 left-14 right-0 z-10 flex flex-col items-center justify-center gap-2 text-center text-[var(--muted)] pointer-events-none"
+            >
+              <UIcon name="i-lucide-calendar-days" class="w-10 h-10 opacity-40" />
+              <p class="text-sm font-semibold">{{ t('calendar.noEventsToday') }}</p>
             </div>
           </div>
         </div>
@@ -607,6 +616,44 @@
           <span>{{ t('mission.viewOfficialDetails') }}</span>
           <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5 text-[var(--muted)]" />
         </NuxtLink>
+      </div>
+    </div>
+
+    <div
+      v-if="dayEventsPopover"
+      class="fixed z-50 w-[calc(100vw-20px)] max-w-[360px] overflow-hidden border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-2xl animate-fadeIn"
+      :style="popoverStyle"
+      @click.stop
+    >
+      <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+        <div>
+          <div class="font-mono text-sm font-black">{{ dayEventsPopover.isoDate }}</div>
+          <div class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+            {{ dayEventsPopover.events.length }} {{ t('overview.launches') }}
+          </div>
+        </div>
+        <button
+          type="button"
+          class="p-1 text-[var(--muted)] transition-colors hover:text-[var(--text)]"
+          aria-label="Close event list"
+          @click="dayEventsPopover = null"
+        >
+          <UIcon name="i-lucide-x" class="h-4 w-4" />
+        </button>
+      </div>
+
+      <div class="overflow-y-auto p-2" style="height: min(60vh, 420px)">
+        <button
+          v-for="event in dayEventsPopover.events"
+          :key="`more-${event.id || event.slug}`"
+          type="button"
+          class="flex h-12 w-full items-center gap-2 overflow-hidden px-2 text-left transition-colors hover:bg-[var(--btn-hover)]"
+          @click="selectMoreEvent(event, $event)"
+        >
+          <span class="h-2 w-2 shrink-0 rounded-full" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
+          <span class="w-12 shrink-0 font-mono text-[10px] font-bold text-[var(--muted)]">{{ formatTimeShort(event.launchAt) }}</span>
+          <span class="min-w-0 flex-1 truncate text-xs font-bold">{{ event.title }}</span>
+        </button>
       </div>
     </div>
 
@@ -804,6 +851,17 @@ const providerList = [
 ]
 
 const activeCalendarView = ref('month') // 'day' | 'week' | 'month'
+const viewTransitionName = ref('view-forward')
+const calendarViewOrder = ['month', 'week', 'day']
+
+const setCalendarView = (nextView) => {
+  if (!calendarViewOrder.includes(nextView) || nextView === activeCalendarView.value) return
+
+  viewTransitionName.value = calendarViewOrder.indexOf(nextView) > calendarViewOrder.indexOf(activeCalendarView.value)
+    ? 'view-forward'
+    : 'view-back'
+  activeCalendarView.value = nextView
+}
 
 const currentWeekDays = computed(() => {
   if (!props.gridDays || props.gridDays.length === 0) return []
@@ -907,6 +965,7 @@ const getProviderColor = (providerId) => {
 // 单击直接同时完成：高亮选中 + 在节点旁打开浮窗 + 调起任务详情
 const selectedMission = ref(null)
 const popoverEvent = ref(null)
+const dayEventsPopover = ref(null)
 const popoverStyle = ref({ top: '100px', left: '100px' })
 
 const handleEventClick = (event, domEvent) => {
@@ -946,10 +1005,40 @@ const handleEventClick = (event, domEvent) => {
   emit('select-mission', event)
 }
 
+const showDayEvents = (day, domEvent) => {
+  if (domEvent) {
+    domEvent.stopPropagation()
+  }
+
+  popoverEvent.value = null
+  selectedMission.value = null
+  const events = sortCalendarEventsByStartTime(day.events)
+  dayEventsPopover.value = { isoDate: day.isoDate, events }
+
+  if (domEvent?.currentTarget) {
+    const rect = domEvent.currentTarget.getBoundingClientRect()
+    const width = 360
+    const height = Math.min(420, 88 + events.length * 40)
+    const left = rect.right + 12 + width > window.innerWidth
+      ? Math.max(10, rect.left - width - 12)
+      : rect.right + 12
+    const top = Math.min(Math.max(10, rect.top - 10), Math.max(10, window.innerHeight - height - 10))
+    popoverStyle.value = { left: `${left}px`, top: `${top}px` }
+  }
+}
+
+const selectMoreEvent = (event, domEvent) => {
+  dayEventsPopover.value = null
+  handleEventClick(event, domEvent)
+}
+
 // 点击卡片外部区域自动收起气泡浮窗
 const handleGlobalClick = (e) => {
   if (popoverEvent.value) {
     popoverEvent.value = null
+  }
+  if (dayEventsPopover.value) {
+    dayEventsPopover.value = null
   }
 }
 
@@ -1180,13 +1269,13 @@ const getCompactEventTitle = (event) => {
 const formatTimeShort = (isoString) => {
   if (!isoString) return ''
   const d = new Date(isoString)
-  return d.toLocaleTimeString(displayLocale.value, { hour: 'numeric', minute: '2-digit', hour12: true })
+  return d.toLocaleTimeString(displayLocale.value, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 }
 
 const formatFullDateTime = (isoString) => {
   if (!isoString) return t('calendar.untimed')
   const d = new Date(isoString)
-  return d.toLocaleString(displayLocale.value, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString(displayLocale.value, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 }
 
 const jumpToToday = () => {
@@ -1284,18 +1373,42 @@ const getEventStyleClass = (event) => {
   }
 }
 
-.view-fade-enter-active,
-.view-fade-leave-active {
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+.view-forward-enter-active,
+.view-back-enter-active {
+  transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.view-fade-enter-from {
-  opacity: 0;
-  transform: scale(0.985) translateY(2px);
+.view-forward-leave-active,
+.view-back-leave-active {
+  transition: opacity 100ms ease-out, transform 100ms ease-out;
 }
 
-.view-fade-leave-to {
+.view-forward-enter-from {
   opacity: 0;
-  transform: scale(1.01) translateY(-2px);
+  transform: translateX(12px);
+}
+
+.view-forward-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+.view-back-enter-from {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+.view-back-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-forward-enter-active,
+  .view-forward-leave-active,
+  .view-back-enter-active,
+  .view-back-leave-active {
+    transition-duration: 1ms;
+  }
 }
 </style>

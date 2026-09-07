@@ -33,8 +33,9 @@ export function useTimezone() {
     const options = {
       month: 'short',
       day: 'numeric',
-      hour: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
+      hourCycle: 'h23',
     }
 
     if (withZone) {
@@ -70,8 +71,9 @@ export function useTimezone() {
 
   const formatEventTime = (iso) => {
     return new Intl.DateTimeFormat(locale.value, {
-      hour: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
+      hourCycle: 'h23',
       timeZoneName: 'short',
     }).format(new Date(iso))
   }

@@ -66,8 +66,9 @@
       "winner": "승자",
       "games": "세트 스코어"
     },
-    "noLaunches": "이 달에는 날짜가 있는 발사가 아직 없습니다.",
-    "dataLoadError": "SpaceX 발사 데이터를 불러오지 못했습니다.",
+    "noEventsToday": "이 날짜에 예정된 이벤트가 없습니다.",
+    "noEventsThisMonth": "이 달에는 날짜가 있는 이벤트가 없습니다.",
+    "dataLoadError": "캘린더 데이터를 불러오지 못했습니다.",
     "retry": "다시 시도",
     "refreshing": "새로 고치는 중...",
     "untimed": "시간 미정",

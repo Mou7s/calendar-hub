@@ -66,8 +66,9 @@
       "winner": "Sieger",
       "games": "Satzergebnisse"
     },
-    "noLaunches": "Für diesen Monat sind noch keine datierten Starts verfügbar.",
-    "dataLoadError": "SpaceX-Startdaten konnten nicht geladen werden.",
+    "noEventsToday": "Für diesen Tag sind keine Ereignisse geplant.",
+    "noEventsThisMonth": "Für diesen Monat sind keine datierten Ereignisse verfügbar.",
+    "dataLoadError": "Kalenderdaten konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
     "refreshing": "Aktualisierung...",
     "untimed": "Zeit offen",

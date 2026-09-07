@@ -50,15 +50,19 @@ import {
 const { t, locale } = useI18n();
 
 // ─── Data Fetching ───
-const {
-  data: upcomingPayload,
-  error: upcomingError,
-  refresh: refreshUpcoming,
-} = await useFetch("/api/launches");
-const { data: historyPayload } = await useFetch("/api/history-launches");
-const { data: f1Payload } = await useFetch("/api/calendar/f1");
-const { data: wttPayload, refresh: refreshWtt } = await useFetch("/api/calendar/wtt");
-const { data: dota2Payload, refresh: refreshDota2 } = await useFetch("/api/calendar/dota2");
+const [
+  { data: upcomingPayload, error: upcomingError, refresh: refreshUpcoming },
+  { data: historyPayload },
+  { data: f1Payload },
+  { data: wttPayload, refresh: refreshWtt },
+  { data: dota2Payload, refresh: refreshDota2 },
+] = await Promise.all([
+  useFetch("/api/launches"),
+  useFetch("/api/history-launches"),
+  useFetch("/api/calendar/f1"),
+  useFetch("/api/calendar/wtt"),
+  useFetch("/api/calendar/dota2"),
+]);
 
 const LAUNCH_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const isRefreshingLaunches = ref(false);

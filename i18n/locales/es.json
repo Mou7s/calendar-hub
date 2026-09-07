@@ -66,8 +66,9 @@
       "winner": "Ganador",
       "games": "Marcador por juegos"
     },
-    "noLaunches": "No hay lanzamientos con fecha para este mes.",
-    "dataLoadError": "No se pudieron cargar los datos de lanzamientos de SpaceX.",
+    "noEventsToday": "No hay eventos programados para esta fecha.",
+    "noEventsThisMonth": "No hay eventos con fecha disponibles para este mes.",
+    "dataLoadError": "No se pudieron cargar los datos del calendario.",
     "retry": "Reintentar",
     "refreshing": "Actualizando...",
     "untimed": "Hora por confirmar",

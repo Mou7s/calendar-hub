@@ -66,8 +66,9 @@
       "winner": "Vainqueur",
       "games": "Scores des sets"
     },
-    "noLaunches": "Aucun lancement daté n'est disponible pour ce mois.",
-    "dataLoadError": "Impossible de charger les données de lancement SpaceX.",
+    "noEventsToday": "Aucun événement n'est prévu à cette date.",
+    "noEventsThisMonth": "Aucun événement daté n'est disponible pour ce mois.",
+    "dataLoadError": "Impossible de charger les données du calendrier.",
     "retry": "Réessayer",
     "refreshing": "Actualisation...",
     "untimed": "Heure à confirmer",

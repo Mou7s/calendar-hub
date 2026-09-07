@@ -66,8 +66,9 @@
       "winner": "勝者",
       "games": "ゲームスコア"
     },
-    "noLaunches": "この月には日付付きの打ち上げがまだありません。",
-    "dataLoadError": "SpaceX の打ち上げデータを読み込めませんでした。",
+    "noEventsToday": "この日には予定されたイベントはありません。",
+    "noEventsThisMonth": "この月には日付付きのイベントはありません。",
+    "dataLoadError": "カレンダーデータを読み込めませんでした。",
     "retry": "再試行",
     "refreshing": "更新中...",
     "untimed": "時刻未定",
