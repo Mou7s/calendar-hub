@@ -264,16 +264,18 @@
       </div>
 
       <!-- Main Dynamic Calendar View Switcher with Smooth Animations -->
-      <Transition :name="viewTransitionName" mode="out-in">
+      <div class="flex-1 flex min-h-0 relative overflow-hidden">
+      <Transition :name="viewTransitionName">
         <!-- 1. Month View (月视图：7 Cols x 6 Rows) -->
-        <div v-if="activeCalendarView === 'month'" key="month-view" class="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 overflow-hidden bg-[var(--border)] gap-[1px]" @wheel="handleCalendarWheel">
+        <div v-if="activeCalendarView === 'month'" :key="`month-view-${activeMonthIndex}`" class="month-grid flex-1 grid grid-cols-7 min-h-0 overflow-hidden bg-[var(--border)]" :style="{ gridTemplateRows: `repeat(${monthRowCount}, minmax(0, 1fr))` }" @wheel="handleCalendarWheel">
           <div
             v-for="day in gridDays"
             :key="day.isoDate"
-            class="calendar-cell h-full min-h-0 p-1 sm:p-1.5 flex flex-col justify-between overflow-hidden transition-colors"
+            class="calendar-cell h-full min-h-0 p-1 sm:p-1.5 flex flex-col justify-between overflow-hidden transition-colors border-r border-b border-[var(--border)]"
             :class="{
-              'bg-[var(--surface)]/80 text-[var(--muted)]': !day.isCurrentMonth,
-              'bg-[var(--surface)] text-[var(--text)]': day.isCurrentMonth
+              'bg-[var(--surface)]/80 text-[var(--muted)]': !day.isCurrentMonth && !isTrailingMonthCell(gridDays, day),
+              'bg-[var(--surface)] text-[var(--text)]': day.isCurrentMonth,
+              'is-trailing': isTrailingMonthCell(gridDays, day)
             }"
           >
             <!-- Cell Header: Date Number + Lunar Term -->
@@ -345,7 +347,7 @@
         </div>
 
         <!-- 2. Week View (周视图：24小时刻度线纵向等分网格) -->
-        <div v-else-if="activeCalendarView === 'week'" key="week-view" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]" @wheel="handleCalendarWheel">
+        <div v-else-if="activeCalendarView === 'week'" :key="`week-view-${currentWeekDays[0]?.isoDate || 'empty'}`" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]" @wheel="handleCalendarWheel">
           <!-- Week Header Row (带左侧 56px 时间轴占位 + 7 列日期头) -->
           <div class="flex border-b border-[var(--border)] bg-[var(--surface)] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
             <div class="w-14 shrink-0 border-r border-[var(--border)] flex items-center justify-center text-[10px] text-[var(--muted)] font-mono">
@@ -456,7 +458,7 @@
         </div>
 
         <!-- 3. Day View (日视图：按 24 小时刻度定位) -->
-        <div v-else key="day-view" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4" @wheel="handleCalendarWheel">
+        <div v-else :key="`day-view-${currentDayFocus?.isoDate || 'empty'}`" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4" @wheel="handleCalendarWheel">
           <div class="flex items-center justify-between border-b border-[var(--border)] pb-4 shrink-0">
             <div class="flex items-center gap-3">
               <span class="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shadow-white/20">
@@ -542,6 +544,7 @@
           </div>
         </div>
       </Transition>
+      </div>
     </main>
 
     <!-- 3. Minimalist Event Detail Floating Card (极简气泡卡片 - 消除嵌套圆角框，专注内容) -->
@@ -855,6 +858,15 @@ const viewTransitionName = ref('view-forward')
 const calendarViewOrder = ['month', 'week', 'day']
 let wheelNavigationTimer = null
 
+// 下月溢出占位格：只作为月与月之间的灰色分隔带，不画格子边框
+const isTrailingMonthCell = (days, day) => {
+  if (day.isCurrentMonth) return false
+  const index = days.indexOf(day)
+  return index >= days.length - 7 && day.isoDate > days[0]?.isoDate
+}
+
+const monthRowCount = computed(() => Math.max(1, Math.ceil((props.gridDays?.length || 0) / 7)))
+
 const setCalendarView = (nextView) => {
   if (!calendarViewOrder.includes(nextView) || nextView === activeCalendarView.value) return
 
@@ -889,6 +901,7 @@ const navigateCalendar = (direction) => {
   if (activeCalendarView.value === 'month') {
     const nextIndex = props.activeMonthIndex + direction
     if (nextIndex < 0 || nextIndex >= props.monthKeys.length) return
+    viewTransitionName.value = direction > 0 ? 'view-forward' : 'view-back'
     emit('update:activeMonthIndex', nextIndex)
     return
   }
@@ -897,6 +910,7 @@ const navigateCalendar = (direction) => {
   const step = getCalendarNavigationStep(activeCalendarView.value)
   const nextDate = shiftCalendarDate(anchorDate, direction * step)
   if (nextDate) {
+    viewTransitionName.value = direction > 0 ? 'view-forward' : 'view-back'
     emit('update:selected-date-iso', nextDate)
   }
 }
@@ -1316,6 +1330,12 @@ const getEventStyleClass = (event) => {
   container-type: inline-size;
 }
 
+/* 尾部占位空行（下月溢出行）不画边框，只透出背景灰，形成月份分隔带 */
+.month-grid > .calendar-cell.is-trailing {
+  border: 0 !important;
+  background: var(--border) !important;
+}
+
 .calendar-event {
   min-height: 1.75rem;
   align-items: flex-start;
@@ -1394,8 +1414,17 @@ const getEventStyleClass = (event) => {
   transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.view-forward-enter-active,
+.view-back-enter-active {
+  z-index: 1;
+}
+
 .view-forward-leave-active,
 .view-back-leave-active {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   transition: opacity 100ms ease-out, transform 100ms ease-out;
 }
 
