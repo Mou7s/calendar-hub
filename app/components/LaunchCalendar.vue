@@ -63,24 +63,6 @@
           </div>
         </div>
 
-        <!-- Language Select in Sidebar -->
-        <div class="space-y-2 pt-2 border-t border-[var(--border)]">
-          <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--muted)] px-1 block">
-            {{ t('calendar.sidebar.language') }}
-          </label>
-          <USelectMenu
-            v-model="activeLocaleCode"
-            :items="languageOptions"
-            value-key="value"
-            label-key="label"
-            icon="i-lucide-globe"
-            size="sm"
-            color="neutral"
-            variant="subtle"
-            class="w-full"
-            aria-label="Select Language"
-          />
-        </div>
       </div>
     </aside>
 
@@ -145,6 +127,19 @@
 
         <!-- Right: Controls < Today > -->
         <div class="flex self-start items-center justify-self-end gap-2 sm:self-auto">
+          <UDropdownMenu :items="languageMenuItems" :content="{ align: 'end' }">
+            <button
+              id="navbar-language"
+              type="button"
+              class="hidden h-8 items-center gap-1.5 px-2 text-xs font-bold text-[var(--muted)] transition-colors hover:bg-[var(--border)] hover:text-[var(--text)] md:flex"
+              :aria-label="t('calendar.sidebar.language')"
+              :title="t('calendar.sidebar.language')"
+            >
+              <UIcon name="i-lucide-globe" class="h-4 w-4" />
+              <span class="leading-none">{{ activeLocaleShort }}</span>
+              <UIcon name="i-lucide-chevron-down" class="h-3 w-3 opacity-60" />
+            </button>
+          </UDropdownMenu>
           <button
             type="button"
             class="flex h-8 w-8 items-center justify-center rounded-none text-[var(--muted)] transition-colors hover:bg-[var(--border)] hover:text-[var(--text)]"
@@ -196,10 +191,10 @@
           <button
             type="button"
             class="flex items-center justify-center h-7 px-2 rounded-none transition-colors cursor-pointer leading-none translate-y-[0.5px]"
-            :class="activeCalendarView === 'week' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
-            @click="setCalendarView('week')"
+            :class="activeCalendarView === '3day' ? 'bg-[var(--btn-hover)] text-[var(--text)] font-bold' : 'text-[var(--muted)] hover:text-[var(--text)]'"
+            @click="setCalendarView('3day')"
           >
-            {{ t('calendar.viewWeek') }}
+            {{ t('calendar.viewThreeDay') }}
           </button>
           <button
             type="button"
@@ -457,7 +452,118 @@
           </div>
         </div>
 
-        <!-- 3. Day View (日视图：按 24 小时刻度定位) -->
+        <!-- 3. Three-Day View (三日视图：今天明天后天，3 列 24 小时时间轴) -->
+        <div v-else-if="activeCalendarView === '3day'" :key="`3day-view-${threeDayColumns[0]?.isoDate || 'empty'}`" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--bg)]" @wheel="handleCalendarWheel">
+          <!-- 3-Day Header Row (带左侧 56px 时间轴占位 + 3 列日期头) -->
+          <div class="flex border-b border-[var(--border)] bg-[var(--surface)] shrink-0 text-center py-2 text-xs font-bold uppercase tracking-wider select-none">
+            <div class="w-14 shrink-0 border-r border-[var(--border)] flex items-center justify-center text-[10px] text-[var(--muted)] font-mono">
+              <UIcon name="i-lucide-clock" class="w-3.5 h-3.5 opacity-60" />
+            </div>
+            <div class="flex-1 grid grid-cols-3 gap-px">
+              <div
+                v-for="day in threeDayColumns"
+                :key="day.isoDate"
+                class="flex flex-col items-center justify-center py-1 gap-1"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] font-bold text-[var(--muted)]">
+                    {{ day.weekdayLabel }}
+                  </span>
+                  <span
+                    class="w-5.5 h-5.5 rounded-full text-xs font-bold flex items-center justify-center transition-all shrink-0"
+                    :class="day.isoDate === todayIso ? 'bg-[var(--text)] text-[var(--surface)] font-black shadow-md' : 'text-[var(--text)]'"
+                  >
+                    {{ day.dayNumber }}
+                  </span>
+                </div>
+                <div v-if="showLunarCalendarLabels" class="text-[9px] text-[var(--muted)] font-normal truncate max-w-[60px] leading-none">
+                  {{ getLunarText(day.isoDate) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 24-Hour Non-Scrollable Adaptive Body -->
+          <div ref="timelineContainer" class="flex-1 flex min-h-0 bg-[var(--surface)] relative overflow-hidden select-none">
+            <!-- Left Adaptive 24-Hour Timeline Column -->
+            <div class="w-14 shrink-0 bg-[var(--surface)] border-r border-[var(--border)] select-none relative z-20 pointer-events-none h-full">
+              <div
+                v-for="hour in visibleHours"
+                :key="`3day-hour-${hour}`"
+                class="absolute right-0 pr-2 text-[10px] font-mono text-[var(--muted)] -translate-y-1/2 flex items-center justify-end"
+                :style="{ top: `${(hour / 24) * 100}%` }"
+              >
+                <span>{{ formatHourLabel(hour) }}</span>
+              </div>
+
+              <!-- Current Time Badge on Timeline Left -->
+              <div
+                v-if="isTodayInThreeDays"
+                    class="absolute right-1 z-30 -translate-y-1/2 px-1 py-0.5 rounded-none text-[9px] font-mono font-bold bg-red-500 text-[var(--text)] shadow-sm shadow-red-500/50"
+                :style="{ top: `${currentTimeTopPct}%` }"
+              >
+                {{ currentTimeLabel }}
+              </div>
+            </div>
+
+            <!-- Right 3-Day Adaptive Timeline Canvas -->
+            <div class="flex-1 grid grid-cols-3 relative bg-[var(--bg)] min-w-0 h-full">
+              <!-- Background Hourly Lines (Highlighted on visible step hours) -->
+              <div
+                v-for="hour in hours24"
+                :key="`3day-line-${hour}`"
+                class="absolute left-0 right-0 border-b pointer-events-none transition-colors"
+                :class="hour % hourStep === 0 ? 'border-[var(--border)]/70' : 'border-[var(--border)]/30'"
+                :style="{ top: `${(hour / 24) * 100}%` }"
+              ></div>
+
+              <!-- 3 Day Columns -->
+              <div
+                v-for="day in threeDayColumns"
+                :key="`3day-col-${day.isoDate}`"
+                class="relative h-full border-r border-[var(--border)]/80 last:border-r-0"
+              >
+                <!-- Current Time Indicator Line for Today -->
+                <div
+                  v-if="day.isoDate === todayIso"
+                  class="absolute left-0 right-0 z-30 pointer-events-none flex items-center -translate-y-1/2"
+                  :style="{ top: `${currentTimeTopPct}%` }"
+                >
+                  <div class="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.25 shadow-md shadow-red-500/80 ring-2 ring-black"></div>
+                  <div class="flex-1 h-[2px] bg-red-500 shadow-md shadow-red-500/50"></div>
+                </div>
+
+                <!-- Events positioned absolutely inside day column -->
+                <template v-if="day.events?.length">
+                  <button
+                    v-for="event in day.events"
+                    :key="event.id || event.slug"
+                    type="button"
+                    class="absolute z-20 min-w-0 text-left px-1.5 py-1 rounded-none text-xs transition-all flex flex-col justify-center gap-0.5 cursor-pointer border border-[var(--border)] hover:border-[var(--text)] hover:z-30 shadow-lg group overflow-hidden"
+                    :class="[
+                      getEventStyleClass(event),
+                      selectedMission && (selectedMission.id === event.id || selectedMission.slug === event.slug) ? 'ring-2 ring-white z-30 font-bold' : ''
+                    ]"
+                    :style="getWeekEventStyle(event, day.events)"
+                    @click="handleEventClick(event, $event)"
+                  >
+                    <div class="flex items-center gap-1 min-w-0 w-full shrink-0">
+                      <span v-if="!event.isLive" class="w-1.5 h-1.5 rounded-full shrink-0" :style="{ backgroundColor: getProviderColor(event.provider) }"></span>
+                      <span v-else class="text-[9px] font-extrabold text-[var(--text)] animate-pulse">● LIVE</span>
+                      <span class="text-[10px] font-bold font-mono opacity-90 truncate leading-none">{{ formatTimeShort(event.launchAt) }}</span>
+                    </div>
+
+                    <span class="truncate font-black text-[11px] leading-snug group-hover:text-[var(--text)] w-full">
+                      {{ event.title }}
+                    </span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Day View (日视图：按 24 小时刻度定位) -->
         <div v-else :key="`day-view-${currentDayFocus?.isoDate || 'empty'}`" class="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-6 bg-[var(--surface)] gap-3 sm:gap-4" @wheel="handleCalendarWheel">
           <div class="flex items-center justify-between border-b border-[var(--border)] pb-4 shrink-0">
             <div class="flex items-center gap-3">
@@ -786,6 +892,26 @@ const activeLocaleCode = computed({
   }
 })
 
+const activeLocaleShort = computed(() => {
+  const code = locale.value || 'en'
+  if (code === 'zh-CN') return '中'
+  return code.slice(0, 2).toUpperCase()
+})
+
+const selectLocale = (code) => {
+  if (code && code !== locale.value && typeof setLocale === 'function') {
+    setLocale(code)
+  }
+}
+
+const languageMenuItems = computed(() => [
+  languageOptions.value.map(opt => ({
+    label: opt.label,
+    checked: opt.value === locale.value,
+    onSelect: () => selectLocale(opt.value)
+  }))
+])
+
 const timezoneDisplay = ref('UTC')
 const isClientReady = ref(false)
 
@@ -830,7 +956,8 @@ const props = defineProps({
   todayIso: { type: String, required: true },
   selectedDateIso: { type: String, default: null },
   calendarLayers: { type: Array, default: () => [] },
-  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1', 'wtt', 'dota2'] }
+  activeCalendarIds: { type: Array, default: () => ['spacex', 'f1', 'wtt', 'dota2'] },
+  missions: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits([
@@ -842,7 +969,7 @@ const emit = defineEmits([
 
 // Provider Color Mapping (黑白灰调色板 Monochrome Palette)
 const providerList = [
-  { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#ffffff' },
+  { id: 'spacex', nameKey: 'calendar.filterSpaceX', defaultName: 'SpaceX', color: '#3b82f6' },
   { id: 'f1', nameKey: 'calendar.filterF1', defaultName: 'F1', color: '#ef4444' },
   { id: 'wtt', nameKey: 'calendar.filterWTT', defaultName: 'WTT', color: '#f59e0b' },
   { id: 'dota2', nameKey: 'calendar.filterDota2', defaultName: 'Dota 2', color: '#8b5cf6' },
@@ -853,9 +980,11 @@ const providerList = [
   { id: 'other', nameKey: 'calendar.filterOther', defaultName: 'Others', color: '#525252' }
 ]
 
-const activeCalendarView = ref('month') // 'day' | 'week' | 'month'
+const activeCalendarView = ref('month') // 'day' | '3day' | 'week' | 'month'
 const viewTransitionName = ref('view-forward')
-const calendarViewOrder = ['month', 'week', 'day']
+const calendarViewOrder = ['month', 'week', '3day', 'day']
+// 三日视图窗口起始日期（默认今天，每次进入视图时重置为今天明天后天）
+const threeDayStartIso = ref('')
 let wheelNavigationTimer = null
 
 // 下月溢出占位格：只作为月与月之间的灰色分隔带，不画格子边框
@@ -873,6 +1002,9 @@ const setCalendarView = (nextView) => {
   viewTransitionName.value = calendarViewOrder.indexOf(nextView) > calendarViewOrder.indexOf(activeCalendarView.value)
     ? 'view-forward'
     : 'view-back'
+  if (nextView === '3day' && props.todayIso) {
+    threeDayStartIso.value = props.todayIso
+  }
   activeCalendarView.value = nextView
 }
 
@@ -897,12 +1029,70 @@ const currentDayFocus = computed(() => {
   }
 })
 
+// 三日视图：按本地日期归类全部可见任务，不受月网格范围限制
+const getMissionDateIso = (launchAt) => {
+  if (!launchAt) return ''
+  const date = launchAt instanceof Date ? launchAt : new Date(launchAt)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const missionEventsByDate = computed(() => {
+  const map = new Map()
+  for (const mission of props.missions || []) {
+    if (!mission?.launchAt) continue
+    const iso = getMissionDateIso(mission.launchAt)
+    if (!iso) continue
+    if (!map.has(iso)) map.set(iso, [])
+    map.get(iso).push(mission)
+  }
+  return map
+})
+
+const formatWeekdayShort = (isoDate) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate || ''))) return ''
+  try {
+    return new Date(`${isoDate}T12:00:00`).toLocaleString(displayLocale.value, { weekday: 'short' })
+  } catch {
+    return ''
+  }
+}
+
+const threeDayColumns = computed(() => {
+  const start = threeDayStartIso.value || props.todayIso
+  return [0, 1, 2].map((offset) => {
+    const isoDate = shiftCalendarDate(start, offset)
+    return {
+      isoDate,
+      dayNumber: isoDate ? Number(isoDate.slice(8, 10)) : '',
+      weekdayLabel: formatWeekdayShort(isoDate),
+      events: sortCalendarEventsByStartTime(missionEventsByDate.value.get(isoDate) || []),
+    }
+  })
+})
+
+const isTodayInThreeDays = computed(() => {
+  if (!props.todayIso) return false
+  return threeDayColumns.value.some(d => d.isoDate === props.todayIso)
+})
+
 const navigateCalendar = (direction) => {
   if (activeCalendarView.value === 'month') {
     const nextIndex = props.activeMonthIndex + direction
     if (nextIndex < 0 || nextIndex >= props.monthKeys.length) return
     viewTransitionName.value = direction > 0 ? 'view-forward' : 'view-back'
     emit('update:activeMonthIndex', nextIndex)
+    return
+  }
+
+  if (activeCalendarView.value === '3day') {
+    const nextStart = shiftCalendarDate(threeDayStartIso.value || props.todayIso, direction * 3)
+    if (!nextStart) return
+    viewTransitionName.value = direction > 0 ? 'view-forward' : 'view-back'
+    threeDayStartIso.value = nextStart
     return
   }
 
@@ -1203,6 +1393,11 @@ const getWeekEventStyle = (event, eventsInDay) => {
 
 onMounted(() => {
   if (import.meta.client) {
+    if (props.todayIso) threeDayStartIso.value = props.todayIso
+    if (window.innerWidth < 768) {
+      viewTransitionName.value = 'view-forward'
+      activeCalendarView.value = '3day'
+    }
     isClientReady.value = true
     updateTimezoneDisplay()
     window.addEventListener('click', handleGlobalClick)
@@ -1234,7 +1429,7 @@ onUnmounted(() => {
 })
 
 watch(activeCalendarView, (val) => {
-  if ((val === 'week' || val === 'day') && import.meta.client) {
+  if ((val === 'week' || val === 'day' || val === '3day') && import.meta.client) {
     nextTick(() => {
       if (!timelineContainer.value) return
       containerHeight.value = timelineContainer.value.clientHeight || 600
@@ -1310,6 +1505,7 @@ const formatFullDateTime = (isoString) => {
 
 const jumpToToday = () => {
   if (!props.todayIso) return
+  threeDayStartIso.value = props.todayIso
   emit('update:selected-date-iso', props.todayIso)
 }
 

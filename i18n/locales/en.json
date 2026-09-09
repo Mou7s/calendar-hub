@@ -45,6 +45,7 @@
     },
     "title": "Browse calendars and events by month",
     "viewDay": "Day",
+    "viewThreeDay": "3-Day",
     "viewWeek": "Week",
     "viewMonth": "Month",
     "today": "Today",

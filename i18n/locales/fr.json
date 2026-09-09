@@ -45,6 +45,7 @@
     },
     "title": "Parcourir les calendriers et événements par mois",
     "viewDay": "Jour",
+    "viewThreeDay": "3 jours",
     "viewWeek": "Semaine",
     "viewMonth": "Mois",
     "today": "Aujourd'hui",

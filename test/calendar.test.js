@@ -1697,7 +1697,9 @@ test("calendar month selection prefers today and preserves manual navigation", (
 test("calendar navigation moves by view-specific steps and supports empty months", () => {
   assert.equal(getCalendarNavigationStep("month"), 0);
   assert.equal(getCalendarNavigationStep("week"), 7);
+  assert.equal(getCalendarNavigationStep("3day"), 3);
   assert.equal(getCalendarNavigationStep("day"), 1);
+  assert.equal(shiftCalendarDate("2026-08-31", 3), "2026-09-03");
   assert.equal(shiftCalendarDate("2026-08-31", 1), "2026-09-01");
   assert.equal(shiftCalendarDate("2026-08-31", 7), "2026-09-07");
   assert.equal(shiftCalendarDate("2026-09-07", -7), "2026-08-31");

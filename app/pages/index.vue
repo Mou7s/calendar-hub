@@ -27,6 +27,7 @@
         :selected-date-iso="selectedDateIso"
         :calendar-layers="calendarLayers"
         :active-calendar-ids="activeCalendarIds"
+        :missions="sortedCalendarMissions"
         @update:active-month-index="setActiveMonthIndex"
         @update:selected-date-iso="setSelectedDateIso"
         @update:active-calendar-ids="activeCalendarIds = $event"
@@ -116,7 +117,7 @@ const calendarLayers = computed(() => [
   {
     id: "spacex",
     name: t("calendar.filterSpaceX"),
-    color: "#ffffff",
+    color: "#3b82f6",
     icsPath: "/spacex.ics",
   },
   {

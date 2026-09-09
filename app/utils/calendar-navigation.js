@@ -1,5 +1,6 @@
 export function getCalendarNavigationStep(view) {
   if (view === 'week') return 7
+  if (view === '3day') return 3
   if (view === 'day') return 1
   return 0
 }

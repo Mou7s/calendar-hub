@@ -45,6 +45,7 @@
     },
     "title": "カレンダーとイベントを月別に表示",
     "viewDay": "日",
+    "viewThreeDay": "3日間",
     "viewWeek": "週",
     "viewMonth": "月",
     "today": "今日",

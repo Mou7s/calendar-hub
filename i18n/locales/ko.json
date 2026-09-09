@@ -45,6 +45,7 @@
     },
     "title": "월별 캘린더 및 이벤트 보기",
     "viewDay": "일",
+    "viewThreeDay": "3일",
     "viewWeek": "주",
     "viewMonth": "월",
     "today": "오늘",

@@ -44,6 +44,7 @@
     },
     "title": "按月浏览日历与事件",
     "viewDay": "日",
+    "viewThreeDay": "三日",
     "viewWeek": "周",
     "viewMonth": "月",
     "today": "今天",
