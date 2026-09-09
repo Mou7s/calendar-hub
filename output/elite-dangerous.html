@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELITE DANGEROUS - Web Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#ff7b00;
+  --orange-dim:#ff7b0022;
+  --orange-glow:#ff7b0088;
+  --cyan:#00e5ff;
+  --bg:#05070a;
+  --panel:#0e1218ee;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#c8d0dc;font-family:'Exo 2',sans-serif;overflow:hidden;height:100vh;width:100vw}
+.mono{font-family:'Share Tech Mono',monospace}
+.orbitron{font-family:'Orbitron',sans-serif}
+
+/* LAYOUT */
+#game{position:relative;width:100vw;height:100vh;overflow:hidden;background:radial-gradient(ellipse at 50% 40%, #0e1a2a 0%, #05070a 65%)}
+canvas#bg{position:absolute;inset:0;width:100%;height:100%}
+canvas#main{position:absolute;inset:0;width:100%;height:100%}
+
+/* TOP BAR */
+#topbar{position:absolute;top:0;left:0;right:0;height:44px;background:linear-gradient(180deg,#0a0e14f2,#05070acc);border-bottom:1px solid #ff7b0033;display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:20;backdrop-filter:blur(8px)}
+#logo{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.18em;font-size:15px;color:var(--orange);text-shadow:0 0 12px var(--orange-glow)}
+#logo span{color:#fff;font-weight:400;letter-spacing:.12em}
+#top-right{display:flex;gap:14px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:11px}
+.stat{border:1px solid #ffffff18;background:#ffffff08;padding:4px 10px;border-radius:3px;display:flex;gap:8px;align-items:center}
+.stat b{color:var(--orange)}
+#fuelbar{width:70px;height:4px;background:#ffffff18;border-radius:2px;overflow:hidden}
+#fuelbar i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),#ffaa00);width:85%;transition:width .4s}
+
+/* LEFT PANEL - SHIP STATUS */
+#leftPanel{position:absolute;left:12px;top:58px;bottom:12px;width:260px;display:flex;flex-direction:column;gap:10px;z-index:15;pointer-events:none}
+.panel{background:var(--panel);border:1px solid #ffffff14;border-left:2px solid var(--orange);backdrop-filter:blur(10px);border-radius:6px;padding:12px;pointer-events:auto}
+.panel h3{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:.2em;color:var(--orange);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.panel h3 em{font-style:normal;color:#ffffff55;font-size:8px;border:1px solid #ffffff20;padding:1px 5px;border-radius:2px}
+.row{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 0;border-bottom:1px solid #ffffff08}
+.row:last-child{border:none}
+.row span:first-child{color:#7a8a9e}
+.row span:last-child{color:#e8eef6}
+.bar{height:6px;background:#ffffff12;border-radius:3px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;border-radius:3px;transition:width .3s}
+.hull i{background:linear-gradient(90deg,#00e5ff,#00ffaa)}
+.shield i{background:linear-gradient(90deg,#5b7cff,#00e5ff)}
+#cargoList{max-height:96px;overflow:auto;font-family:'Share Tech Mono',monospace;font-size:10px}
+.cargo-item{display:flex;justify-content:space-between;padding:3px 0;color:#9aabbF}
+.cargo-item b{color:#fff}
+
+/* RIGHT PANEL - GALAXY / MISSIONS */
+#rightPanel{position:absolute;right:12px;top:58px;bottom:12px;width:300px;display:flex;flex-direction:column;gap:10px;z-index:15;pointer-events:none}
+#rightPanel .panel{pointer-events:auto}
+.tabs{display:flex;gap:4px;margin-bottom:10px}
+.tab{flex:1;text-align:center;padding:6px 0;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:.1em;border:1px solid #ffffff18;background:#ffffff06;color:#7a8a9e;cursor:pointer;border-radius:3px;transition:.2s}
+.tab.active{background:var(--orange);color:#000;border-color:var(--orange);font-weight:700;box-shadow:0 0 12px var(--orange-glow)}
+.sys{padding:8px;border:1px solid #ffffff10;background:#ffffff06;border-radius:4px;margin-bottom:6px;cursor:pointer;transition:.15s;display:flex;justify-content:space-between;align-items:center}
+.sys:hover{border-color:var(--orange-glow);background:#ff7b0011}
+.sys.active{border-color:var(--orange);background:linear-gradient(90deg,#ff7b0018,transparent);box-shadow:0 0 10px #ff7b0022}
+.sys-name{font-family:'Orbitron',sans-serif;font-size:11px;color:#e6edf5;letter-spacing:.06em}
+.sys-dist{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--orange)}
+.sys-meta{font-family:'Share Tech Mono',monospace;font-size:9px;color:#6b7d94}
+.btn{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:.12em;padding:9px 14px;border-radius:3px;border:1px solid var(--orange);background:var(--orange);color:#000;font-weight:800;cursor:pointer;transition:.15s;text-transform:uppercase}
+.btn:hover{box-shadow:0 0 16px var(--orange-glow);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--orange);border-color:#ff7b0055}
+.btn.ghost:hover{background:#ff7b0011}
+.btn.small{padding:5px 10px;font-size:9px}
+.btn:disabled{opacity:.35;pointer-events:none}
+
+/* CENTER HUD */
+#centerHUD{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;text-align:center;transition:opacity .3s}
+#reticle{width:120px;height:120px;border:1px solid #00e5ff44;border-radius:50%;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center}
+#reticle::before{content:'';position:absolute;inset:18px;border:1px dashed #00e5ff22;border-radius:50%}
+#reticle i{width:4px;height:4px;background:var(--cyan);border-radius:50%;box-shadow:0 0 8px var(--cyan)}
+.tick{position:absolute;width:10px;height:2px;background:var(--cyan);opacity:.6}
+.tick.t1{top:0;left:50%;transform:translateX(-50%)}
+.tick.t2{bottom:0;left:50%;transform:translateX(-50%)}
+.tick.t3{left:0;top:50%;transform:translateY(-50%)}
+.tick.t4{right:0;top:50%;transform:translateY(-50%)}
+#speedRead{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:.2em;margin-top:10px}
+#speedVal{font-family:'Orbitron',sans-serif;font-size:22px;color:#fff;letter-spacing:.06em}
+
+/* BOTTOM CONTROLS */
+#bottomBar{position:absolute;bottom:12px;left:284px;right:324px;height:92px;background:var(--panel);border:1px solid #ffffff14;border-radius:6px;display:flex;z-index:15;overflow:hidden;backdrop-filter:blur(10px)}
+.btm-sect{flex:1;padding:10px 14px;border-right:1px solid #ffffff0f;display:flex;flex-direction:column;gap:6px}
+.btm-sect:last-child{border:none}
+.btm-sect h4{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:.18em;color:var(--orange)}
+.controls-grid{display:flex;gap:6px;flex-wrap:wrap}
+.kbd{font-family:'Share Tech Mono',monospace;font-size:10px;border:1px solid #ffffff20;background:#ffffff08;padding:3px 7px;border-radius:3px;color:#cbd5e1}
+.kbd em{color:var(--orange);font-style:normal}
+#throttle{height:6px;background:#ffffff12;border-radius:3px;overflow:hidden;position:relative}
+#throttleFill{height:100%;width:35%;background:linear-gradient(90deg,var(--orange),#ffb700);transition:width .15s}
+#throttleMark{position:absolute;top:50%;transform:translate(-50%,-50%);width:2px;height:14px;background:#fff;left:35%;box-shadow:0 0 6px #fff;transition:left .15s}
+
+/* OVERLAYS */
+#jumpOverlay{position:absolute;inset:0;background:radial-gradient(ellipse at center, #ff7b0022 0%, #000 75%);display:none;align-items:center;justify-content:center;z-index:30;flex-direction:column;gap:14px}
+#jumpOverlay.show{display:flex}
+#jumpText{font-family:'Orbitron',sans-serif;font-size:28px;letter-spacing:.22em;color:var(--orange);text-shadow:0 0 20px var(--orange-glow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+#jumpBar{width:320px;height:3px;background:#ffffff18;border-radius:2px;overflow:hidden}
+#jumpBar i{display:block;height:100%;width:0%;background:var(--orange);box-shadow:0 0 10px var(--orange);transition:width .1s}
+#dockOverlay{position:absolute;inset:0;background:#05070acc;backdrop-filter:blur(6px);display:none;z-index:25;align-items:center;justify-content:center}
+#dockOverlay.show{display:flex}
+.dock-card{width:520px;background:#0c1118;border:1px solid #ff7b0033;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px #000}
+.dock-head{padding:18px 20px;background:linear-gradient(90deg,#ff7b0018,transparent);border-bottom:1px solid #ffffff0f;display:flex;justify-content:space-between;align-items:center}
+.dock-head h2{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:.15em;color:var(--orange)}
+#commodities{padding:14px}
+.comm-row{display:grid;grid-template-columns:1.2fr .7fr .7fr auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid #ffffff0a;background:#ffffff04;border-radius:4px;margin-bottom:6px;font-family:'Share Tech Mono',monospace;font-size:11px}
+.comm-row b{color:#e6edf5}
+.price-up{color:#00ff88}
+.price-down{color:#ff4d4d}
+
+/* MOBILE */
+@media(max-width:900px){
+  #leftPanel,#rightPanel{width: 46vw; font-size:12px}
+  #bottomBar{left:12px;right:12px;bottom:12px}
+  #centerHUD{transform:translate(-50%,-60%) scale(.8)}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#ff7b0033;border-radius:3px}
+
+/* INTRO */
+#intro{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, #0f1f33 0%, #020408 70%);z-index:40;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px}
+#intro h1{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.22em;font-size:clamp(28px,6vw,54px);color:#fff;line-height:1}
+#intro h1 i{color:var(--orange);font-style:normal;text-shadow:0 0 20px var(--orange-glow)}
+#intro p{max-width:560px;color:#8ea0b8;font-size:13px;line-height:1.7;margin:14px auto}
+.badge{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--orange);border:1px solid #ff7b0044;padding:5px 12px;border-radius:20px;background:#ff7b0010}
+.intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:560px;width:100%;margin:18px 0}
+.intro-card{border:1px solid #ffffff12;background:#ffffff06;border-radius:6px;padding:12px;text-align:left}
+.intro-card b{font-family:'Orbitron',sans-serif;font-size:10px;color:#e6edf5;letter-spacing:.08em}
+.intro-card p{font-size:11px;color:#6f8198;line-height:1.5;margin:6px 0 0}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="bg"></canvas>
+  <canvas id="main"></canvas>
+
+  <div id="topbar">
+    <div id="logo">ELITE <span>DANGEROUS</span> <em style="font-size:9px;letter-spacing:.18em;color:#ffffff55;font-style:normal;margin-left:8px">WEB EDITION • 3309</em></div>
+    <div id="top-right">
+      <div class="stat">CMDR <b id="cmdrName">LIU</b></div>
+      <div class="stat">CR <b id="credits">12,450</b></div>
+      <div class="stat">FUEL <div id="fuelbar"><i id="fuelFill"></i></div> <b id="fuelTxt">85%</b></div>
+      <div class="stat" id="locStat">📍 <b id="locName">LHS 3447</b></div>
+    </div>
+  </div>
+
+  <!-- left -->
+  <div id="leftPanel">
+    <div class="panel">
+      <h3>SHIP STATUS <em>SIDEWINDER Mk.I</em></h3>
+      <div class="row"><span>HULL INTEGRITY</span><span id="hullTxt">100%</span></div>
+      <div class="bar hull"><i id="hullBar" style="width:100%"></i></div>
+      <div class="row"><span>SHIELD</span><span id="shieldTxt">100%</span></div>
+      <div class="bar shield"><i id="shieldBar" style="width:100%"></i></div>
+      <div class="row"><span>SPEED</span><span id="hudSpeed">0 m/s</span></div>
+      <div class="row"><span>WANTED</span><span style="color:#00ff88">CLEAN</span></div>
+      <div class="row"><span>RANK</span><span style="color:var(--orange)">MOSTLY HARMLESS</span></div>
+    </div>
+    <div class="panel">
+      <h3>CARGO HOLD <em id="cargoCap">0 / 4 T</em></h3>
+      <div id="cargoList"><div style="color:#5a6d85;font-size:10px;text-align:center;padding:10px">空 — 前往空间站购买商品</div></div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn ghost small" style="flex:1" onclick="jettison()">抛弃货物</button>
+        <button class="btn ghost small" style="flex:1" onclick="refuel()">加油 200 CR</button>
+      </div>
+    </div>
+    <div class="panel" style="padding:10px">
+      <h3>CONTACTS</h3>
+      <div id="contacts" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7a8a9e;line-height:1.8">
+        ● LHS 3447 - Dalton Gateway [STATION]<br>
+        ● Unidentified Signal Source<br>
+        <span style="color:#ff4d4d">● Pirate - Wanted [THREAT 2]</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- center crosshair -->
+  <div id="centerHUD">
+    <div id="reticle"><i></i><div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div></div>
+    <div id="speedRead">THRUST</div>
+    <div id="speedVal">0%</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6d85;letter-spacing:.15em;margin-top:4px">SUPERCRUISE READY • PRESS J TO JUMP</div>
+  </div>
+
+  <!-- right -->
+  <div id="rightPanel">
+    <div class="panel">
+      <h3>GALAXY MAP <em id="sysCount">8 SYSTEMS</em></h3>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('map',this)">星图</div>
+        <div class="tab" onclick="switchTab('missions',this)">任务</div>
+        <div class="tab" onclick="switchTab('log',this)">日志</div>
+      </div>
+      <div id="tab-map">
+        <div id="sysList"></div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn" style="flex:1" onclick="doJump()">⚡ FSD 跳跃 [J]</button>
+          <button class="btn ghost" onclick="doDock()">对接 [D]</button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6d85;margin-top:8px;line-height:1.5">选中目标后按 J 消耗燃料跃迁。距离越远消耗越多。可在空间站交易赚取星币。</div>
+      </div>
+      <div id="tab-missions" style="display:none">
+        <div id="missionList" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div id="tab-log" style="display:none">
+        <div id="logBox" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8ea0b8;line-height:1.7;max-height:260px;overflow:auto"></div>
+      </div>
+    </div>
+    <div class="panel" style="padding:10px;display:flex;gap:8px;align-items:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #ff7b00, #331500);border:1px solid #ff7b0055"></div>
+      <div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#e6edf5">GALNET NEWS</div>
+        <div style="font-size:11px;color:#8ea0b8">Thargoid 活动在 Pleiades 星区加剧，联邦发布赏金。</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottomBar">
+    <div class="btm-sect">
+      <h4>FLIGHT CONTROLS</h4>
+      <div class="controls-grid">
+        <span class="kbd"><em>W/S</em> 推力</span>
+        <span class="kbd"><em>A/D</em> 偏航</span>
+        <span class="kbd"><em>鼠标</em> 瞄准</span>
+        <span class="kbd"><em>空格</em> 开火</span>
+      </div>
+      <div id="throttle"><div id="throttleFill"></div><div id="throttleMark"></div></div>
+    </div>
+    <div class="btm-sect">
+      <h4>NAVIGATION</h4>
+      <div class="controls-grid">
+        <span class="kbd"><em>J</em> 跃迁</span>
+        <span class="kbd"><em>D</em> 对接</span>
+        <span class="kbd"><em>R</em> 超巡</span>
+        <span class="kbd"><em>1-8</em> 选星系</span>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8ea0b8" id="navHint">目标: LHS 3447 — 0.00 LY</div>
+    </div>
+    <div class="btm-sect">
+      <h4>COMBAT</h4>
+      <div style="display:flex;gap:6px">
+        <button class="btn small" onclick="fireWeapon()" style="flex:1">开火</button>
+        <button class="btn ghost small" onclick="toggleSupercruise()" id="scBtn" style="flex:1">超巡</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6d85">击毁海盗获得赏金，躲避小行星带！</div>
+    </div>
+  </div>
+
+  <div id="jumpOverlay">
+    <div id="jumpText">FSD CHARGING... 4...3...2...1</div>
+    <div id="jumpBar"><i id="jumpFill"></i></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff7b00;letter-spacing:.2em">FRAME SHIFT DRIVE ENGAGED</div>
+  </div>
+
+  <div id="dockOverlay">
+    <div class="dock-card">
+      <div class="dock-head">
+        <h2>⬢ <span id="dockName">DALTON GATEWAY</span> — COMMODITIES MARKET</h2>
+        <button class="btn ghost small" onclick="closeDock()">✕ 离开</button>
+      </div>
+      <div id="commodities"></div>
+      <div style="padding:10px 14px;border-top:1px solid #ffffff0f;display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:10px;color:#6b7d94">
+        <span>提示：低买高卖 — 每个星系价格不同，稀有商品利润更高</span>
+        <span id="dockCredits" style="color:var(--orange)">CR 12,450</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="intro">
+    <div class="badge">FRONTIER DEVELOPMENTS • WEB EDITION</div>
+    <h1>ELITE <i>DANGEROUS</i></h1>
+    <p>1984 年的传奇在浏览器中重生。驾驶 Sidewinder 穿梭银河，在 8 个星系间贸易、战斗与探索。FSD 跃迁、超巡航、空间站对接与小行星带激战 — 全部在单页中运行。</p>
+    <div class="intro-grid">
+      <div class="intro-card"><b>🚀 飞行</b><p>WASD + 鼠标控制，空格激光，R 超巡加速</p></div>
+      <div class="intro-card"><b>💰 贸易</b><p>在空间站低买高卖，稀有商品利润翻倍</p></div>
+      <div class="intro-card"><b>⚔️ 战斗</b><p>击毁海盗领赏金，注意护盾与船体</p></div>
+    </div>
+    <button class="btn" style="padding:14px 36px;font-size:12px;margin-top:6px" onclick="startGame()">▶ 进入驾驶舱 LAUNCH</button>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6d85;margin-top:10px">支持键盘 1-8 快速选星系 • J 跃迁 • D 对接 • 空格开火</div>
+  </div>
+</div>
+
+<script>
+const SYSTEMS = [
+  {id:'lhs3447', name:'LHS 3447', dist:0, x:0.2, y:0.5, economy:'Extraction', gov:'Corporate', pop:'12M', station:'Dalton Gateway'},
+  {id:'eravate', name:'ERAVATE', dist:6.8, x:0.35, y:0.38, economy:'Agriculture', gov:'Democracy', pop:'8M', station:'Cleve Hub'},
+  {id:'kremainn', name:'KREMAINN', dist:12.3, x:0.55, y:0.62, economy:'Industrial', gov:'Dictatorship', pop:'22M', station:'Baker Platform'},
+  {id:'asellus', name:'ASELLUS PRIMUS', dist:18.1, x:0.72, y:0.32, economy:'High Tech', gov:'Corporate', pop:'45M', station:'Beagle 2 Landing'},
+  {id:'sol', name:'SOL', dist:22.5, x:0.48, y:0.48, economy:'High Tech', gov:'Federation', pop:'22B', station:'Abraham Lincoln'},
+  {id:'wolf1301', name:'WOLF 1301', dist:28.4, x:0.62, y:0.72, economy:'Refinery', gov:'Anarchy', pop:'3M', station:'Saunders Divinity'},
+  {id:'pleiades', name:'PLEIADES - MAIA', dist:34.7, x:0.82, y:0.55, economy:'Military', gov:'Federation', pop:'0.5M', station:'Obs. Darnielle'},
+  {id:'col285', name:'COL 285 SECTOR', dist:41.2, x:0.15, y:0.72, economy:'Tourism', gov:'Democracy', pop:'16M', station:'Jacques Station'},
+];
+const COMMODITIES_BASE = [
+  {name:'Food Cartridges', base:120, vol:1, rare:false},
+  {name:'Mineral Oil', base:210, vol:1, rare:false},
+  {name:'Gold', base:9800, vol:1, rare:true},
+  {name:'Bertrandite', base:680, vol:1, rare:false},
+  {name:'Palladium', base:13100, vol:1, rare:true},
+  {name:'Leather', base:190, vol:1, rare:false},
+  {name:'Superconductors', base:6400, vol:1, rare:false},
+  {name:'Lavitz Diamonds', base:18500, vol:1, rare:true},
+];
+let state = {
+  credits:12450,
+  fuel:85,
+  hull:100,
+  shield:100,
+  cargo:[],
+  location:0,
+  target:0,
+  supercruise:false,
+  throttle:0.35,
+  kills:0,
+  jumps:0,
+};
+
+let thrust = 0;
+let yaw = 0;
+let mouseX = 0;
+let mouseY = 0;
+let bullets = [];
+let asteroids = [];
+let pirates = [];
+let particles = [];
+let stars = [];
+let started=false;
+
+const bg = document.getElementById('bg');
+const main = document.getElementById('main');
+const bgCtx = bg.getContext('2d');
+const ctx = main.getContext('2d');
+
+function resize(){
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  [bg,main].forEach(c=>{
+    c.width = innerWidth*dpr;
+    c.height = innerHeight*dpr;
+    c.style.width = innerWidth+'px';
+    c.style.height = innerHeight+'px';
+    c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+  });
+  initStars();
+}
+window.addEventListener('resize', resize);
+
+// stars
+function initStars(){
+  stars=[];
+  for(let i=0;i<260;i++) stars.push({x:Math.random()*innerWidth, y:Math.random()*innerHeight, r:Math.random()*1.4+0.2, tw:Math.random()*Math.PI*2, sp:Math.random()*0.6+0.2, col: Math.random()>.85 ? '#ff7b00' : Math.random()>.5 ? '#7ec8ff' : '#ffffff'});
+}
+function drawBg(t){
+  bgCtx.clearRect(0,0,innerWidth,innerHeight);
+  // nebula gradient
+  const g = bgCtx.createRadialGradient(innerWidth*0.6, innerHeight*0.35, 0, innerWidth*0.6, innerHeight*0.35, Math.max(innerWidth,innerHeight)*0.9);
+  g.addColorStop(0,'#0e1a2a');
+  g.addColorStop(0.4,'#070b12');
+  g.addColorStop(1,'#020408');
+  bgCtx.fillStyle=g;
+  bgCtx.fillRect(0,0,innerWidth,innerHeight);
+  // stars
+  stars.forEach(s=>{
+    s.x -= s.sp * (state.supercruise? 6 : 0.7) * (0.5 + state.throttle);
+    if(s.x < -5){ s.x = innerWidth+5; s.y = Math.random()*innerHeight; }
+    const a = 0.5 + Math.sin(t*0.002 + s.tw)*0.5;
+    bgCtx.globalAlpha = a* (s.col==='#ff7b00'?0.9:0.85);
+    bgCtx.fillStyle=s.col;
+    bgCtx.beginPath();
+    if(state.supercruise){
+      bgCtx.fillRect(s.x, s.y, 14*s.sp, 1.2);
+    } else {
+      bgCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      bgCtx.fill();
+    }
+  });
+  bgCtx.globalAlpha=1;
+  // planet
+  const sys = SYSTEMS[state.location];
+  const px = innerWidth*0.5 + Math.sin(t*0.00012)*30;
+  const py = innerHeight*0.5 + Math.cos(t*0.0001)*12;
+  const pr = state.supercruise? 220 : 90;
+  const pg = bgCtx.createRadialGradient(px- pr*0.3, py- pr*0.3, pr*0.2, px, py, pr);
+  const cols = [['#1a3a5a','#0a1a2a'],['#3a2a0a','#1a1000'],['#1a3a2a','#0a1a14'],['#2a1a3a','#120a1a']][state.location%4];
+  pg.addColorStop(0, cols[0]);
+  pg.addColorStop(1, cols[1]);
+  bgCtx.fillStyle=pg;
+  bgCtx.beginPath(); bgCtx.arc(px, py, pr, 0, Math.PI*2); bgCtx.fill();
+  bgCtx.strokeStyle='#ffffff08'; bgCtx.lineWidth=1; bgCtx.stroke();
+  // ring for some
+  if(state.location%2===1){
+    bgCtx.strokeStyle='#ffffff14'; bgCtx.lineWidth=  state.supercruise? 8:4; bgCtx.beginPath(); bgCtx.ellipse(px, py, pr*1.45, pr*0.38, -0.18, 0, Math.PI*2); bgCtx.stroke();
+  }
+  // supercruise streaks
+  if(state.supercruise){
+    bgCtx.strokeStyle='#00e5ff11'; bgCtx.lineWidth=1;
+    for(let i=0;i<5;i++){ const y= innerHeight*0.15 + i*innerHeight*0.16; bgCtx.beginPath(); bgCtx.moveTo(0,y); bgCtx.lineTo(innerWidth,y); bgCtx.stroke();}
+  }
+}
+
+function spawnAsteroid(){
+  const side = Math.random()>0.5?1:-1;
+  asteroids.push({x: side>0? -40: innerWidth+40, y: Math.random()*innerHeight*0.7+ innerHeight*0.15, r: 16+Math.random()*28, vx: (2+Math.random()*2)*side, vy:(Math.random()-0.5)*1.2, rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.04, hp:2});
+}
+function spawnPirate(){
+  pirates.push({x: innerWidth+60, y: Math.random()*innerHeight*0.6+ innerHeight*0.2, r:18, vx:-1.5 - Math.random(), vy:(Math.random()-0.5)*1, hp:3, shootCd: 60+Math.random()*80});
+}
+
+let lastAst=0,lastPir=0;
+function drawMain(t){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  // ship shadow/pos
+  const shipX = innerWidth*0.5 + mouseX*0.06 + Math.sin(t*0.001+yaw)*4;
+  const shipY = innerHeight*0.5 + mouseY*0.04;
+
+  // asteroids
+  if(t - lastAst > (state.supercruise? 900: 1400)){ spawnAsteroid(); lastAst=t; }
+  if(t - lastPir > 7000 + Math.random()*5000){ spawnPirate(); lastPir=t; }
+
+  // update asteroids
+  asteroids.forEach(a=>{
+    a.x += a.vx * (0.6+ state.throttle*0.9) * (state.supercruise?2.5:1);
+    a.y += a.vy;
+    a.rot += a.vr;
+    // draw
+    ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
+    ctx.fillStyle='#2a2f3a'; ctx.strokeStyle='#3a4150'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    const pts=7; for(let i=0;i<pts;i++){ const ang=i/pts*Math.PI*2; const rr=a.r*(0.75+Math.random()*0.15+0.25*Math.sin(i*1.7)); const x=Math.cos(ang)*rr, y=Math.sin(ang)*rr*0.85; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.closePath(); ctx.fill(); ctx.stroke();
+    // crater
+    ctx.fillStyle='#1a1f2a'; ctx.beginPath(); ctx.arc(a.r*0.2,a.r*0.1,a.r*0.22,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+  asteroids = asteroids.filter(a=> a.x>-80 && a.x<innerWidth+80 && a.y>-80 && a.y<innerHeight+80);
+
+  // pirates
+  pirates.forEach(p=>{
+    p.x += p.vx; p.y+=p.vy;
+    if(p.y<80||p.y>innerHeight-80) p.vy*=-1;
+    p.shootCd--;
+    if(p.shootCd<=0){ p.shootCd=90+Math.random()*90; bullets.push({x:p.x-18,y:p.y, vx:-7, vy:(Math.random()-0.5)*1.2, enemy:true, life:80}); }
+    // ship shape
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.fillStyle='#3a0a0a'; ctx.strokeStyle='#ff3a3a'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-14,-10); ctx.lineTo(-10,0); ctx.lineTo(-14,10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ff3a3a'; ctx.beginPath(); ctx.arc(6,0,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ff4d4d'; ctx.font='700 7px Orbitron'; ctx.fillText('WANTED', -18, -14);
+    ctx.restore();
+  });
+  pirates = pirates.filter(p=> p.x>-80);
+
+  // bullets
+  bullets.forEach(b=>{
+    b.x += b.vx; b.y+=b.vy; b.life--;
+    ctx.fillStyle = b.enemy? '#ff3a3a' : '#00e5ff';
+    ctx.shadowColor = b.enemy? '#ff3a3a' : '#00e5ff'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.arc(b.x,b.y, b.enemy?3:3.5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    // trail
+    ctx.strokeStyle = b.enemy? '#ff3a3a66' : '#00e5ff66'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(b.x - b.vx*1.2, b.y - b.vy*1.2); ctx.lineTo(b.x,b.y); ctx.stroke();
+  });
+  bullets = bullets.filter(b=> b.life>0 && b.x>-20 && b.x<innerWidth+20 && b.y>-20 && b.y<innerHeight+20);
+
+  // particles
+  particles.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.06; pt.life--; pt.a*=0.98; ctx.globalAlpha=pt.a; ctx.fillStyle=pt.col; ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,Math.PI*2); ctx.fill(); });
+  particles = particles.filter(p=> p.life>0);
+  ctx.globalAlpha=1;
+
+  // crosshair aim line
+  if(started){
+    ctx.strokeStyle='#00e5ff18'; ctx.lineWidth=1; ctx.setLineDash([4,6]); ctx.beginPath(); ctx.moveTo(shipX,shipY); ctx.lineTo(shipX + mouseX*0.25, shipY + mouseY*0.25); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // ship (player)
+  ctx.save(); ctx.translate(shipX, shipY);
+  // engine glow
+  const glow = 10 + Math.sin(t*0.02)*3 + state.throttle*8;
+  ctx.fillStyle=`rgba(0,229,255,${0.35+state.throttle*0.35})`; ctx.beginPath(); ctx.ellipse(-22,0, glow, 6,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(255,123,0,${0.5+state.throttle*0.3})`; ctx.beginPath(); ctx.ellipse(-24,0, glow*0.6, 3,0,0,Math.PI*2); ctx.fill();
+  // hull
+  ctx.fillStyle='#cbd5e1'; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(28,0); ctx.lineTo(-18,-12); ctx.lineTo(-14,-4); ctx.lineTo(-22,0); ctx.lineTo(-14,4); ctx.lineTo(-18,12); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#0e1218'; ctx.beginPath(); ctx.ellipse(8,0,7,5,0,0,Math.PI*2); ctx.fill(); // cockpit
+  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle='#00e5ffaa'; ctx.beginPath(); ctx.arc(8,0,2.5,0,Math.PI*2); ctx.fill();
+  // wings detail
+  ctx.fillStyle='#ff7b00'; ctx.fillRect(-10,-2,12,1); ctx.fillRect(-10,1,12,1);
+  ctx.restore();
+
+  // collisions
+  bullets.forEach(b=>{
+    if(b.enemy){
+      const dx=b.x-shipX, dy=b.y-shipY;
+      if(Math.hypot(dx,dy)<18){ b.life=0; takeDamage(7); explosion(b.x,b.y,'#ff3a3a'); }
+    } else {
+      pirates.forEach(p=>{
+        const dx=b.x-p.x, dy=b.y-p.y;
+        if(Math.hypot(dx,dy)<16){ b.life=0; p.hp--; explosion(b.x,b.y,'#00e5ff'); if(p.hp<=0){ p.x=9999; state.credits+= 1800 + Math.floor(Math.random()*1200); state.kills++; explosion(p.x,p.y,'#ff7b00',22); log(`击毁通缉海盗 +${state.credits} CR`); updateHUD(); } }
+      });
+      asteroids.forEach(a=>{
+        const dx=b.x-a.x, dy=b.y-a.y;
+        if(Math.hypot(dx,dy)<a.r){ b.life=0; a.hp--; if(a.hp<=0){ a.x=9999; explosion(a.x,a.y,'#8ea0b8',18); if(Math.random()<0.35){ const drop= COMMODITIES_BASE[Math.floor(Math.random()*COMMODITIES_BASE.length)]; state.cargo.push({name:drop.name, qty:1, buy:0}); log(`打捞到 ${drop.name} x1`); updateHUD(); } } else explosion(b.x,b.y,'#8ea0b8'); }
+      });
+    }
+  });
+  // ship hits asteroid
+  asteroids.forEach(a=>{
+    if(Math.hypot(a.x-shipX,a.y-shipY) < a.r+14){ takeDamage(12); explosion(shipX,shipY,'#ff7b00',12); a.x= a.x<shipX? -80: innerWidth+80; }
+  });
+}
+
+function explosion(x,y,col,n=10){
+  for(let i=0;i<n;i++) particles.push({x,y, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6 -1, r: Math.random()*3+1, col, a:1, life: 18+Math.random()*18});
+}
+
+function takeDamage(d){
+  if(state.shield>0){ state.shield=Math.max(0,state.shield-d*1.2); if(state.shield===0) log('⚠ 护盾失效！'); }
+  else { state.hull=Math.max(0,state.hull-d); if(state.hull<=0){ state.hull=0; log('☠ 船体毁坏！已在最近空间站重生'); state.hull=100; state.shield=100; state.credits=Math.max(0,state.credits-800); }
+  }
+  updateHUD();
+  if(state.hull<30) screenShake();
+}
+function screenShake(){
+  const g=document.getElementById('game');
+  g.animate([{transform:'translate(0,0)'},{transform:'translate(2px,1px)'},{transform:'translate(-2px,-1px)'},{transform:'translate(0,0)'}],{duration:250});
+}
+
+let raf;
+function loop(t){
+  drawBg(t);
+  drawMain(t);
+  // throttle lerp
+  state.throttle += (thrust - state.throttle)*0.06;
+  if(started) updateThrottleUI();
+  raf=requestAnimationFrame(loop);
+}
+
+// UI
+function renderSystems(){
+  const el=document.getElementById('sysList');
+  el.innerHTML = SYSTEMS.map((s,i)=>`
+    <div class="sys ${i===state.target?'active':''}" onclick="selectSys(${i})">
+      <div>
+        <div class="sys-name">${s.name}</div>
+        <div class="sys-meta">${s.economy} • ${s.gov} • ${s.pop}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sys-dist">${s.dist.toFixed(1)} LY</div>
+        <div class="sys-meta">${s.station}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('navHint').textContent = `目标: ${SYSTEMS[state.target].name} — ${Math.abs(SYSTEMS[state.target].dist - SYSTEMS[state.location].dist).toFixed(2)} LY`;
+}
+function selectSys(i){ state.target=i; renderSystems(); log(`已锁定 ${SYSTEMS[i].name} (${SYSTEMS[i].dist} LY)`); }
+function switchTab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.getElementById('tab-map').style.display = name==='map'?'block':'none';
+  document.getElementById('tab-missions').style.display = name==='missions'?'block':'none';
+  document.getElementById('tab-log').style.display = name==='log'?'block':'none';
+}
+function updateHUD(){
+  document.getElementById('credits').textContent = state.credits.toLocaleString();
+  document.getElementById('dockCredits').textContent = 'CR '+state.credits.toLocaleString();
+  document.getElementById('fuelFill').style.width = state.fuel+'%';
+  document.getElementById('fuelTxt').textContent = Math.round(state.fuel)+'%';
+  document.getElementById('locName').textContent = SYSTEMS[state.location].name;
+  document.getElementById('hullTxt').textContent = Math.round(state.hull)+'%';
+  document.getElementById('hullBar').style.width = state.hull+'%';
+  document.getElementById('shieldTxt').textContent = Math.round(state.shield)+'%';
+  document.getElementById('shieldBar').style.width = state.shield+'%';
+  document.getElementById('cargoCap').textContent = `${state.cargo.reduce((a,c)=>a+c.qty,0)} / 4 T`;
+  const cl=document.getElementById('cargoList');
+  if(state.cargo.length===0) cl.innerHTML=`<div style="color:#5a6d85;font-size:10px;text-align:center;padding:10px">空 — 前往空间站购买商品</div>`;
+  else cl.innerHTML = state.cargo.map((c,i)=>`<div class="cargo-item"><span><b>${c.name}</b> x${c.qty}</span><span>${c.buy?c.buy+' CR':''} <a href="#" onclick="sellOne(${i});return false" style="color:var(--orange)">出售</a></span></div>`).join('');
+  document.getElementById('hudSpeed').textContent = Math.round(state.throttle*520) + ' m/s';
+  document.getElementById('speedVal').textContent = Math.round(state.throttle*100)+'%';
+  renderMissions();
+}
+function updateThrottleUI(){
+  document.getElementById('throttleFill').style.width = (state.throttle*100)+'%';
+  document.getElementById('throttleMark').style.left = (state.throttle*100)+'%';
+}
+function log(msg){
+  const box=document.getElementById('logBox');
+  const time=new Date().toLocaleTimeString('zh-CN',{hour12:false});
+  box.innerHTML = `<div style="border-left:2px solid var(--orange);padding-left:8px;margin-bottom:6px"><span style="color:#5a6d85">${time}</span> ${msg}</div>` + box.innerHTML;
+}
+function renderMissions(){
+  const missions=[
+    {title:'击毁海盗', desc:'在任意星系击毁 3 艘海盗', prog:`${Math.min(state.kills,3)}/3`, reward:'5,000 CR', done: state.kills>=3},
+    {title:'贸易新手', desc:'完成一次跨星系贸易', prog:`${state.jumps>0?'1':'0'}/1`, reward:'2,000 CR', done: state.jumps>0},
+    {title:'勘探者', desc:'跃迁至 SOL 太阳系', prog:`${state.location===4?'1':'0'}/1`, reward:'3,500 CR', done: state.location===4},
+  ];
+  document.getElementById('missionList').innerHTML = missions.map(m=>`
+    <div style="border:1px solid ${m.done?'#00ff8844':'#ffffff12'};background:${m.done?'#00ff880e':'#ffffff06'};border-radius:4px;padding:10px">
+      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:${m.done?'#00ff88':'#e6edf5'}">${m.done?'✓ ':''}${m.title} <span style="float:right;color:var(--orange)">${m.reward}</span></div>
+      <div style="font-size:11px;color:#8ea0b8;margin-top:4px">${m.desc}</div>
+      <div style="height:4px;background:#ffffff14;border-radius:2px;margin-top:8px;overflow:hidden"><i style="display:block;height:100%;width:${m.done?'100%':'35%'};background:${m.done?'#00ff88':'var(--orange)'}"></i></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#6b7d94;margin-top:4px">${m.prog} ${m.done?'— 已完成':''}</div>
+    </div>
+  `).join('');
+}
+
+// actions
+function doJump(){
+  if(state.target===state.location){ log('已在目标星系'); return; }
+  const dist = Math.abs(SYSTEMS[state.target].dist - SYSTEMS[state.location].dist);
+  const cost = Math.max(4, Math.round(dist*1.1));
+  if(state.fuel < cost){ log('⛽ 燃料不足，无法跃迁！请先加油'); return; }
+  state.fuel -= cost;
+  const overlay=document.getElementById('jumpOverlay');
+  overlay.classList.add('show');
+  let p=0;
+  const iv=setInterval(()=>{
+    p+= 3 + Math.random()*5;
+    if(p>=100){ p=100; clearInterval(iv); setTimeout(()=>{
+      overlay.classList.remove('show');
+      state.location = state.target;
+      state.jumps++;
+      // random shield restore on jump
+      state.shield = Math.min(100, state.shield+22);
+      // price shuffle hint
+      log(`跃迁完成 → ${SYSTEMS[state.location].name}  消耗 ${cost}% 燃料`);
+      updateHUD(); renderSystems();
+      explosion(innerWidth*0.5, innerHeight*0.5, '#00e5ff', 18);
+      // pirate ambush chance
+      if(Math.random()<0.45){ spawnPirate(); spawnPirate(); log('⚠ 跃迁尾迹被海盗截获！准备战斗'); }
+    },220);}
+    document.getElementById('jumpFill').style.width=p+'%';
+    document.getElementById('jumpText').textContent = p<30?'FSD CHARGING...': p<70?'FSD ENGAGED — TUNNEL':'EXITING WITCH-SPACE...';
+  },70);
+}
+function doDock(){
+  openDock();
+}
+function openDock(){
+  document.getElementById('dockOverlay').classList.add('show');
+  document.getElementById('dockName').textContent = SYSTEMS[state.location].station.toUpperCase();
+  renderCommodities();
+}
+function closeDock(){ document.getElementById('dockOverlay').classList.remove('show'); }
+function renderCommodities(){
+  const loc = state.location;
+  const el=document.getElementById('commodities');
+  el.innerHTML = COMMODITIES_BASE.map((c,idx)=>{
+    // price varies per system: pseudo random by location
+    const seed = (loc*37 + idx*17) % 100;
+    const variance = (seed - 50)/100 * 0.9; // -45% to +45%
+    const rareBonus = c.rare ? 0.3 : 0;
+    const price = Math.max(10, Math.round(c.base * (1+variance+rareBonus)));
+    const trend = variance>0.12? 'price-up' : variance<-0.12? 'price-down':'';
+    const arrow = variance>0.12?'▲': variance<-0.12?'▼':'—';
+    const owned = state.cargo.filter(x=>x.name===c.name).reduce((a,b)=>a+b.qty,0);
+    return `<div class="comm-row">
+      <div><b>${c.name}</b> <span style="color:#5a6d85;font-size:9px">${c.rare?'RARE':''}</span></div>
+      <div class="${trend}">${arrow} ${price.toLocaleString()} CR</div>
+      <div style="color:#8ea0b8">持有 ${owned}</div>
+      <div style="display:flex;gap:4px"><button class="btn small" onclick="buyComm(${idx},${price})">买入</button><button class="btn ghost small" onclick="sellComm('${c.name}',${price})">卖出</button></div>
+    </div>`;
+  }).join('');
+}
+function buyComm(idx, price){
+  if(state.credits < price){ log('星币不足'); return; }
+  const total = state.cargo.reduce((a,c)=>a+c.qty,0);
+  if(total>=4){ log('货舱已满 (4T)'); return; }
+  state.credits -= price;
+  const name = COMMODITIES_BASE[idx].name;
+  const ex = state.cargo.find(c=>c.name===name);
+  if(ex) ex.qty++; else state.cargo.push({name, qty:1, buy:price});
+  log(`买入 ${name} @ ${price} CR`);
+  updateHUD(); renderCommodities();
+}
+function sellComm(name, price){
+  const i = state.cargo.findIndex(c=>c.name===name);
+  if(i===-1){ log('未持有该商品'); return; }
+  const item = state.cargo[i];
+  const profit = price - (item.buy||price);
+  state.credits += price;
+  item.qty--; if(item.qty<=0) state.cargo.splice(i,1);
+  log(`卖出 ${name} @ ${price} CR ${profit>0?`(+${profit} 利润)`: profit<0?`(${profit})`:''}`);
+  updateHUD(); renderCommodities();
+}
+function sellOne(i){
+  const item=state.cargo[i];
+  // sell at avg market (use current system's price approx)
+  const base = COMMODITIES_BASE.find(c=>c.name===item.name);
+  const loc=state.location;
+  const idx=COMMODITIES_BASE.indexOf(base);
+  const seed=(loc*37+idx*17)%100; const variance=(seed-50)/100*0.9; const price=Math.max(10,Math.round(base.base*(1+variance+(base.rare?0.3:0))));
+  sellComm(item.name, price);
+}
+function jettison(){ if(state.cargo.length===0) return; state.cargo.pop(); log('已抛弃 1T 货物'); updateHUD(); }
+function refuel(){ if(state.credits<200){ log('星币不足'); return;} if(state.fuel>=100){ log('燃料已满'); return;} state.credits-=200; state.fuel=Math.min(100,state.fuel+42); log('已加注燃料'); updateHUD(); }
+function toggleSupercruise(){
+  state.supercruise=!state.supercruise;
+  document.getElementById('scBtn').textContent = state.supercruise?'退出超巡':'超巡';
+  document.getElementById('scBtn').style.background = state.supercruise?'var(--orange)':'';
+  document.getElementById('scBtn').style.color = state.supercruise?'#000':'var(--orange)';
+  log(state.supercruise?'超巡航已启动 — 速度大幅提升':'已退出超巡航');
+}
+function fireWeapon(){
+  const shipX = innerWidth*0.5 + mouseX*0.06;
+  const shipY = innerHeight*0.5 + mouseY*0.04;
+  const tx = shipX + mouseX*0.35;
+  const ty = shipY + mouseY*0.35;
+  const ang = Math.atan2(ty-shipY, tx-shipX);
+  bullets.push({x:shipX+18*Math.cos(ang), y:shipY+18*Math.sin(ang), vx: Math.cos(ang)*11, vy: Math.sin(ang)*11, enemy:false, life:70});
+  // muzzle flash
+  particles.push({x:shipX+20*Math.cos(ang), y:shipY+20*Math.sin(ang), vx:Math.cos(ang)*2, vy:Math.sin(ang)*2, r:4, col:'#00e5ff', a:1, life:8});
+}
+
+// input
+window.addEventListener('mousemove', e=>{ mouseX = e.clientX - innerWidth/2; mouseY = e.clientY - innerHeight/2; });
+window.addEventListener('keydown', e=>{
+  if(!started) return;
+  if(e.key==='w'||e.key==='W') thrust = Math.min(1, thrust+0.14);
+  if(e.key==='s'||e.key==='S') thrust = Math.max(0, thrust-0.14);
+  if(e.key==='a'||e.key==='A') yaw -=0.2;
+  if(e.key==='d'||e.key==='D') yaw +=0.2;
+  if(e.key===' '){ e.preventDefault(); fireWeapon(); }
+  if(e.key==='j'||e.key==='J') doJump();
+  if(e.key==='r'||e.key==='R') toggleSupercruise();
+  if(e.key>='1' && e.key<='8'){ const idx=parseInt(e.key)-1; if(idx<SYSTEMS.length) selectSys(idx); }
+  if(e.key==='d'||e.key==='D'){} // handled above via doDock? avoid double
+  if(e.code==='KeyD' && !e.ctrlKey && e.key==='d'){ /* keep jump's D conflict - use uppercase D for dock via button */ }
+});
+window.addEventListener('keydown', e=>{
+  if(e.key==='d' && started && !document.getElementById('dockOverlay').classList.contains('show')){ /* D dock only if not typing */ if(e.target.tagName!=='INPUT') openDock(); }
+});
+window.addEventListener('wheel', e=>{
+  if(!started) return;
+  thrust = Math.max(0, Math.min(1, thrust - e.deltaY*0.0005));
+});
+
+// start
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  started=true;
+  thrust=0.35;
+  state.throttle=0.35;
+  log('欢迎，指挥官。Sidewinder 已就绪。祝你在银河中好运。');
+  log('提示：驾驶 W/S 调节推力，鼠标瞄准，空格开火，J 跃迁，D 对接贸易');
+  renderSystems(); updateHUD();
+}
+resize(); initStars();
+renderSystems(); updateHUD();
+// pre-missions log
+log('GalNet: 联邦与帝国在 Eravate 附近发现未知信号源');
+requestAnimationFrame(loop);
+</script>
+</div>
+</body>
+</html>
