@@ -32,7 +32,7 @@
 - **`server/api/calendar/[topic].get.js`**：提供 F1、WTT 等主题日历的 JSON 数据接口。
 - **`server/api/launches/[slug].get.js`**：动态路由接口，按 Slug 获取特定发射任务的超高清图解及深度内容详情。
 - **`server/utils/spacex.js`**：核心后端数据处理库。包含双源 API 拉取（GraphQL Page Tiles + TIMING JSON）、格式标准化、历史发射适配、超高清图解数据解析及 ICS 标准格式序列化（处理安全换行与字符转义）。
-- **`server/utils/calendars.js`**：主题日历注册、F1 赛程处理、WTT 官方比赛级赛程解析及通用 ICS 序列化。WTT 只保留 `WTT Series` 中有明确双方选手和开赛时间的未来比赛。
+- **`server/utils/calendars.js`**：主题日历注册、F1 赛程处理、WTT 官方比赛级赛程解析及通用 ICS 序列化。WTT 只保留 `WTT Series` 中有明确双方选手和开赛时间的未来比赛（正赛 R16 及以上）；其中 **WTT Contender 级别只输出决赛**。
 - **`server/utils/kv.js`**：基于 **Nuxt Hub KV** (Cloudflare KV) 封装的 **SWR (Stale-While-Revalidate)** 后台异步刷新缓存控制器。支持分布式版本 Sequence 自增追踪与 `LAST-MODIFIED` 时间锁。
 
 ---
@@ -62,13 +62,18 @@
 ### 5. 保持轻量与边缘友好
 * 运行在 Cloudflare Workers/Pages 边缘环境，内存及包体积受限。**切勿随意引入臃肿的第三方 npm 依赖库**。渲染高性能图片时可引入 `@nuxt/image`，但需兼顾原生 HTML 图像加载机制。
 
+### 6. WTT 赛事数量收敛口径（订阅源裁剪，破坏性）
+* **不得用页面筛选代替订阅裁剪**：本站的主要内容价值是 ICS 订阅源，日历客户端只会读到 `.ics` 里的事件。前端筛选不改变订阅结果，因此"比赛太多"必须通过服务端过滤解决。
+* **Contender 只保留决赛**：`isWttContenderLevelEvent(event)` 命中的赛事（`WTT Contender`，**不含** `WTT Star Contender` / `WTT Youth Contender`）只在 `isWttFinalRound(description)` 为真时输出，其余轮次一律不进日历。`Champions` / `Smash` / `Star Contender` / `Feeder` 维持原有 R16+ 口径不变。
+* **属于破坏性变更**：被裁掉的比赛会从所有订阅者的日历中消失（该赛事若没有决赛数据则整个赛事消失）。调整该口径前须先评估对现有订阅者的影响。
+
 ---
 
 ## 🧪 验证与测试流程
 在提代码更改并交付部署之前，**必须**依次运行并确认以下所有检查全部通过：
 
 ### 1. 运行完整单元测试
-项目内置了 **33** 项全面的单元测试，覆盖了 SpaceX 数据源合并与降级、F1 赛程、WTT 主系列筛选与比赛双方解析、ICS 文本转义、SWR 异步刷新、直播保活以及主题 ICS 路由校验。
+项目内置了 **44** 项全面的单元测试，覆盖了 SpaceX 数据源合并与降级、F1 赛程、WTT 主系列筛选与比赛双方解析、WTT Contender 决赛裁剪口径、ICS 文本转义、SWR 异步刷新、直播保活以及主题 ICS 路由校验。
 ```bash
 bun test
 node --check server/utils/calendars.js

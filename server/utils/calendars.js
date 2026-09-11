@@ -551,6 +551,8 @@ export function normalizeWttOfficialResult(event, resultItem) {
   const discipline = matchCard?.subEventName || resultItem?.subEventType || 'Table Tennis Match'
   const roundDesc = matchCard?.subEventDescription || `${discipline} Official Result`
   if (!isWttMainDrawR16Plus(roundDesc)) return null
+  // WTT Contender 级别只保留决赛
+  if (isWttContenderLevelEvent(event) && !isWttFinalRound(roundDesc)) return null
 
   return {
     id,
@@ -596,6 +598,26 @@ export function isWttMainDrawR16Plus(description) {
   return true
 }
 
+/**
+ * WTT Contender 级别赛事（WTT Contender / WTT Contender Xxx）订阅口径：
+ * 只保留决赛。Star Contender、Youth Contender、Champions、Smash、Feeder 等
+ * 级别维持原有 R16+ 口径不变。
+ */
+export function isWttContenderLevelEvent(event) {
+  const name = String(event?.eventName || '')
+  if (!name) return false
+  if (/star\s*contender/i.test(name)) return false
+  if (/youth/i.test(name)) return false
+  return /\bwtt\s+contender\b/i.test(name)
+}
+
+/** 判定轮次描述是否为正赛决赛（排除半决赛/四分之一决赛/1/N 决赛）。 */
+export function isWttFinalRound(description) {
+  const text = String(description || '')
+  if (!text || !/\bfinals?\b/i.test(text)) return false
+  return !/semi|quarter|round of/i.test(text)
+}
+
 export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const timeZoneId = event?.timeZoneId
   const launchAt = normalizeWttDate(unit?.StartDate, timeZoneId)
@@ -623,6 +645,8 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const roundDescription = unit.ItemDescription?.find(item => item.Language === 'ENG')?.Value
     || `${discipline} ${unit.Round || ''}`.trim()
   if (!isWttMainDrawR16Plus(roundDescription)) return null
+  // WTT Contender 级别只保留决赛
+  if (isWttContenderLevelEvent(event) && !isWttFinalRound(roundDescription)) return null
 
   return {
     id,

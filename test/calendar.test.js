@@ -13,6 +13,8 @@ import {
   getTopicCalendarData,
   loadDota2CalendarData,
   loadWttCalendarData,
+  isWttContenderLevelEvent,
+  isWttFinalRound,
   normalizeWttDate,
   normalizeWttOfficialResult,
   normalizeWttScheduleUnit,
@@ -1171,6 +1173,73 @@ test("WTT normalizes only future matches with two named competitors", () => {
       ],
     },
   }, now), null);
+});
+
+test("WTT Contender level is detected without catching Star or Youth Contender", () => {
+  assert.equal(isWttContenderLevelEvent({ eventName: "WTT Contender Almaty 2026" }), true);
+  assert.equal(isWttContenderLevelEvent({ eventName: "WTT Contender Panagyurishte 2026 Presented by ASAREL" }), true);
+  assert.equal(isWttContenderLevelEvent({ eventName: "WTT Star Contender Doha 2026" }), false);
+  assert.equal(isWttContenderLevelEvent({ eventName: "WTT Youth Contender Tunis 2026" }), false);
+  assert.equal(isWttContenderLevelEvent({ eventName: "WTT Champions Macao 2026" }), false);
+  assert.equal(isWttContenderLevelEvent({ eventName: "Europe Smash - Sweden 2026" }), false);
+  assert.equal(isWttContenderLevelEvent({}), false);
+
+  assert.equal(isWttFinalRound("Men's Singles - Final - Match 1"), true);
+  assert.equal(isWttFinalRound("Men's Singles Final"), true);
+  assert.equal(isWttFinalRound("Men's Singles - Semifinal - Match 1"), false);
+  assert.equal(isWttFinalRound("Men's Singles - Quarterfinal - Match 3"), false);
+  assert.equal(isWttFinalRound("Men's Singles - Round of 16 - Match 7"), false);
+  assert.equal(isWttFinalRound(""), false);
+});
+
+test("WTT Contender fixtures keep only the final while other tiers keep the whole R16+ set", async () => {
+  const now = new Date("2026-08-14T00:00:00.000Z");
+  const rounds = [
+    "Men's Singles - Round of 16 - Match 1",
+    "Men's Singles - Quarterfinal - Match 1",
+    "Men's Singles - Semifinal - Match 1",
+    "Men's Singles - Final - Match 1",
+  ];
+  const events = [
+    { eventId: 9101, eventName: "WTT Contender Testville 2026", event_Tier_name: "WTT Series", startDateTime: "2026-08-15T00:00:00", endDateTime: "2026-08-20T00:00:00", timeZoneId: 53 },
+    { eventId: 9102, eventName: "WTT Champions Testville 2026", event_Tier_name: "WTT Series", startDateTime: "2026-08-15T00:00:00", endDateTime: "2026-08-20T00:00:00", timeZoneId: 53 },
+    { eventId: 9103, eventName: "WTT Star Contender Testville 2026", event_Tier_name: "WTT Series", startDateTime: "2026-08-15T00:00:00", endDateTime: "2026-08-20T00:00:00", timeZoneId: 53 },
+  ];
+  const buildSchedule = () => [{ Competition: { Unit: rounds.map((round, index) => ({
+    Code: `m${index}`,
+    StartDate: `2026-08-1${5 + index}T10:00:00`,
+    SubEvent: "Men's Singles",
+    ItemDescription: [{ Language: "ENG", Value: round }],
+    StartList: { Start: [
+      { StartOrder: 1, Competitor: { Description: { TeamName: "PLAYER A" } } },
+      { StartOrder: 2, Competitor: { Description: { TeamName: "PLAYER B" } } },
+    ] },
+  })) } }];
+
+  const fetchStub = async (url) => {
+    const value = String(url);
+    if (value.includes("wtt_upcoming_only_events_list.json")) {
+      return new Response(JSON.stringify(events), { status: 200 });
+    }
+    if (value.includes("take_10_official_results.json")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    return new Response(JSON.stringify(buildSchedule()), { status: 200 });
+  };
+
+  const data = await loadWttCalendarData(fetchStub, now);
+  const byEvent = (id) => data.missions
+    .filter(mission => String(mission.missionUrl).includes(`eventId=${id}`))
+    .map(mission => mission.missionType);
+
+  assert.deepEqual(byEvent(9101), ["Men's Singles - Final - Match 1"]);
+  assert.deepEqual(byEvent(9102), rounds);
+  assert.deepEqual(byEvent(9103), rounds);
+
+  const feed = buildTopicCalendarFeed("wtt", data);
+  assert.equal((feed.match(/BEGIN:VEVENT/g) || []).length, 9);
+  assert.match(feed, /UID:wtt-9101-m3@calendarhub.local/);
+  assert.equal(feed.includes("UID:wtt-9101-m0@calendarhub.local"), false);
 });
 
 test("normalizeWttOfficialResult parses completed match, scores, winner, and game breakdown", () => {
