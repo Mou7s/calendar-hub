@@ -59,7 +59,8 @@
       "closeMenu": "Close menu",
       "calendars": "Calendars",
       "subscriptions": "Subscriptions",
-      "language": "Language"
+      "language": "Language",
+      "layerColor": "Change {name} layer color"
     },
     "title": "Browse calendars and events by month",
     "viewDay": "Day",

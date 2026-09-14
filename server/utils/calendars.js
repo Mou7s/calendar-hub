@@ -14,6 +14,12 @@ export const WTT_MAIN_SERIES_TIER = 'WTT Series'
 export const DOTA2_MATCHES_SOURCE_URL = 'https://liquipedia.net/dota2/api.php'
 export const DOTA2_MATCHES_PAGE = 'Liquipedia:Matches'
 export const DOTA2_MATCHES_USER_AGENT = 'CalendarHub/1.0 (https://calendarhub.mou7s.com/)'
+// 锦标赛元数据（举办地 + Tier）在 KV 中的缓存键。Tier/举办地几乎不变，
+// 长 TTL 让 Worker 抓取抖动时仍能按缓存执行 Tier 1 过滤，而不是静默放行全量比赛。
+export const DOTA2_TOURNAMENT_META_CACHE_KEY = 'calendar:dota2:tournament-meta'
+export const DOTA2_TOURNAMENT_META_TTL_SECONDS = 7 * 24 * 60 * 60
+// 锦标赛页逐个串行抓取时的间隔，避免突发并行被 Liquipedia 限流。
+export const DOTA2_VENUE_FETCH_DELAY_MS = 150
 
 export const CALENDAR_TOPICS = [
   {
@@ -228,12 +234,14 @@ export function parseDota2Matches(html, now = new Date(), venuesByTournamentPath
       : `https://liquipedia.net/dota2/${encodeURIComponent(DOTA2_MATCHES_PAGE)}`
 
     // 举办地：优先用锦标赛页 infobox 的 Location，未抓到时回退 Online
-    // 仅保留 Tier 1（当有 Tier 元数据时；无元数据时为兼容旧测试不过滤）
+    // 只过滤已确认为非 Tier 1 的锦标赛；未知锦标赛（无元数据）放行。
+    // Worker 上锦标赛页抓取失败时旧的 size>0 判定会被静默绕过，导致全量 Tier3
+    // 泄漏到线上日历——配合 KV 缓存的元数据与逐项未知放行堵住这个缺口。
     const venueLookupKey = decodeURIComponent(tournamentPath.split('#')[0])
     const metaRaw = venuesByTournamentPath.get(venueLookupKey)
-    const metaObj = typeof metaRaw === 'string' ? { venue: metaRaw, tier: '' } : (metaRaw || { venue: '', tier: '' })
-    if (venuesByTournamentPath.size > 0 && !isDota2Tier1(metaObj.tier)) continue
-    const launchSite = metaObj.venue || 'Online'
+    const metaObj = typeof metaRaw === 'string' ? { venue: metaRaw, tier: '' } : (metaRaw || null)
+    if (metaObj && !isDota2Tier1(metaObj.tier)) continue
+    const launchSite = metaObj?.venue || 'Online'
 
     const matchId = block.match(/(?:[?&]title=|title=)Match:([^&"\s]+)/i)?.[1]
     const matchKey = matchId || [timestamp, opponents[0], opponents[1], tournamentName].join('-')
@@ -769,7 +777,7 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
   return buildTopicCalendarData('wtt', items)
 }
 
-export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date()) {
+export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date(), options = {}) {
   const params = new URLSearchParams({
     action: 'parse',
     format: 'json',
@@ -796,11 +804,32 @@ export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date())
 
   // Matches 页的 match 卡片不携带举办地。按锦标赛页面并发抓取 infobox Location 补齐，
   // 失败的比赛回退 'Online'，不影响主数据。
-  let venuesByTournamentPath = new Map()
+  // 锦标赛元数据走 KV 长缓存：抓取抖动时仍能按缓存执行 Tier 1 过滤；
+  // 全失败则回退到缓存（而非空 map，避免 Tier 口径被静默绕过）。
+  const kv = options?.kv || null
+  let cachedMeta = new Map()
+  if (kv) {
+    try {
+      cachedMeta = await loadCachedDota2TournamentMeta(kv)
+    } catch {
+      cachedMeta = new Map()
+    }
+  }
+  let venuesByTournamentPath = new Map(cachedMeta)
   try {
-    venuesByTournamentPath = await loadDota2TournamentVenues(html, fetchImpl)
+    venuesByTournamentPath = await loadDota2TournamentVenues(html, fetchImpl, {
+      cachedMeta,
+      delayMs: options?.venueDelayMs ?? DOTA2_VENUE_FETCH_DELAY_MS
+    })
   } catch {
-    venuesByTournamentPath = new Map()
+    venuesByTournamentPath = new Map(cachedMeta)
+  }
+  if (kv) {
+    try {
+      await saveCachedDota2TournamentMeta(kv, venuesByTournamentPath)
+    } catch {
+      // 元数据缓存失败不影响主数据
+    }
   }
 
   return buildTopicCalendarData('dota2', parseDota2Matches(html, now, venuesByTournamentPath))
@@ -831,7 +860,44 @@ export function extractDota2TierFromInfobox(pageHtml) {
   return decodeHtmlText(raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
 }
 
-async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+/** 从 KV 读取已缓存的锦标赛元数据（路径 -> { venue, tier }），损坏或缺失时返回空 Map。 */
+export async function loadCachedDota2TournamentMeta(kv) {
+  if (!kv || typeof kv.get !== 'function') return new Map()
+  const stored = await kv.get(DOTA2_TOURNAMENT_META_CACHE_KEY)
+  if (!stored || typeof stored !== 'object') return new Map()
+  const meta = new Map()
+  for (const [path, entry] of Object.entries(stored)) {
+    if (typeof path !== 'string' || !path.startsWith('/dota2/')) continue
+    if (typeof entry === 'string') {
+      if (entry) meta.set(path, { venue: entry, tier: '' })
+      continue
+    }
+    if (!entry || typeof entry !== 'object') continue
+    const venue = typeof entry.venue === 'string' ? entry.venue : ''
+    const tier = typeof entry.tier === 'string' ? entry.tier : ''
+    if (venue || tier) meta.set(path, { venue, tier })
+  }
+  return meta
+}
+
+/** 把锦标赛元数据合并写回 KV（新抓到的覆盖缓存），供下次抓取失败时兜底过滤。 */
+export async function saveCachedDota2TournamentMeta(kv, metaMap) {
+  if (!kv || typeof kv.get !== 'function' || typeof kv.set !== 'function') return
+  if (!(metaMap instanceof Map) || metaMap.size === 0) return
+  const stored = await kv.get(DOTA2_TOURNAMENT_META_CACHE_KEY)
+  const merged = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? { ...stored } : {}
+  for (const [path, entry] of metaMap) {
+    if (typeof path !== 'string' || !path.startsWith('/dota2/')) continue
+    const venue = typeof entry?.venue === 'string' ? entry.venue : (typeof entry === 'string' ? entry : '')
+    const tier = typeof entry?.tier === 'string' ? entry.tier : ''
+    if (venue || tier) merged[path] = { venue, tier }
+  }
+  await kv.set(DOTA2_TOURNAMENT_META_CACHE_KEY, merged, { ttl: DOTA2_TOURNAMENT_META_TTL_SECONDS })
+}
+
+export async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl, options = {}) {
   const tournamentPaths = new Set()
 
   for (const block of getDota2MatchBlocks(matchTickerHtml)) {
@@ -847,10 +913,20 @@ async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
     }
   }
 
-  const limitedPaths = Array.from(tournamentPaths).slice(0, DOTA2_VENUE_FETCH_LIMIT)
-  const venues = new Map()
+  // 缓存优先：只抓缓存里缺失或 Tier 未知的锦标赛；串行 + 间隔，
+  // 避免 Worker 出口 IP 一次性突发几十个子请求被 Liquipedia 限流
+  // （全失败会导致元数据 map 为空，Tier 口径被绕过）。
+  const cachedMeta = options.cachedMeta instanceof Map ? options.cachedMeta : new Map()
+  const delayMs = options.delayMs ?? DOTA2_VENUE_FETCH_DELAY_MS
+  const uncachedPaths = Array.from(tournamentPaths).filter((path) => {
+    const entry = cachedMeta.get(path)
+    const tier = typeof entry?.tier === 'string' ? entry.tier : ''
+    return !entry || !tier
+  }).slice(0, DOTA2_VENUE_FETCH_LIMIT)
+  const venues = new Map(cachedMeta)
 
-  await Promise.all(limitedPaths.map(async path => {
+  for (const path of uncachedPaths) {
+    if (delayMs > 0) await sleep(delayMs)
     try {
       // 子页（如 .../2026/Main_Event）的 infobox 往往没有 Location，
       // 真实举办地写在父页（如 .../2026）。逐级向上最多回退一次。
@@ -886,7 +962,7 @@ async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
           const existing = venues.get(path) || { venue: '', tier: '' }
           const merged = { venue: venue || existing.venue, tier: tier || existing.tier }
           venues.set(path, merged)
-          // 拿到 venue+ tier 就不用再回退父页
+          // 拿到 venue + tier 就不用再回退父页
           if (merged.venue && merged.tier) break
           // 只拿到其中一个则继续尝试父页补全
           if (!merged.venue || !merged.tier) continue
@@ -894,9 +970,10 @@ async function loadDota2TournamentVenues(matchTickerHtml, fetchImpl) {
         }
       }
     } catch {
-      // 单个锦标赛页面失败不影响其余场次
+      // 单个锦标赛页面失败不影响其余场次；未知锦标赛在解析阶段放行，
+      // 下次刷新（缓存 TTL 内）会再次尝试抓取其元数据。
     }
-  }))
+  }
 
   return venues
 }
@@ -1007,7 +1084,7 @@ const STATIC_TOPIC_DATA = {
 /**
  * 根据 Topic ID 获取主题日历数据（SpaceX 实时 API 或预设数据）
  */
-export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
+export async function getTopicCalendarData(topicId, fetchImpl = fetch, options = {}) {
   if (topicId === 'spacex') {
     return await loadLaunchData(fetchImpl);
   }
@@ -1017,7 +1094,7 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch) {
   }
 
   if (topicId === 'dota2') {
-    return await loadDota2CalendarData(fetchImpl)
+    return await loadDota2CalendarData(fetchImpl, new Date(), options)
   }
 
   return buildTopicCalendarData(topicId, STATIC_TOPIC_DATA[topicId] || []);

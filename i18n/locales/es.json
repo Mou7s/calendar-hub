@@ -59,7 +59,8 @@
       "closeMenu": "Cerrar menú",
       "calendars": "Calendarios",
       "subscriptions": "Suscripciones",
-      "language": "Idioma"
+      "language": "Idioma",
+      "layerColor": "Cambiar el color de la capa {name}"
     },
     "title": "Ver calendarios y eventos por mes",
     "viewDay": "Día",

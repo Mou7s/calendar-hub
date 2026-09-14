@@ -58,7 +58,8 @@
       "openMenu": "打开菜单",
       "closeMenu": "关闭菜单",
       "calendars": "日历图层",
-      "language": "语言"
+      "language": "语言",
+      "layerColor": "更改 {name} 的图层颜色"
     },
     "title": "按月浏览日历与事件",
     "viewDay": "日",

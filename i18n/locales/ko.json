@@ -59,7 +59,8 @@
       "closeMenu": "메뉴 닫기",
       "calendars": "캘린더",
       "subscriptions": "구독",
-      "language": "언어"
+      "language": "언어",
+      "layerColor": "{name} 레이어 색상 변경"
     },
     "title": "월별 캘린더 및 이벤트 보기",
     "viewDay": "일",

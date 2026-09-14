@@ -1,5 +1,5 @@
 import { getCalendarFromKv } from '../utils/calendar-sync.js'
-import { getCachedData } from '../utils/kv.js'
+import { getCachedData, getKvStorage } from '../utils/kv.js'
 import { loadGlobalLaunches } from '../utils/launches.js'
 import { loadHistoryLaunchData } from '../utils/spacex.js'
 import { getTopicCalendarData } from '../utils/calendars.js'
@@ -73,12 +73,14 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
   }
 
   // 各源独立降级：单个源失败不拖累其它图层
+  // Dota 2 锦标赛 Tier 元数据走 KV 长缓存：Worker 抓取抖动时仍能执行 Tier 1 过滤
+  const dota2Kv = getKvStorage((event as any).context?.cloudflare?.env || {})
   const settled = await Promise.allSettled([
     getCalendarFromKv(event, 'spacex', loadGlobalLaunches),
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
     getCalendarFromKv(event, 'f1', (fetchImpl: typeof fetch) => getTopicCalendarData('f1', fetchImpl)),
     getCachedData(event, 'calendar_topic_wtt', (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl)),
-    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl))
+    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
   ])
 
   const pools: Array<{ result: PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: string }> = [

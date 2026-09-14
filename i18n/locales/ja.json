@@ -59,7 +59,8 @@
       "closeMenu": "メニューを閉じる",
       "calendars": "カレンダー",
       "subscriptions": "購読",
-      "language": "言語"
+      "language": "言語",
+      "layerColor": "{name} のレイヤー色を変更"
     },
     "title": "カレンダーとイベントを月別に表示",
     "viewDay": "日",

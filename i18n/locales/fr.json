@@ -59,7 +59,8 @@
       "closeMenu": "Fermer le menu",
       "calendars": "Calendriers",
       "subscriptions": "Abonnements",
-      "language": "Langue"
+      "language": "Langue",
+      "layerColor": "Changer la couleur du calque {name}"
     },
     "title": "Parcourir les calendriers et événements par mois",
     "viewDay": "Jour",

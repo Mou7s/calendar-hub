@@ -11,8 +11,11 @@ import fixUrlMiddleware from "../server/middleware/fix-url.js";
 import {
   buildTopicCalendarFeed,
   getTopicCalendarData,
+  loadCachedDota2TournamentMeta,
   loadDota2CalendarData,
+  loadDota2TournamentVenues,
   loadWttCalendarData,
+  saveCachedDota2TournamentMeta,
   isWttContenderLevelEvent,
   isWttFinalRound,
   normalizeWttDate,
@@ -1519,6 +1522,104 @@ test("Dota 2 venue extraction falls back to Online when the tournament page has 
 
   assert.equal(data.missions.length, 1);
   assert.equal(data.missions[0].launchSite, "Online");
+});
+
+test("Dota 2 parser drops known Tier 3 tournaments but keeps unknown ones", () => {
+  const now = new Date("2026-08-20T00:00:00.000Z");
+  const venues = new Map([
+    ["/dota2/The_International/2026", { venue: "Shanghai", tier: "Tier 1" }],
+    ["/dota2/Old_Tournament", { venue: "Online", tier: "Tier 3" }],
+  ]);
+  const matches = parseDota2Matches(sampleDota2MatchHtml, now, venues);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
+
+  // 未知锦标赛（无元数据）放行：Worker 抓取失败时不误删未知赛事
+  const unknownOnly = parseDota2Matches(
+    sampleDota2MatchHtml,
+    now,
+    new Map([["/dota2/Some_Other_Cup", { venue: "Berlin", tier: "Tier 1" }]]),
+  );
+  assert.equal(unknownOnly.length, 1);
+  assert.equal(unknownOnly[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
+});
+
+test("Dota 2 venue loader serves cached tournaments without refetching", async () => {
+  const fetchedPages = [];
+  const tier3Infobox = `<div><div class="infobox-cell-2 infobox-description">Tier:</div><div>Tier 3</div></div><div><div class="infobox-cell-2 infobox-description">Location:</div><div>Berlin</div></div>`;
+  const venues = await loadDota2TournamentVenues(
+    sampleDota2MatchHtml,
+    async (input) => {
+      fetchedPages.push(new URL(String(input)).searchParams.get("page"));
+      return new Response(
+        JSON.stringify({ parse: { text: tier3Infobox } }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+    {
+      cachedMeta: new Map([["/dota2/The_International/2026", { venue: "Shanghai", tier: "Tier 1" }]]),
+      delayMs: 0,
+    },
+  );
+
+  assert.equal(venues.get("/dota2/The_International/2026")?.tier, "Tier 1");
+  assert.ok(!fetchedPages.some((p) => String(p).includes("The_International")), "cached tournament must not be refetched");
+  assert.ok(fetchedPages.some((p) => String(p).includes("Old_Tournament")), "uncached tournament must be fetched");
+  assert.equal(venues.get("/dota2/Old_Tournament")?.venue, "Berlin");
+  assert.equal(venues.get("/dota2/Old_Tournament")?.tier, "Tier 3");
+});
+
+test("Dota 2 tournament meta survives a KV round-trip", async () => {
+  const store = new Map();
+  const kv = {
+    get: async (key) => store.get(key) ?? null,
+    set: async (key, value) => { store.set(key, JSON.parse(JSON.stringify(value))); },
+  };
+
+  await saveCachedDota2TournamentMeta(
+    kv,
+    new Map([["/dota2/The_International/2026", { venue: "Shanghai", tier: "Tier 1" }]]),
+  );
+  const loaded = await loadCachedDota2TournamentMeta(kv);
+  assert.equal(loaded.get("/dota2/The_International/2026")?.venue, "Shanghai");
+  assert.equal(loaded.get("/dota2/The_International/2026")?.tier, "Tier 1");
+
+  // 脏数据不炸：非法路径与空条目被丢弃
+  store.set("calendar:dota2:tournament-meta", { "/x": 123, "/dota2/Ok": { venue: "", tier: "Tier 3" } });
+  const reloaded = await loadCachedDota2TournamentMeta(kv);
+  assert.equal(reloaded.size, 1);
+  assert.equal(reloaded.get("/dota2/Ok")?.tier, "Tier 3");
+
+  assert.equal((await loadCachedDota2TournamentMeta(null)).size, 0);
+});
+
+test("Dota 2 loader still filters Tier 3 when tournament page fetches fail but KV meta exists", async () => {
+  // 线上事故重演：锦标赛页全被限流（429），靠 KV 缓存仍只保留 Tier 1。
+  // now 取 2026-08-18T12:00Z：未来场 + 完场 15 小时内（48h 保留期内）的 Old 场共存。
+  const store = new Map(Object.entries({
+    "calendar:dota2:tournament-meta": {
+      "/dota2/The_International/2026": { venue: "Shanghai", tier: "Tier 1" },
+      "/dota2/Old_Tournament": { venue: "Online", tier: "Tier 3" },
+    },
+  }));
+  const kv = {
+    get: async (key) => store.get(key) ?? null,
+    set: async (key, value) => { store.set(key, JSON.parse(JSON.stringify(value))); },
+  };
+
+  const data = await loadDota2CalendarData(async (input) => {
+    if (/page=Liquipedia%3AMatches/.test(String(input))) {
+      return new Response(
+        JSON.stringify({ parse: { text: sampleDota2MatchHtml } }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }
+    return new Response("throttled", { status: 429 });
+  }, new Date("2026-08-18T12:00:00.000Z"), { kv, venueDelayMs: 0 });
+
+  assert.equal(data.missions.length, 1);
+  assert.equal(data.missions[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
+  assert.equal(data.missions[0].launchSite, "Shanghai");
 });
 
 const officialF1Rows = [

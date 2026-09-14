@@ -1,6 +1,8 @@
 import { addDays, startOfDay } from 'date-fns'
 import { FetchError } from 'ofetch'
 
+import { CALENDAR_LAYER_COLORS_KEY, isCalendarLayerColor, resolveCalendarLayerColor } from '~/utils/calendar-colors'
+
 interface EventOverlay {
   created: Record<string, CalendarEvent>
   updated: Record<string, CalendarEvent>
@@ -30,7 +32,7 @@ const _useCalendarEvents = () => {
   const nuxtApp = useNuxtApp()
   const toast = useToast()
 
-  const { data: calendars } = useFetch<Calendar[]>('/api/calendars', {
+  const { data: calendarsData } = useFetch<Calendar[]>('/api/calendars', {
     key: 'calendars',
     default: () => [],
     getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
@@ -42,6 +44,26 @@ const _useCalendarEvents = () => {
     hiddenCalendars.value = hiddenCalendars.value.includes(id)
       ? hiddenCalendars.value.filter(hidden => hidden !== id)
       : [...hiddenCalendars.value, id]
+  }
+
+  // 图层颜色：服务端下发的是默认值，用户在侧边栏另选的颜色存 localStorage，
+  // 这里合并后返回——所有读 `calendars` 的地方（事件块、搜索面板、图层列表）
+  // 自动拿到覆盖后的颜色，无需逐处改
+  const calendarColorOverrides = useLocalStorage<Record<string, Calendar['color']>>(CALENDAR_LAYER_COLORS_KEY, {})
+
+  const calendars = computed<Calendar[]>(() =>
+    (calendarsData.value ?? []).map(calendar => ({
+      ...calendar,
+      color: resolveCalendarLayerColor(calendar.color, calendarColorOverrides.value[calendar.id])
+    }))
+  )
+
+  function setCalendarColor(id: string, color: Calendar['color']) {
+    if (!isCalendarLayerColor(color)) {
+      return
+    }
+
+    calendarColorOverrides.value = { ...calendarColorOverrides.value, [id]: color }
   }
 
   // One cached fetch per visible range: revisiting a range renders instantly
@@ -351,6 +373,7 @@ const _useCalendarEvents = () => {
     calendars,
     hiddenCalendars,
     toggleCalendar,
+    setCalendarColor,
     events,
     eventsForDay,
     eventsForDays,

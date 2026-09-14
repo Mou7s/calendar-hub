@@ -59,7 +59,8 @@
       "closeMenu": "Menü schließen",
       "calendars": "Kalender",
       "subscriptions": "Abonnements",
-      "language": "Sprache"
+      "language": "Sprache",
+      "layerColor": "Ebenenfarbe von {name} ändern"
     },
     "title": "Kalender und Ereignisse nach Monat durchsuchen",
     "viewDay": "Tag",
