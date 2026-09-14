@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Fermer"
+  },
   "meta": {
     "title": "Calendar Hub | Abonnements de calendriers Webcal",
     "description": "Abonnez-vous aux calendriers de lancements, courses et autres événements via des liens Webcal ou ICS."
@@ -15,6 +18,17 @@
     "copyBtn": "Copier",
     "buttonLabel": "S'abonner au calendrier",
     "buttonShort": "S'abonner"
+  },
+  "settings": {
+    "label": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "appearance": "Apparence",
+    "system": "Suivre l'appareil",
+    "primary": "Principale",
+    "neutral": "Neutre",
+    "light": "Clair",
+    "dark": "Sombre"
   },
   "hero": {
     "eyebrow": "Flux de calendrier en direct",
@@ -39,6 +53,10 @@
   },
   "calendar": {
     "sidebar": {
+      "home": "Accueil",
+      "search": "Rechercher",
+      "openMenu": "Ouvrir le menu",
+      "closeMenu": "Fermer le menu",
       "calendars": "Calendriers",
       "subscriptions": "Abonnements",
       "language": "Langue"
@@ -49,6 +67,20 @@
     "viewWeek": "Semaine",
     "viewMonth": "Mois",
     "today": "Aujourd'hui",
+    "allDay": "Toute la journée",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "offline": {
+      "hint": "Les modifications sont conservées localement et synchronisées à la reconnexion",
+      "badge": "Hors ligne",
+      "badgeWithCount": "Hors ligne ({count})"
+    },
+    "search": {
+      "placeholder": "Rechercher des événements, changer de vue...",
+      "goToToday": "Aller à aujourd'hui",
+      "views": "Vues",
+      "events": "Événements"
+    },
     "timezone": "Fuseau horaire",
     "filterF1": "F1",
     "f1": {
@@ -57,6 +89,16 @@
     },
     "filterWTT": "WTT Tennis de table",
     "filterDota2": "Dota 2",
+    "dota2": {
+      "format": "Format",
+      "venue": "Lieu",
+      "scoreboard": "Tableau d'affichage",
+      "finished": "Résultat officiel",
+      "finalScore": "Score final",
+      "score": "Score",
+      "winner": "Vainqueur",
+      "games": "Scores des sets"
+    },
     "wtt": {
       "match": "Discipline",
       "venue": "Lieu",

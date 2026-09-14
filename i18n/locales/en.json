@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Close"
+  },
   "meta": {
     "title": "Calendar Hub | Multi-Calendar Webcal Subscriptions",
     "description": "Subscribe to public calendars for launches, races, and other events through Webcal or ICS links."
@@ -15,6 +18,17 @@
     "copyBtn": "Copy",
     "buttonLabel": "Subscribe Calendar",
     "buttonShort": "Subscribe"
+  },
+  "settings": {
+    "label": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "appearance": "Appearance",
+    "system": "Follow device",
+    "primary": "Primary",
+    "neutral": "Neutral",
+    "light": "Light",
+    "dark": "Dark"
   },
   "hero": {
     "eyebrow": "Live Calendar Feed",
@@ -39,6 +53,10 @@
   },
   "calendar": {
     "sidebar": {
+      "home": "Home",
+      "search": "Search",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu",
       "calendars": "Calendars",
       "subscriptions": "Subscriptions",
       "language": "Language"
@@ -49,6 +67,20 @@
     "viewWeek": "Week",
     "viewMonth": "Month",
     "today": "Today",
+    "allDay": "All-day",
+    "previous": "Previous",
+    "next": "Next",
+    "offline": {
+      "hint": "Changes are stored locally and sync when you reconnect",
+      "badge": "Offline",
+      "badgeWithCount": "Offline ({count})"
+    },
+    "search": {
+      "placeholder": "Search events, switch views...",
+      "goToToday": "Go to today",
+      "views": "Views",
+      "events": "Events"
+    },
     "timezone": "Time zone",
     "filterF1": "F1",
     "f1": {

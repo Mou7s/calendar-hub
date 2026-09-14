@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "Schließen"
+  },
   "meta": {
     "title": "Calendar Hub | Kalender per Webcal abonnieren",
     "description": "Abonniere Kalender für Starts, Rennen und andere Ereignisse über Webcal- oder ICS-Links."
@@ -15,6 +18,17 @@
     "copyBtn": "Kopieren",
     "buttonLabel": "Kalender abonnieren",
     "buttonShort": "Abonnieren"
+  },
+  "settings": {
+    "label": "Einstellungen",
+    "language": "Sprache",
+    "theme": "Design",
+    "appearance": "Darstellung",
+    "system": "Gerät folgen",
+    "primary": "Primär",
+    "neutral": "Neutral",
+    "light": "Hell",
+    "dark": "Dunkel"
   },
   "hero": {
     "eyebrow": "Live-Kalenderfeed",
@@ -39,6 +53,10 @@
   },
   "calendar": {
     "sidebar": {
+      "home": "Startseite",
+      "search": "Suchen",
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schließen",
       "calendars": "Kalender",
       "subscriptions": "Abonnements",
       "language": "Sprache"
@@ -49,6 +67,20 @@
     "viewWeek": "Woche",
     "viewMonth": "Monat",
     "today": "Heute",
+    "allDay": "Ganztägig",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "offline": {
+      "hint": "Änderungen bleiben lokal gespeichert und werden bei Verbindung synchronisiert",
+      "badge": "Offline",
+      "badgeWithCount": "Offline ({count})"
+    },
+    "search": {
+      "placeholder": "Ereignisse suchen, Ansicht wechseln...",
+      "goToToday": "Zu heute",
+      "views": "Ansichten",
+      "events": "Ereignisse"
+    },
     "timezone": "Zeitzone",
     "filterF1": "F1",
     "f1": {
@@ -57,6 +89,16 @@
     },
     "filterWTT": "WTT Tischtennis",
     "filterDota2": "Dota 2",
+    "dota2": {
+      "format": "Format",
+      "venue": "Austragungsort",
+      "scoreboard": "Spielstandsanzeige",
+      "finished": "Offizielles Ergebnis",
+      "finalScore": "Endergebnis",
+      "score": "Ergebnis",
+      "winner": "Sieger",
+      "games": "Satzergebnisse"
+    },
     "wtt": {
       "match": "Disziplin",
       "venue": "Austragungsort",

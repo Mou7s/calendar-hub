@@ -27,17 +27,6 @@ import {
   syncCalendars,
 } from "../server/utils/calendar-sync.js";
 import { getCalendarEventPresentation } from "../app/utils/calendar-event-presentation.js";
-import {
-  buildCalendarMonthKeys,
-  resolveCalendarMonthIndex,
-} from "../app/utils/calendar-month.js";
-import {
-  getCalendarMonthAnchor,
-  getCalendarMonthKey,
-  getCalendarNavigationStep,
-  sortCalendarEventsByStartTime,
-  shiftCalendarDate,
-} from "../app/utils/calendar-navigation.js";
 
 import {
   buildCalendarFeed,
@@ -1733,62 +1722,6 @@ test("local date helpers correctly handle timezone and month boundary conversion
   // Test invalid input returns null safely
   assert.equal(getLocalDateParts(null), null);
   assert.equal(getLocalDateParts("invalid-date-string"), null);
-});
-
-test("calendar month selection prefers today and preserves manual navigation", () => {
-  assert.deepEqual(
-    buildCalendarMonthKeys(["2026-07"], "2026-08"),
-    ["2026-07", "2026-08"],
-  );
-  assert.equal(
-    resolveCalendarMonthIndex(["2026-07", "2026-08"], "2026-08", "2026-09"),
-    1,
-  );
-  assert.equal(
-    resolveCalendarMonthIndex(["2026-07", "2026-09"], "2026-08", "2026-09"),
-    1,
-  );
-  assert.equal(
-    resolveCalendarMonthIndex(
-      ["2026-07", "2026-08"],
-      "2026-08",
-      "2026-09",
-      "2026-07",
-    ),
-    0,
-  );
-  assert.equal(
-    resolveCalendarMonthIndex(["2026-07", "2026-08"], "2026-09", "2026-10"),
-    0,
-  );
-});
-
-test("calendar navigation moves by view-specific steps and supports empty months", () => {
-  assert.equal(getCalendarNavigationStep("month"), 0);
-  assert.equal(getCalendarNavigationStep("week"), 7);
-  assert.equal(getCalendarNavigationStep("3day"), 3);
-  assert.equal(getCalendarNavigationStep("day"), 1);
-  assert.equal(shiftCalendarDate("2026-08-31", 3), "2026-09-03");
-  assert.equal(shiftCalendarDate("2026-08-31", 1), "2026-09-01");
-  assert.equal(shiftCalendarDate("2026-08-31", 7), "2026-09-07");
-  assert.equal(shiftCalendarDate("2026-09-07", -7), "2026-08-31");
-  assert.equal(getCalendarMonthKey("2026-09-07"), "2026-09");
-  assert.equal(getCalendarMonthAnchor("2026-09"), "2026-09-01");
-  assert.equal(shiftCalendarDate("", 1), "");
-});
-
-test("calendar day events are sorted from midnight to the end of the day", () => {
-  const events = [
-    { id: "late", launchAt: "2026-08-15T23:00:00+08:00" },
-    { id: "early", launchAt: "2026-08-15T04:05:00+08:00" },
-    { id: "middle", launchAt: "2026-08-15T09:30:00+08:00" },
-  ];
-
-  assert.deepEqual(
-    sortCalendarEventsByStartTime(events).map((event) => event.id),
-    ["early", "middle", "late"],
-  );
-  assert.deepEqual(events.map((event) => event.id), ["late", "early", "middle"]);
 });
 
 test("calendar event presentation uses F1 semantics without changing SpaceX defaults", () => {

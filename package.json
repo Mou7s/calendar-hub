@@ -10,13 +10,18 @@
     "preview:worker": "bun run build && bunx wrangler dev --config .output/server/wrangler.json",
     "deploy:worker": "bun run build && bunx wrangler deploy --config .output/server/wrangler.json",
     "test": "bun test",
-    "translate:locales": "bun scripts/translate-locales.js"
+    "typecheck": "nuxt typecheck",
+    "translate:locales": "bun scripts/translate-locales.js",
+    "generate:theme-colors": "node scripts/generate-theme-colors.js"
   },
   "dependencies": {
-    "@nuxt/image": "^2.1.0",
+    "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "^4.11.1",
     "@nuxthub/core": "^0.10.8",
     "@nuxtjs/i18n": "^10.6.0",
+    "@vueuse/core": "^14.4.0",
+    "@vueuse/nuxt": "^14.4.0",
+    "date-fns": "^4.4.0",
     "h3": "^1.15.11",
     "nuxt": "^4.5.2"
   },
@@ -26,6 +31,8 @@
     "@iconify-json/simple-icons": "^1.2.95",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.11",
     "wrangler": "^4.130.0"
   }
 }

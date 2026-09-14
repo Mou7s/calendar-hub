@@ -1,4 +1,7 @@
 {
+  "common": {
+    "close": "닫기"
+  },
   "meta": {
     "title": "Calendar Hub | Webcal 캘린더 구독",
     "description": "발사 일정, 레이스 및 다양한 주제의 캘린더를 Webcal 또는 ICS 링크로 구독하세요."
@@ -15,6 +18,17 @@
     "copyBtn": "복사",
     "buttonLabel": "달력 구독",
     "buttonShort": "구독"
+  },
+  "settings": {
+    "label": "설정",
+    "language": "언어",
+    "theme": "테마",
+    "appearance": "화면 모드",
+    "system": "기기 설정 따르기",
+    "primary": "기본 색상",
+    "neutral": "중립 색상",
+    "light": "라이트",
+    "dark": "다크"
   },
   "hero": {
     "eyebrow": "실시간 캘린더 피드",
@@ -39,6 +53,10 @@
   },
   "calendar": {
     "sidebar": {
+      "home": "홈",
+      "search": "검색",
+      "openMenu": "메뉴 열기",
+      "closeMenu": "메뉴 닫기",
       "calendars": "캘린더",
       "subscriptions": "구독",
       "language": "언어"
@@ -49,6 +67,20 @@
     "viewWeek": "주",
     "viewMonth": "월",
     "today": "오늘",
+    "allDay": "종일",
+    "previous": "이전",
+    "next": "다음",
+    "offline": {
+      "hint": "변경 사항은 기기에 저장되고 연결되면 동기화됩니다",
+      "badge": "오프라인",
+      "badgeWithCount": "오프라인 ({count})"
+    },
+    "search": {
+      "placeholder": "이벤트 검색, 보기 전환...",
+      "goToToday": "오늘로 이동",
+      "views": "보기",
+      "events": "이벤트"
+    },
     "timezone": "시간대",
     "filterF1": "F1",
     "f1": {
@@ -57,6 +89,16 @@
     },
     "filterWTT": "WTT 탁구",
     "filterDota2": "Dota 2",
+    "dota2": {
+      "format": "형식",
+      "venue": "경기장",
+      "scoreboard": "경기 스코어보드",
+      "finished": "경기 종료",
+      "finalScore": "최종 스코어",
+      "score": "스코어",
+      "winner": "승자",
+      "games": "세트 스코어"
+    },
     "wtt": {
       "match": "경기 종목",
       "venue": "경기장",
