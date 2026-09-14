@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.2.2",
+  "packageManager": "bun@1.4.0",
   "scripts": {
     "dev": "node node_modules/nuxt/bin/nuxt.mjs dev --host",
     "build": "bun install && nuxt build",
