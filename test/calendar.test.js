@@ -1849,6 +1849,61 @@ test("calendar event presentation uses F1 semantics without changing SpaceX defa
     vehicleIcon: "i-lucide-trophy",
     locationIcon: "i-lucide-map-pin",
   });
+
+  assert.deepEqual(getCalendarEventPresentation({ calendarId: "asian-games-tt" }), {
+    vehicleLabelKey: "calendar.asianGamesTt.phase",
+    locationLabelKey: "calendar.asianGamesTt.venue",
+    scoreLabelKey: "calendar.asianGamesTt.score",
+    winnerLabelKey: "calendar.asianGamesTt.winner",
+    gamesLabelKey: "calendar.asianGamesTt.games",
+    vehicleIcon: "i-lucide-trophy",
+    locationIcon: "i-lucide-map-pin",
+  });
+});
+
+test("asian-games-tt topic exposes authentic 2026 Asian Games table tennis schedule and generates valid ICS feed", async () => {
+  const data = await getTopicCalendarData("asian-games-tt");
+  assert.ok(data.missions.length >= 20, "Should contain comprehensive Asian Games TT schedule");
+
+  // 验证昨天（9月22日 1/4 决赛）与今天（9月23日 半决赛）的真实完赛赛果与比分
+  const wtSemi = data.missions.find(m => m.id === "ag2026-tt-wt-sf-chn-prk");
+  assert.ok(wtSemi, "Should have women's team semifinal result (China vs North Korea)");
+  assert.equal(wtSemi.status, "Finished");
+  assert.equal(wtSemi.scores, "3-0");
+  assert.ok(wtSemi.winner.includes("中国"));
+  assert.ok(wtSemi.gameScores.some(g => g.includes("孙颖莎")));
+
+  const mtSemi = data.missions.find(m => m.id === "ag2026-tt-mt-sf-chn-tpe");
+  assert.ok(mtSemi, "Should have men's team semifinal result (China vs Chinese Taipei)");
+  assert.equal(mtSemi.status, "Finished");
+  assert.equal(mtSemi.scores, "3-0");
+  assert.ok(mtSemi.winner.includes("中国"));
+  assert.ok(mtSemi.gameScores.some(g => g.includes("王楚钦")));
+
+  // 验证明天（9月24日）已晋级出炉的金牌战对阵（中国 对阵 日本）
+  const wtGold = data.missions.find(m => m.id === "ag2026-tt-wt-final");
+  assert.ok(wtGold, "Should have scheduled women's team gold medal match");
+  assert.equal(wtGold.status, "Confirmed");
+  assert.equal(wtGold.competitor1?.name, "China");
+  assert.equal(wtGold.competitor2?.name, "Japan");
+
+  const mtGold = data.missions.find(m => m.id === "ag2026-tt-mt-final");
+  assert.ok(mtGold, "Should have scheduled men's team gold medal match");
+  assert.equal(mtGold.status, "Confirmed");
+  assert.equal(mtGold.competitor1?.name, "China");
+  assert.equal(mtGold.competitor2?.name, "Japan");
+
+  // 验证生成的 ICS 订阅源包含比分和对阵
+  const icsFeed = buildTopicCalendarFeed("asian-games-tt", data);
+  assert.ok(icsFeed.includes("BEGIN:VCALENDAR"));
+  assert.ok(icsFeed.includes("END:VCALENDAR"));
+  assert.ok(icsFeed.includes("Asian Games Table Tennis"));
+  assert.ok(icsFeed.includes("Sky Hall Toyota"));
+  assert.ok(icsFeed.includes("UID:ag2026-tt-"));
+  assert.ok(icsFeed.includes("SUMMARY:[3-0] China vs North Korea"));
+  assert.ok(icsFeed.includes("Score: 3-0"));
+  assert.ok(icsFeed.includes("Winner: 中国 (China)"));
+  assert.ok(icsFeed.includes("SUMMARY:Asian Games 2026: Men's Team Gold Medal Match - China vs Japan"));
 });
 
 test("runCalendarSyncTask skips gracefully when no KV binding is available", async () => {

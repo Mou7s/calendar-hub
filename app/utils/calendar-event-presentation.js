@@ -29,6 +29,15 @@ const EVENT_PRESENTATIONS = Object.freeze({
     gamesLabelKey: 'calendar.dota2.games',
     vehicleIcon: 'i-lucide-swords',
     locationIcon: 'i-lucide-map-pin'
+  }),
+  'asian-games-tt': Object.freeze({
+    vehicleLabelKey: 'calendar.asianGamesTt.phase',
+    locationLabelKey: 'calendar.asianGamesTt.venue',
+    scoreLabelKey: 'calendar.asianGamesTt.score',
+    winnerLabelKey: 'calendar.asianGamesTt.winner',
+    gamesLabelKey: 'calendar.asianGamesTt.games',
+    vehicleIcon: 'i-lucide-trophy',
+    locationIcon: 'i-lucide-map-pin'
   })
 })
 

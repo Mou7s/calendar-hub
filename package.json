@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",
-    "@nuxt/ui": "^4.11.1",
+    "@nuxt/ui": "^4.11.2",
     "@nuxthub/core": "^0.10.8",
     "@nuxtjs/i18n": "^10.6.0",
     "@vueuse/core": "^14.4.0",
@@ -27,12 +27,12 @@
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
-    "@iconify-json/lucide": "^1.2.130",
-    "@iconify-json/simple-icons": "^1.2.95",
+    "@iconify-json/lucide": "^1.2.136",
+    "@iconify-json/simple-icons": "^1.2.97",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.11",
-    "wrangler": "^4.130.0"
+    "wrangler": "^4.136.3"
   }
 }

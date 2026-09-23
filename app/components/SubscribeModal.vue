@@ -8,7 +8,8 @@ const layers = [
   { id: 'spacex', name: 'SpaceX', color: '#3b82f6', ics: '/spacex.ics' },
   { id: 'f1', name: 'F1', color: '#ef4444', ics: '/ics/f1.ics' },
   { id: 'wtt', name: 'WTT', color: '#f59e0b', ics: '/ics/wtt.ics' },
-  { id: 'dota2', name: 'Dota 2', color: '#8b5cf6', ics: '/ics/dota2.ics' }
+  { id: 'dota2', name: 'Dota 2', color: '#8b5cf6', ics: '/ics/dota2.ics' },
+  { id: 'asian-games-tt', name: 'Asian Games TT', color: '#10b981', ics: '/ics/asian-games-tt.ics' }
 ] as const
 
 const provider = ref<string>('spacex')
@@ -77,7 +78,7 @@ watch(isSubscribeOpen, (open) => {
           />
         </div>
 
-        <div class="grid grid-cols-4 gap-1.5">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
           <button
             v-for="layer in layers"
             :key="layer.id"

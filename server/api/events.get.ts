@@ -22,6 +22,10 @@ interface SourceMission {
   status?: string
   scores?: string
   isLive?: boolean
+  winner?: string
+  gameScores?: string[]
+  competitor1?: any
+  competitor2?: any
 }
 
 function pickTitle(mission: SourceMission, locale: string): string {
@@ -44,11 +48,22 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
 
   const location = mission.launchSite || undefined
   const vehicle = mission.vehicle || undefined
+  const baseTitle = pickTitle(mission, locale)
+  const title = (mission.status === 'Finished' && mission.scores && !baseTitle.startsWith('['))
+    ? `[${mission.scores}] ${baseTitle}`
+    : baseTitle
+
+  const comp1Name = typeof mission.competitor1 === 'string'
+    ? mission.competitor1
+    : mission.competitor1?.name || undefined
+  const comp2Name = typeof mission.competitor2 === 'string'
+    ? mission.competitor2
+    : mission.competitor2?.name || undefined
 
   return {
     id: `${calendarId}:${mission.slug || mission.id || startMs}`,
     calendarId,
-    title: pickTitle(mission, locale),
+    title,
     description: [vehicle, location].filter(Boolean).join(' · ') || undefined,
     // 绝对时刻 ISO（带时区）：客户端 new Date() 解析为绝对瞬间，
     // 再按观众本地时区分桶，与模板浮动本地字符串 contract 兼容
@@ -58,7 +73,11 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
     location,
     vehicle,
     url: mission.missionUrl || undefined,
-    scores: mission.scores || undefined
+    scores: mission.scores || undefined,
+    winner: mission.winner || undefined,
+    gameScores: Array.isArray(mission.gameScores) && mission.gameScores.length ? mission.gameScores : undefined,
+    competitor1: comp1Name,
+    competitor2: comp2Name
   }
 }
 
@@ -80,7 +99,8 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
     getCalendarFromKv(event, 'f1', (fetchImpl: typeof fetch) => getTopicCalendarData('f1', fetchImpl)),
     getCachedData(event, 'calendar_topic_wtt', (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl)),
-    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
+    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv })),
+    getCachedData(event, 'calendar_topic_asian_games_tt', (fetchImpl: typeof fetch) => getTopicCalendarData('asian-games-tt', fetchImpl))
   ])
 
   const pools: Array<{ result: PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: string }> = [
@@ -88,7 +108,8 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     { result: settled[1] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'spacex' },
     { result: settled[2] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'f1' },
     { result: settled[3] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'wtt' },
-    { result: settled[4] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'dota2' }
+    { result: settled[4] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'dota2' },
+    { result: settled[5] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'asian-games-tt' }
   ]
 
   if (settled.every(r => r.status === 'rejected')) {

@@ -110,6 +110,11 @@
       "winner": "Sieger",
       "games": "Satzergebnisse"
     },
+    "filterAsianGamesTt": "Asienspiele Tischtennis",
+    "asianGamesTt": {
+      "phase": "Phase / Wettbewerb",
+      "venue": "Austragungsort"
+    },
     "noEventsToday": "Für diesen Tag sind keine Ereignisse geplant.",
     "noEventsThisMonth": "Für diesen Monat sind keine datierten Ereignisse verfügbar.",
     "dataLoadError": "Kalenderdaten konnten nicht geladen werden.",

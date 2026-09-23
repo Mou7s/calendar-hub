@@ -110,6 +110,14 @@
       "winner": "Winner",
       "games": "Game Scores"
     },
+    "filterAsianGamesTt": "Asian Games Table Tennis",
+    "asianGamesTt": {
+      "phase": "Session / Event",
+      "venue": "Venue",
+      "score": "Score",
+      "winner": "Winner",
+      "games": "Game Scores"
+    },
     "filterAll": "All Providers",
     "filterSpaceX": "SpaceX",
     "filterRocketLab": "Rocket Lab",

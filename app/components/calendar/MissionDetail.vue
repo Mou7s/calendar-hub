@@ -60,9 +60,35 @@ const timeLabel = computed(() => {
       </div>
       <div
         v-if="event.scores"
-        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/15 text-warning text-[11px] font-bold font-mono mb-1"
+        class="p-2.5 rounded-lg bg-default/5 border border-default/10 space-y-2 mb-2"
       >
-        {{ presentation.scoreLabelKey ? t(presentation.scoreLabelKey) : t('calendar.wtt.score') }}: {{ event.scores }}
+        <div class="flex items-center justify-between text-xs gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold font-mono text-[11px]">
+            {{ presentation.scoreLabelKey ? t(presentation.scoreLabelKey) : t('calendar.wtt.score') }}: {{ event.scores }}
+          </span>
+          <span
+            v-if="event.winner"
+            class="text-[11px] font-semibold text-primary truncate flex items-center gap-1"
+          >
+            <span>🏆</span>
+            <span>{{ presentation.winnerLabelKey ? t(presentation.winnerLabelKey) : t('calendar.wtt.winner') }}: {{ event.winner }}</span>
+          </span>
+        </div>
+        <div
+          v-if="event.gameScores && event.gameScores.length"
+          class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-default/10"
+        >
+          <span class="text-[10px] text-muted font-medium">
+            {{ presentation.gamesLabelKey ? t(presentation.gamesLabelKey) : t('calendar.wtt.games') }}:
+          </span>
+          <span
+            v-for="(game, idx) in event.gameScores"
+            :key="idx"
+            class="px-1.5 py-0.5 rounded bg-default/10 text-[10px] font-mono text-default font-semibold"
+          >
+            {{ game }}
+          </span>
+        </div>
       </div>
       <h3 class="text-base font-bold text-highlighted leading-snug text-balance">
         {{ event.title }}

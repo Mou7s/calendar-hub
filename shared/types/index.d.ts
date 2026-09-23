@@ -25,4 +25,8 @@ export interface CalendarEvent {
   vehicle?: string
   url?: string
   scores?: string
+  winner?: string
+  gameScores?: string[]
+  competitor1?: string
+  competitor2?: string
 }

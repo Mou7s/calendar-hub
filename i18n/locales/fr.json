@@ -110,6 +110,11 @@
       "winner": "Vainqueur",
       "games": "Scores des sets"
     },
+    "filterAsianGamesTt": "Jeux Asiatiques Tennis de table",
+    "asianGamesTt": {
+      "phase": "Phase / Épreuve",
+      "venue": "Site"
+    },
     "noEventsToday": "Aucun événement n'est prévu à cette date.",
     "noEventsThisMonth": "Aucun événement daté n'est disponible pour ce mois.",
     "dataLoadError": "Impossible de charger les données du calendrier.",

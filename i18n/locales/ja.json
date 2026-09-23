@@ -110,6 +110,11 @@
       "winner": "勝者",
       "games": "ゲームスコア"
     },
+    "filterAsianGamesTt": "アジア大会 卓球",
+    "asianGamesTt": {
+      "phase": "競技種目・ラウンド",
+      "venue": "会場"
+    },
     "noEventsToday": "この日には予定されたイベントはありません。",
     "noEventsThisMonth": "この月には日付付きのイベントはありません。",
     "dataLoadError": "カレンダーデータを読み込めませんでした。",
