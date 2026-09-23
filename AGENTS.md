@@ -161,3 +161,7 @@ grep -rn "useEventDraft\|useEventMove\|useEventDrag\|useEventEditor\|EventForm\|
 * **所有路由（含 `/api/*`）都返回 200 + Nuxt 欢迎页**：这是本地 dev server 带着旧模块图/`.nuxt` 缓存跑的症状，不是代码坏了。从 `.nuxt/nuxt.lock` 拿到 PID → kill → `rm -rf .nuxt .output` → 重启。
 * **`Another Nuxt dev is already running (PID x)`**：上面的锁文件里就是这个 PID。
 * repo 文件是 CRLF：`patch` 的 `old_string` 若非逐字节一致会被模糊匹配，可能悄悄改坏缩进——遇到就改用整段重写。
+
+## 持续沉淀项目经验
+
+完成非琐碎任务后，检查是否形成了可复用且已验证的项目流程、排错方法，或用户明确纠正的项目约定。若有，先查 `.agents/skills/`，优先更新已有技能；没有合适技能时创建 `.agents/skills/<kebab-case-name>/SKILL.md`。技能说明适用场景、关键步骤、常见陷阱和验证方式；较长资料放入 `references/`。不要记录对话流水账、一次性结论或未经验证的猜测，也不要让技能与本文件的只读和订阅源安全边界冲突。完成任务时说明新增或更新的技能路径。
