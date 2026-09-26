@@ -1,3 +1,4 @@
+import { breakpointsTailwind } from '@vueuse/core'
 import { parseDate, type CalendarDate } from '@internationalized/date'
 
 const _useCalendar = () => {
@@ -8,6 +9,11 @@ const _useCalendar = () => {
     return ['day', 'month'].includes(route.params.view as string) ? route.params.view as CalendarView : 'week'
   })
 
+  const isSmallScreen = useBreakpoints(breakpointsTailwind).smaller('lg')
+  // Keep the server and first client render on a full week; narrow after hydration.
+  const mounted = useMounted()
+  const isThreeDayView = computed(() => view.value === 'week' && mounted.value && isSmallScreen.value)
+
   const date = computed<CalendarDate>(() => {
     try {
       return parseDate(route.params.date as string)
@@ -16,7 +22,7 @@ const _useCalendar = () => {
     }
   })
 
-  const range = computed<DateRange>(() => rangeFor(view.value, date.value))
+  const range = computed<DateRange>(() => rangeFor(view.value, date.value, isThreeDayView.value ? 3 : 7))
 
   // The month docked at the top of the month view scroll viewport, kept in
   // sync live while scrolling so the header title follows along
@@ -45,7 +51,9 @@ const _useCalendar = () => {
   // single column the width of the grid, so there is no beside to stand in
   const formSide = computed<'bottom' | 'right'>(() => view.value === 'day' ? 'bottom' : 'right')
 
-  const step = computed(() => view.value === 'month' ? { months: 1 } : { days: view.value === 'day' ? 1 : 7 })
+  const step = computed(() => view.value === 'month'
+    ? { months: 1 }
+    : { days: view.value === 'day' ? 1 : isThreeDayView.value ? 3 : 7 })
 
   const prevDate = computed(() => date.value.subtract(step.value))
   const nextDate = computed(() => date.value.add(step.value))
@@ -107,6 +115,7 @@ const _useCalendar = () => {
 
   return {
     view,
+    isThreeDayView,
     date,
     range,
     title,

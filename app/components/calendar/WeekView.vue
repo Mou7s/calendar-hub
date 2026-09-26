@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { breakpointsTailwind } from '@vueuse/core'
-import { differenceInCalendarDays, isToday } from 'date-fns'
+import { isToday } from 'date-fns'
 
-const { date, range } = useCalendar()
+const { range } = useCalendar()
 const { eventsForDay, eventsForDays, status } = useCalendarEvents()
 
 // 农历/节气标签只在简体中文下显示
@@ -10,23 +9,11 @@ const { t, locale } = useI18n()
 const { getLunarText } = useLunar()
 const showLunar = computed(() => locale.value === 'zh-CN')
 
-const isSmallScreen = useBreakpoints(breakpointsTailwind).smaller('lg')
-// Only narrow after mount: the server always renders the full week, so the
-// hydrated DOM must match it
 const mounted = useMounted()
 
-// Small screens show a 3-day window around the anchor date, clamped so it
-// stays inside the fetched week
-const days = computed(() => {
-  const week = eachDay(range.value)
-  if (week.length <= 3 || !mounted.value || !isSmallScreen.value) {
-    return week
-  }
-
-  const start = Math.min(Math.max(differenceInCalendarDays(toDate(date.value), range.value.start), 0), week.length - 3)
-
-  return week.slice(start, start + 3)
-})
+// useCalendar supplies a full-week range on wide screens and a rolling 3-day
+// range on small screens, so navigation, fetching, title and columns agree.
+const days = computed(() => eachDay(range.value))
 
 const gridStyle = computed(() => ({
   gridTemplateColumns: `3.5rem repeat(${days.value.length}, minmax(0, 1fr))`

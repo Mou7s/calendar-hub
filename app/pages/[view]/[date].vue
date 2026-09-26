@@ -27,14 +27,14 @@ definePageMeta({
   }]
 })
 
-const { view, date, title, monthLabelsVisible, prevDate, nextDate, pathFor, setDirection, isSidebarOpen } = useCalendar()
+const { view, isThreeDayView, date, title, monthLabelsVisible, prevDate, nextDate, pathFor, setDirection, isSidebarOpen } = useCalendar()
 const { online, queue } = useCalendarEvents()
 
 const { t } = useI18n()
 
 const views = computed(() => [
   { label: t('calendar.viewDay'), value: 'day' },
-  { label: t('calendar.viewWeek'), value: 'week' },
+  { label: isThreeDayView.value ? t('calendar.viewThreeDay') : t('calendar.viewWeek'), value: 'week' },
   { label: t('calendar.viewMonth'), value: 'month' }
 ] satisfies TabsItem[])
 
@@ -100,12 +100,13 @@ function onViewChange(value: string | number) {
         :model-value="view"
         color="neutral"
         size="sm"
-        class="mx-auto w-20 sm:w-42 lg:w-48"
+        class="mx-auto sm:w-42 lg:w-48"
+        :class="isThreeDayView ? 'w-32' : 'w-20'"
         :ui="{ trigger: 'p-1 lg:p-1.5' }"
         @update:model-value="onViewChange"
       >
         <template #default="{ item }">
-          <span class="sm:hidden">{{ item.label.charAt(0) }}</span>
+          <span class="sm:hidden">{{ isThreeDayView && item.value === 'week' ? item.label : item.label.charAt(0) }}</span>
           <span class="hidden sm:inline">{{ item.label }}</span>
         </template>
       </UTabs>

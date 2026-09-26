@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 
-const { view, date, pathFor, isSearchOpen, isSubscribeOpen } = useCalendar()
+const { view, isThreeDayView, date, pathFor, isSearchOpen, isSubscribeOpen } = useCalendar()
 const { events, calendars, hiddenCalendars, toggleCalendar } = useCalendarEvents()
 const { t, locale } = useI18n()
 
 const views = computed(() => [
   { label: t('calendar.viewDay'), value: 'day', icon: 'i-lucide-calendar-range', kbd: 'd' },
-  { label: t('calendar.viewWeek'), value: 'week', icon: 'i-lucide-calendar-days', kbd: 'w' },
+  { label: isThreeDayView.value ? t('calendar.viewThreeDay') : t('calendar.viewWeek'), value: 'week', icon: 'i-lucide-calendar-days', kbd: 'w' },
   { label: t('calendar.viewMonth'), value: 'month', icon: 'i-lucide-calendar', kbd: 'm' }
 ] as const)
 

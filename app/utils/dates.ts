@@ -94,12 +94,12 @@ export function monthFetchRange(date: CalendarDate): DateRange {
   return { start, end: addDays(start, MONTH_FETCH_WEEKS * 7) }
 }
 
-export function rangeFor(view: CalendarView, date: CalendarDate): DateRange {
+export function rangeFor(view: CalendarView, date: CalendarDate, weekDays = 7): DateRange {
   if (view === 'month') {
     return monthFetchRange(date)
   }
 
-  return weekRange(date, view === 'day' ? 1 : 7)
+  return weekRange(date, view === 'day' ? 1 : weekDays)
 }
 
 export function eachDay({ start, end }: DateRange): Date[] {

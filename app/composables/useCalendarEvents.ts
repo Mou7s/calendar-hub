@@ -27,7 +27,7 @@ function eventsQuery({ start, end }: DateRange, locale: string) {
 }
 
 const _useCalendarEvents = () => {
-  const { view, range, prevDate, nextDate } = useCalendar()
+  const { view, range, isThreeDayView, prevDate, nextDate } = useCalendar()
   const { locale } = useI18n()
   const nuxtApp = useNuxtApp()
   const toast = useToast()
@@ -97,8 +97,9 @@ const _useCalendarEvents = () => {
         return
       }
 
-      warmRange(rangeFor(view.value, prevDate.value))
-      warmRange(rangeFor(view.value, nextDate.value))
+      const windowDays = isThreeDayView.value ? 3 : 7
+      warmRange(rangeFor(view.value, prevDate.value, windowDays))
+      warmRange(rangeFor(view.value, nextDate.value, windowDays))
     }, { immediate: true })
   })
 
