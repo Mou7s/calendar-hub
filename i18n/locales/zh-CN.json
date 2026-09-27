@@ -111,6 +111,7 @@
     },
     "filterAsianGamesTt": "亚运会乒乓球",
     "asianGamesTt": {
+      "name": "亚运会乒乓球",
       "phase": "比赛阶段",
       "venue": "比赛场馆",
       "score": "比分",

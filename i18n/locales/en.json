@@ -112,6 +112,7 @@
     },
     "filterAsianGamesTt": "Asian Games Table Tennis",
     "asianGamesTt": {
+      "name": "Asian Games Table Tennis",
       "phase": "Session / Event",
       "venue": "Venue",
       "score": "Score",

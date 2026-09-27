@@ -3,6 +3,7 @@ import { getCachedData, getKvStorage } from '../utils/kv.js'
 import { loadGlobalLaunches } from '../utils/launches.js'
 import { loadHistoryLaunchData } from '../utils/spacex.js'
 import { getTopicCalendarData } from '../utils/calendars.js'
+import { localizeAsianGamesTtMission } from '../utils/asian-games-tt-localization.js'
 
 // 模板客户端按可见范围拉取（月视图 12 周 = 84 天），上限与模板一致 90 天
 const MAX_RANGE_MS = 90 * 24 * 60 * 60 * 1000
@@ -46,9 +47,12 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
   const closeMs = Date.parse(mission.launchWindow?.close || '')
   const endMs = Number.isFinite(closeMs) && closeMs > startMs ? closeMs : startMs + FALLBACK_DURATION_MS
 
-  const location = mission.launchSite || undefined
-  const vehicle = mission.vehicle || undefined
-  const baseTitle = pickTitle(mission, locale)
+  const localized = calendarId === 'asian-games-tt'
+    ? localizeAsianGamesTtMission(mission, locale)
+    : undefined
+  const location = localized?.location || mission.launchSite || undefined
+  const vehicle = localized?.vehicle || mission.vehicle || undefined
+  const baseTitle = localized?.title || pickTitle(mission, locale)
   const title = (mission.status === 'Finished' && mission.scores && !baseTitle.startsWith('['))
     ? `[${mission.scores}] ${baseTitle}`
     : baseTitle
@@ -64,7 +68,11 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
     id: `${calendarId}:${mission.slug || mission.id || startMs}`,
     calendarId,
     title,
-    description: [vehicle, location].filter(Boolean).join(' · ') || undefined,
+    // Asian Games details already show phase and venue in their own rows;
+    // repeating both in a synthesized description made the popover redundant.
+    description: calendarId === 'asian-games-tt'
+      ? undefined
+      : [vehicle, location].filter(Boolean).join(' · ') || undefined,
     // 绝对时刻 ISO（带时区）：客户端 new Date() 解析为绝对瞬间，
     // 再按观众本地时区分桶，与模板浮动本地字符串 contract 兼容
     start: new Date(startMs).toISOString(),
@@ -74,8 +82,8 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
     vehicle,
     url: mission.missionUrl || undefined,
     scores: mission.scores || undefined,
-    winner: mission.winner || undefined,
-    gameScores: Array.isArray(mission.gameScores) && mission.gameScores.length ? mission.gameScores : undefined,
+    winner: localized?.winner || mission.winner || undefined,
+    gameScores: localized?.gameScores ?? (Array.isArray(mission.gameScores) && mission.gameScores.length ? mission.gameScores : undefined),
     competitor1: comp1Name,
     competitor2: comp2Name
   }

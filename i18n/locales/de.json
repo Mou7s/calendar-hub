@@ -112,8 +112,12 @@
     },
     "filterAsianGamesTt": "Asienspiele Tischtennis",
     "asianGamesTt": {
+      "name": "Tischtennis bei den Asienspielen",
       "phase": "Phase / Wettbewerb",
-      "venue": "Austragungsort"
+      "venue": "Austragungsort",
+      "score": "Ergebnis",
+      "winner": "Sieger",
+      "games": "Satzstände"
     },
     "noEventsToday": "Für diesen Tag sind keine Ereignisse geplant.",
     "noEventsThisMonth": "Für diesen Monat sind keine datierten Ereignisse verfügbar.",

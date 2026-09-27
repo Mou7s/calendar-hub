@@ -112,8 +112,12 @@
     },
     "filterAsianGamesTt": "アジア大会 卓球",
     "asianGamesTt": {
+      "name": "アジア競技大会 卓球",
       "phase": "競技種目・ラウンド",
-      "venue": "会場"
+      "venue": "会場",
+      "score": "スコア",
+      "winner": "勝者",
+      "games": "各ゲームのスコア"
     },
     "noEventsToday": "この日には予定されたイベントはありません。",
     "noEventsThisMonth": "この月には日付付きのイベントはありません。",

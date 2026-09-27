@@ -112,8 +112,12 @@
     },
     "filterAsianGamesTt": "Juegos Asiáticos Tenis de mesa",
     "asianGamesTt": {
+      "name": "Tenis de mesa de los Juegos Asiáticos",
       "phase": "Fase / Evento",
-      "venue": "Sede"
+      "venue": "Sede",
+      "score": "Marcador",
+      "winner": "Ganador",
+      "games": "Puntuación por juego"
     },
     "noEventsToday": "No hay eventos programados para esta fecha.",
     "noEventsThisMonth": "No hay eventos con fecha disponibles para este mes.",

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import launchesApi from "../server/api/launches.get.js";
 import historyApi from "../server/api/history-launches.get.js";
@@ -24,6 +25,7 @@ import {
   parseDota2Matches,
   parseF1OfficialStartTimes,
 } from "../server/utils/calendars.js";
+import { localizeAsianGamesTtMission } from "../server/utils/asian-games-tt-localization.js";
 import {
   CALENDAR_KEYS,
   runCalendarSyncTask,
@@ -1915,6 +1917,97 @@ test("asian-games-tt topic exposes authentic 2026 Asian Games table tennis sched
   assert.ok(icsFeed.includes("Score: 3-0"));
   assert.ok(icsFeed.includes("Winner: 中国 (China)"));
   assert.ok(unfoldedIcsFeed.includes("SUMMARY:[2-3] Asian Games 2026: Men's Team Gold Medal Match - China vs Japan"));
+});
+
+test("asian-games-tt event details are localized across all supported locales", async () => {
+  const data = await getTopicCalendarData("asian-games-tt");
+  const semifinals = data.missions.find(m => m.id === "ag2026-tt-singles-sf");
+  const teamResult = data.missions.find(m => m.id === "ag2026-tt-wt-sf-chn-prk");
+  assert.ok(semifinals);
+  assert.ok(teamResult);
+
+  const expectedTitles = {
+    "zh-CN": "2026 亚运会：女子单打半决赛",
+    en: "Asian Games 2026: Women's Singles Semifinals",
+    ja: "2026年アジア競技大会：女子シングルス準決勝",
+    ko: "2026 아시안게임: 여자 단식 준결승",
+    es: "Juegos Asiáticos 2026: Semifinales de individual femenino",
+    fr: "Jeux asiatiques 2026 : Demi-finales du simple dames",
+    de: "Asienspiele 2026: Halbfinale Dameneinzel",
+  };
+  const expectedChinaLabels = {
+    "zh-CN": "中国",
+    en: "China",
+    ja: "中国",
+    ko: "중국",
+    es: "China",
+    fr: "Chine",
+    de: "China",
+  };
+  const expectedVenues = {
+    "zh-CN": "Sky Hall Toyota，日本爱知县丰田市",
+    en: "Sky Hall Toyota, Toyota, Aichi",
+    ja: "Sky Hall Toyota（愛知県豊田市）",
+    ko: "Sky Hall Toyota, 일본 아이치현 도요타시",
+    es: "Sky Hall Toyota, Toyota, Aichi (Japón)",
+    fr: "Sky Hall Toyota, Toyota, Aichi (Japon)",
+    de: "Sky Hall Toyota, Toyota, Aichi, Japan",
+  };
+
+  for (const [locale, expectedTitle] of Object.entries(expectedTitles)) {
+    const messages = JSON.parse(readFileSync(new URL(`../i18n/locales/${locale}.json`, import.meta.url), "utf8"));
+    for (const key of ["name", "phase", "venue", "score", "winner", "games"]) {
+      assert.equal(typeof messages.calendar?.asianGamesTt?.[key], "string", `missing calendar.asianGamesTt.${key} for ${locale}`);
+    }
+
+    const event = localizeAsianGamesTtMission(semifinals, locale);
+    assert.equal(event.title, expectedTitle, `unexpected title for ${locale}`);
+    assert.ok(event.vehicle, `missing event phase for ${locale}`);
+    assert.equal(event.location, expectedVenues[locale]);
+
+    const teamEvent = localizeAsianGamesTtMission(teamResult, locale);
+    assert.ok(teamEvent.title.includes(expectedChinaLabels[locale]));
+    assert.equal(teamEvent.winner, expectedChinaLabels[locale]);
+
+    if (locale === "zh-CN") {
+      assert.match(event.title, /女子单打/);
+      assert.equal(teamEvent.winner, "中国");
+    } else {
+      const localizedText = `${event.title} ${event.vehicle} ${teamEvent.title} ${teamEvent.winner}`;
+      if (locale === "ja") {
+        assert.doesNotMatch(localizedText, /女子单打|女子团体|女子双打|男子单打|男子团体|对阵|金牌战|小组赛|半决赛/);
+      } else {
+        assert.doesNotMatch(localizedText, /[\u4e00-\u9fff]/);
+      }
+      if (locale !== "en") {
+        assert.doesNotMatch(event.title, /Asian Games 2026|Women's|Men's|Singles|Doubles|\bSemifinals?\b|\bQuarterfinals?\b|Gold Medal Match|Group [A-Z]\b/i);
+      }
+    }
+  }
+
+  for (const locale of ["ja", "ko", "es", "fr", "de"]) {
+    for (const mission of data.missions) {
+      const localized = localizeAsianGamesTtMission(mission, locale);
+      const localizedText = `${localized.title} ${localized.vehicle} ${localized.winner || ""} ${localized.gameScores?.join(" ") || ""}`;
+      if (locale === "ja") {
+        assert.doesNotMatch(localizedText, /女子单打|女子团体|女子双打|男子单打|男子团体|对阵|金牌战|小组赛|半决赛/);
+      } else {
+        assert.doesNotMatch(localizedText, /[\u4e00-\u9fff]/);
+      }
+      const originalTitle = String(mission.titleEn || mission.title || '')
+        .replace(/^Asian Games 2026:\s*/, '')
+        .replace(/\s*🥇\s*$/, '')
+        .trim();
+      const originalVehicle = String(mission.vehicle || '').split('·').at(-1)?.trim() || '';
+      assert.ok(!localized.title.includes(originalTitle), `English title leaked for ${locale}: ${mission.id}`);
+      if (/[A-Za-z]/.test(originalVehicle)) {
+        assert.ok(!localizedText.includes(originalVehicle), `English event phase leaked for ${locale}: ${mission.id}`);
+      }
+      if (String(mission.titleEn || mission.title || '').includes('🥇')) {
+        assert.equal((localized.title.match(/🥇/g) || []).length, 1, `medal marker duplicated for ${locale}: ${mission.id}`);
+      }
+    }
+  }
 });
 
 test("runCalendarSyncTask skips gracefully when no KV binding is available", async () => {

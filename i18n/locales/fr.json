@@ -112,8 +112,12 @@
     },
     "filterAsianGamesTt": "Jeux Asiatiques Tennis de table",
     "asianGamesTt": {
+      "name": "Tennis de table des Jeux asiatiques",
       "phase": "Phase / Épreuve",
-      "venue": "Site"
+      "venue": "Site",
+      "score": "Score",
+      "winner": "Vainqueur",
+      "games": "Scores par manche"
     },
     "noEventsToday": "Aucun événement n'est prévu à cette date.",
     "noEventsThisMonth": "Aucun événement daté n'est disponible pour ce mois.",

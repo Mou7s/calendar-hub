@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// ICS 订阅弹窗：四个图层各有 webcal 一键订阅 + HTTPS 链接复制。
-// 文案复用 subscribe.* 词条，图层名为专有名词无需翻译。
+// ICS 订阅弹窗：五个图层各有 webcal 一键订阅 + HTTPS 链接复制。
+// 文案复用 subscribe.* 词条，亚运会图层名也随界面语言切换。
 const { isSubscribeOpen } = useCalendar()
 const { t } = useI18n()
 
@@ -94,7 +94,7 @@ watch(isSubscribeOpen, (open) => {
               class="size-2 rounded-full shrink-0"
               :style="{ backgroundColor: layer.color }"
             />
-            {{ layer.name }}
+            {{ layer.id === 'asian-games-tt' ? t('calendar.asianGamesTt.name') : layer.name }}
           </button>
         </div>
 
