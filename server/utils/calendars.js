@@ -894,18 +894,20 @@ export async function loadCachedDota2TournamentMeta(kv) {
   return meta
 }
 
-/** 把锦标赛元数据合并写回 KV（新抓到的覆盖缓存），供下次抓取失败时兜底过滤。 */
+/** 把锦标赛元数据合并写回 KV；内容未变化时跳过写入。 */
 export async function saveCachedDota2TournamentMeta(kv, metaMap) {
   if (!kv || typeof kv.get !== 'function' || typeof kv.set !== 'function') return
   if (!(metaMap instanceof Map) || metaMap.size === 0) return
   const stored = await kv.get(DOTA2_TOURNAMENT_META_CACHE_KEY)
-  const merged = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? { ...stored } : {}
+  const storedRecord = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {}
+  const merged = { ...storedRecord }
   for (const [path, entry] of metaMap) {
     if (typeof path !== 'string' || !path.startsWith('/dota2/')) continue
     const venue = typeof entry?.venue === 'string' ? entry.venue : (typeof entry === 'string' ? entry : '')
     const tier = typeof entry?.tier === 'string' ? entry.tier : ''
     if (venue || tier) merged[path] = { venue, tier }
   }
+  if (JSON.stringify(merged) === JSON.stringify(storedRecord)) return
   await kv.set(DOTA2_TOURNAMENT_META_CACHE_KEY, merged, { ttl: DOTA2_TOURNAMENT_META_TTL_SECONDS })
 }
 

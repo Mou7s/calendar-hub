@@ -7,8 +7,6 @@ export const CALENDAR_KEYS = {
   f1: 'calendar:f1:data'
 }
 
-const STATUS_KEY = 'calendar:sync:status'
-
 const stablePayload = (data) => JSON.stringify(
   (data?.missions || []).map(mission => ({
     id: mission.correlationId || mission.id,
@@ -61,7 +59,6 @@ export async function syncCalendars(env, fetchImpl = fetch, now = new Date()) {
   }
 
   status.completedAt = new Date().toISOString()
-  await kv.set(STATUS_KEY, status)
 
   if (results.every(result => result.status === 'rejected')) {
     throw new Error('All calendar synchronization jobs failed')

@@ -1,6 +1,7 @@
 import { loadMissionDetails, M2M100_LANG_MAP, translateMissionDetails } from './spacex.js'
 
-const CACHE_TTL = 300; // 5 minutes cache for lists
+const CACHE_TTL = 1800; // 30 minutes for calendar data to avoid frequent KV refresh writes
+const ACTIVE_LAUNCH_CACHE_TTL = 300; // 5 minutes while a launch is live or approaching
 const HISTORY_METADATA_KEY = "spacex_launches_history_metadata";
 
 /**
@@ -155,33 +156,33 @@ export async function getCachedData(
 
   const nowMs = Date.now();
 
-  // 根据缓存类型采用不同的时效策略
-  // 任务列表（spacex_launches_data）经常变动，采用 5分钟 CACHE_TTL
-  // 具体的详情翻译卡片属于静态数据，变动极慢，采用 24小时 (86400秒) 的超长缓存 TTL，最大化降低首屏 API 延迟与 AI 消耗！
+  // 日历数据默认 30 分钟刷新，减少历史发射和赛事源的重复抓取及 KV 写入。
+  // 任务详情变化很少，维持 24 小时缓存。
   const isDetailsKey = cacheKey.startsWith("spacex_mission_details_");
   let currentTTL = isDetailsKey ? 86400 : CACHE_TTL;
   if (cacheKey === "calendar_topic_dota2") {
     currentTTL = 1800;
   }
 
-  // 优化：针对任务列表实施动态 TTL 策略以节省 KV 资源额度。
-  // 若当前没有进行中的直播任务，且下一次发射时间尚远（大于3小时）或已发射完毕（过去大于3小时），
-  // 则将更新频次降低至 30 分钟 (1800 秒)；否则（临近发射期）维持 5 分钟 (300 秒) 以保障时效性。
-  if (!isDetailsKey && cacheKey === "spacex_launches_data" && cached) {
-    const missions = cached.missions || [];
-    const hasLiveMission = missions.some(m => m.isLive === true);
+  // SpaceX 发射列表在直播或临近发射时保持 5 分钟刷新；平时放宽至 30 分钟。
+  if (!isDetailsKey && cacheKey === "spacex_launches_data") {
+    currentTTL = ACTIVE_LAUNCH_CACHE_TTL;
+    if (cached) {
+      const missions = cached.missions || [];
+      const hasLiveMission = missions.some(m => m.isLive === true);
 
-    let timeToNextLaunchMs = Infinity;
-    if (cached.nextLaunch && cached.nextLaunch.launchAt) {
-      const launchTime = Date.parse(cached.nextLaunch.launchAt);
-      if (!Number.isNaN(launchTime)) {
-        timeToNextLaunchMs = launchTime - nowMs;
+      let timeToNextLaunchMs = Infinity;
+      if (cached.nextLaunch && cached.nextLaunch.launchAt) {
+        const launchTime = Date.parse(cached.nextLaunch.launchAt);
+        if (!Number.isNaN(launchTime)) {
+          timeToNextLaunchMs = launchTime - nowMs;
+        }
       }
-    }
 
-    const THREE_HOURS_MS = 3 * 3600 * 1000;
-    if (!hasLiveMission && (timeToNextLaunchMs > THREE_HOURS_MS || timeToNextLaunchMs < -THREE_HOURS_MS)) {
-      currentTTL = 1800; // 30 minutes
+      const THREE_HOURS_MS = 3 * 3600 * 1000;
+      if (!hasLiveMission && (timeToNextLaunchMs > THREE_HOURS_MS || timeToNextLaunchMs < -THREE_HOURS_MS)) {
+        currentTTL = CACHE_TTL;
+      }
     }
   }
 
