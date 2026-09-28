@@ -18,6 +18,12 @@ const eventLabels = {
       'Hong Kong, China': '中国香港',
       'Chinese Taipei': '中国台北',
     },
+    participants: {
+      'Huang Youzheng / Lin Shidong': '黄友政 / 林诗栋',
+      'Tomokazu Harimoto / Hiroto Shinozuka': '张本智和 / 篠塚大登',
+      'Wang Manyu': '王曼昱',
+      'Sun Yingsha': '孙颖莎',
+    },
     categories: {
       "Women's Team Group A": '女子团体 A组小组赛',
       "Women's Team Group B": '女子团体 B组小组赛',
@@ -340,7 +346,7 @@ export function localizeAsianGamesTtMission(mission, locale = 'en') {
   const second = participantName(mission.competitor2)
   const hasMatchup = Boolean(first && second)
   const matchup = hasMatchup
-    ? `${labels.matchJoin}${countryName(first, activeLocale)} ${labels.versus} ${countryName(second, activeLocale)}`
+    ? `${labels.matchJoin}${labels.participants?.[first] || countryName(first, activeLocale)} ${labels.versus} ${labels.participants?.[second] || countryName(second, activeLocale)}`
     : ''
   const medal = String(mission.titleEn || mission.title || '').includes('🥇') ? ' 🥇' : ''
   const rawVehicleParts = String(mission.vehicle || '').split('·')

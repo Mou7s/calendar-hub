@@ -24,6 +24,7 @@ Use this skill when a static sports calendar in `server/utils/calendars.js` need
 ## Common pitfalls
 
 - A daily schedule may group several events into one broad time window; do not invent more precise times.
+- For 2026 Aichi-Nagoya table tennis, the official results hub is client-rendered. Its daily results page uses `https://results.asiangames2026.org/#/discipline/TTE/schedule/daily/YYYY-MM-DD`; the verified daily-data route is `https://back.results.asiangames2026.org/s/AG2026/en/TTE/schedule/daily/YYYY-MM-DD`. The API response is compressed, so use the official page or decode it before parsing, and check each match's status and start time inside the shared session.
 - A fixture's competitor order can differ from the official page's display order. Convert scores and winners carefully before storing them.
 - A finished event without a verified result should not receive a guessed score.
 - Do not alter SpaceX UID generation, ICS response headers, or field escaping while correcting a different sports calendar.
