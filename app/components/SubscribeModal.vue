@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// ICS 订阅弹窗：五个图层各有 webcal 一键订阅 + HTTPS 链接复制。
-// 文案复用 subscribe.* 词条，亚运会图层名也随界面语言切换。
+// ICS 订阅弹窗：四个图层各有 webcal 一键订阅 + HTTPS 链接复制。
+// 文案复用 subscribe.* 词条。
 const { isSubscribeOpen } = useCalendar()
 const { t } = useI18n()
 
@@ -8,8 +8,7 @@ const layers = [
   { id: 'spacex', name: 'SpaceX', color: '#3b82f6', ics: '/spacex.ics' },
   { id: 'f1', name: 'F1', color: '#ef4444', ics: '/ics/f1.ics' },
   { id: 'wtt', name: 'WTT', color: '#f59e0b', ics: '/ics/wtt.ics' },
-  { id: 'dota2', name: 'Dota 2', color: '#8b5cf6', ics: '/ics/dota2.ics' },
-  { id: 'asian-games-tt', name: 'Asian Games TT', color: '#10b981', ics: '/ics/asian-games-tt.ics' }
+  { id: 'dota2', name: 'Dota 2', color: '#8b5cf6', ics: '/ics/dota2.ics' }
 ] as const
 
 const provider = ref<string>('spacex')
@@ -94,7 +93,7 @@ watch(isSubscribeOpen, (open) => {
               class="size-2 rounded-full shrink-0"
               :style="{ backgroundColor: layer.color }"
             />
-            {{ layer.id === 'asian-games-tt' ? t('calendar.asianGamesTt.name') : layer.name }}
+            {{ layer.name }}
           </button>
         </div>
 

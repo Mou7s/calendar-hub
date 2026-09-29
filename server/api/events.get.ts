@@ -3,7 +3,6 @@ import { getCachedData, getKvStorage } from '../utils/kv.js'
 import { loadGlobalLaunches } from '../utils/launches.js'
 import { loadHistoryLaunchData } from '../utils/spacex.js'
 import { getTopicCalendarData } from '../utils/calendars.js'
-import { localizeAsianGamesTtMission } from '../utils/asian-games-tt-localization.js'
 
 // 模板客户端按可见范围拉取（月视图 12 周 = 84 天），上限与模板一致 90 天
 const MAX_RANGE_MS = 90 * 24 * 60 * 60 * 1000
@@ -47,12 +46,9 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
   const closeMs = Date.parse(mission.launchWindow?.close || '')
   const endMs = Number.isFinite(closeMs) && closeMs > startMs ? closeMs : startMs + FALLBACK_DURATION_MS
 
-  const localized = calendarId === 'asian-games-tt'
-    ? localizeAsianGamesTtMission(mission, locale)
-    : undefined
-  const location = localized?.location || mission.launchSite || undefined
-  const vehicle = localized?.vehicle || mission.vehicle || undefined
-  const baseTitle = localized?.title || pickTitle(mission, locale)
+  const location = mission.launchSite || undefined
+  const vehicle = mission.vehicle || undefined
+  const baseTitle = pickTitle(mission, locale)
   const title = (mission.status === 'Finished' && mission.scores && !baseTitle.startsWith('['))
     ? `[${mission.scores}] ${baseTitle}`
     : baseTitle
@@ -68,11 +64,7 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
     id: `${calendarId}:${mission.slug || mission.id || startMs}`,
     calendarId,
     title,
-    // Asian Games details already show phase and venue in their own rows;
-    // repeating both in a synthesized description made the popover redundant.
-    description: calendarId === 'asian-games-tt'
-      ? undefined
-      : [vehicle, location].filter(Boolean).join(' · ') || undefined,
+    description: [vehicle, location].filter(Boolean).join(' · ') || undefined,
     // 绝对时刻 ISO（带时区）：客户端 new Date() 解析为绝对瞬间，
     // 再按观众本地时区分桶，与模板浮动本地字符串 contract 兼容
     start: new Date(startMs).toISOString(),
@@ -82,8 +74,8 @@ function toCalendarEvent(mission: SourceMission, calendarId: string, locale: str
     vehicle,
     url: mission.missionUrl || undefined,
     scores: mission.scores || undefined,
-    winner: localized?.winner || mission.winner || undefined,
-    gameScores: localized?.gameScores ?? (Array.isArray(mission.gameScores) && mission.gameScores.length ? mission.gameScores : undefined),
+    winner: mission.winner || undefined,
+    gameScores: Array.isArray(mission.gameScores) && mission.gameScores.length ? mission.gameScores : undefined,
     competitor1: comp1Name,
     competitor2: comp2Name
   }
@@ -107,8 +99,7 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
     getCalendarFromKv(event, 'f1', (fetchImpl: typeof fetch) => getTopicCalendarData('f1', fetchImpl)),
     getCachedData(event, 'calendar_topic_wtt', (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl)),
-    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv })),
-    getCachedData(event, 'calendar_topic_asian_games_tt', (fetchImpl: typeof fetch) => getTopicCalendarData('asian-games-tt', fetchImpl))
+    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
   ])
 
   const pools: Array<{ result: PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: string }> = [
@@ -116,8 +107,7 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     { result: settled[1] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'spacex' },
     { result: settled[2] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'f1' },
     { result: settled[3] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'wtt' },
-    { result: settled[4] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'dota2' },
-    { result: settled[5] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'asian-games-tt' }
+    { result: settled[4] as PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: 'dota2' }
   ]
 
   if (settled.every(r => r.status === 'rejected')) {

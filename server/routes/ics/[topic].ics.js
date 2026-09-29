@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
     // 清理后缀名为 .ics 的情况（例如 spacex.ics 提取出 spacex）
     topic = topic.replace(/\.ics$/i, '').toLowerCase()
 
-    const topicConfig = CALENDAR_TOPICS.find(t => t.id === topic) || CALENDAR_TOPICS[0]
+    const topicConfig = CALENDAR_TOPICS.find(t => t.id === topic)
+    if (!topicConfig) {
+      throw createError({ statusCode: 404, statusMessage: 'Not Found', message: 'Calendar topic not found.' })
+    }
 
     // 缓存加载 key 区分主题
     const cacheKey = `calendar_topic_${topicConfig.id}`
@@ -34,6 +37,9 @@ export default defineEventHandler(async (event) => {
 
     return icsContent
   } catch (error) {
+    if (error?.statusCode === 404) {
+      throw error
+    }
     throw createError({
       statusCode: 502,
       statusMessage: "Bad Gateway",

@@ -6,7 +6,10 @@ import { getTopicCalendarData, CALENDAR_TOPICS } from '../../utils/calendars.js'
 export default defineEventHandler(async (event) => {
   try {
     const topicParam = getRouterParam(event, 'topic') || 'spacex'
-    const topicConfig = CALENDAR_TOPICS.find(t => t.id === topicParam) || CALENDAR_TOPICS[0]
+    const topicConfig = CALENDAR_TOPICS.find(t => t.id === topicParam)
+    if (!topicConfig) {
+      throw createError({ statusCode: 404, statusMessage: 'Not Found', message: 'Calendar topic not found.' })
+    }
 
     const cacheKey = `calendar_topic_${topicConfig.id}`
     // Dota 2 锦标赛 Tier 元数据走 KV 长缓存：Worker 抓取抖动时仍能执行 Tier 1 过滤
@@ -22,6 +25,9 @@ export default defineEventHandler(async (event) => {
 
     return data
   } catch (error) {
+    if (error?.statusCode === 404) {
+      throw error
+    }
     throw createError({
       statusCode: 502,
       statusMessage: "Bad Gateway",

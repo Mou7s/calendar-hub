@@ -109,15 +109,6 @@
       "winner": "获胜者",
       "games": "每局小分"
     },
-    "filterAsianGamesTt": "亚运会乒乓球",
-    "asianGamesTt": {
-      "name": "亚运会乒乓球",
-      "phase": "比赛阶段",
-      "venue": "比赛场馆",
-      "score": "比分",
-      "winner": "获胜者",
-      "games": "每局小分"
-    },
     "filterAll": "全部机构",
     "filterSpaceX": "SpaceX",
     "filterRocketLab": "Rocket Lab",

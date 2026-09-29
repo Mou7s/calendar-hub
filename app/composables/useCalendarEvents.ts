@@ -28,7 +28,7 @@ function eventsQuery({ start, end }: DateRange, locale: string) {
 
 const _useCalendarEvents = () => {
   const { view, range, isThreeDayView, prevDate, nextDate } = useCalendar()
-  const { locale, t } = useI18n()
+  const { locale } = useI18n()
   const nuxtApp = useNuxtApp()
   const toast = useToast()
 
@@ -54,7 +54,7 @@ const _useCalendarEvents = () => {
   const calendars = computed<Calendar[]>(() =>
     (calendarsData.value ?? []).map(calendar => ({
       ...calendar,
-      name: calendar.id === 'asian-games-tt' ? t('calendar.asianGamesTt.name') : calendar.name,
+      name: calendar.name,
       color: resolveCalendarLayerColor(calendar.color, calendarColorOverrides.value[calendar.id])
     }))
   )

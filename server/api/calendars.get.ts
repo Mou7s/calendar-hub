@@ -6,6 +6,5 @@ export default defineEventHandler((): Calendar[] => {
     { id: 'f1', name: 'F1', color: 'error' },
     { id: 'wtt', name: 'WTT', color: 'warning' },
     { id: 'dota2', name: 'Dota 2', color: 'secondary' },
-    { id: 'asian-games-tt', name: 'Asian Games TT', color: 'success' }
   ]
 })
