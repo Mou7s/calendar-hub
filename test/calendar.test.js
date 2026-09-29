@@ -1922,24 +1922,33 @@ test("asian-games-tt topic exposes authentic 2026 Asian Games table tennis sched
   assert.equal(womenSinglesGold?.scores, "4-2");
   assert.equal(womenSinglesGold?.winner, "王曼昱 (China)");
 
-  // 9月28日女双半决赛已完赛；男单半决赛第二场仍在进行。
+  // 9月28日最后一日赛程的官方结果。
   const womenDoublesSemi = data.missions.find(m => m.id === "ag2026-tt-wd-sf");
   assert.equal(womenDoublesSemi?.status, "Finished");
   assert.ok(womenDoublesSemi?.gameScores.some(g => g.includes("4-0")));
 
   const menSinglesSemi = data.missions.find(m => m.id === "ag2026-tt-ms-sf");
   assert.equal(menSinglesSemi?.launchAt, "2026-09-28T04:30:00.000Z");
-  assert.equal(menSinglesSemi?.isLive, true);
-  assert.ok(menSinglesSemi?.gameScores.some(g => g.includes("3-2")));
+  assert.equal(menSinglesSemi?.status, "Finished");
+  assert.equal(menSinglesSemi?.isLive, false);
+  assert.ok(menSinglesSemi?.gameScores.some(g => g.includes("Lin Yun-ju 3-4 Lin Shidong")));
 
   const womenDoublesGold = data.missions.find(m => m.id === "ag2026-tt-wd-final");
-  assert.equal(womenDoublesGold?.status, "Confirmed");
+  assert.equal(womenDoublesGold?.status, "Finished");
+  assert.equal(womenDoublesGold?.scores, "0-4");
+  assert.equal(womenDoublesGold?.winner, "快曼 / 王曼昱 (Kuai Man / Wang Manyu)");
+  assert.deepEqual(womenDoublesGold?.gameScores.slice(1), ["0-11", "11-13", "4-11", "9-11"]);
   assert.equal(womenDoublesGold?.competitor1?.name, "Japan");
   assert.equal(womenDoublesGold?.competitor2?.name, "China");
 
   const menSinglesGold = data.missions.find(m => m.id === "ag2026-tt-ms-final");
   assert.equal(menSinglesGold?.launchAt, "2026-09-28T11:30:00.000Z");
-  assert.equal(menSinglesGold?.status, "Confirmed");
+  assert.equal(menSinglesGold?.status, "Finished");
+  assert.equal(menSinglesGold?.scores, "0-4");
+  assert.equal(menSinglesGold?.winner, "林诗栋 (Lin Shidong)");
+  assert.equal(menSinglesGold?.competitor1?.name, "Wang Chuqin");
+  assert.equal(menSinglesGold?.competitor2?.name, "Lin Shidong");
+  assert.deepEqual(menSinglesGold?.gameScores.slice(1), ["5-11", "8-11", "11-13", "5-11"]);
 
   // 验证生成的 ICS 订阅源包含比分和对阵
   const icsFeed = buildTopicCalendarFeed("asian-games-tt", data);
@@ -1954,6 +1963,8 @@ test("asian-games-tt topic exposes authentic 2026 Asian Games table tennis sched
   assert.ok(icsFeed.includes("Winner: 中国 (China)"));
   assert.ok(unfoldedIcsFeed.includes("SUMMARY:[2-3] Asian Games 2026: Men's Team Gold Medal Match - China vs Japan"));
   assert.ok(unfoldedIcsFeed.includes("SUMMARY:[4-2] Asian Games 2026: Women's Singles Gold Medal Match - Wang Manyu vs Sun Yingsha"));
+  assert.ok(unfoldedIcsFeed.includes("SUMMARY:[0-4] Asian Games 2026: Women's Doubles Gold Medal Match - Japan vs China"));
+  assert.ok(unfoldedIcsFeed.includes("SUMMARY:[0-4] Asian Games 2026: Men's Singles Gold Medal Match - Wang Chuqin vs Lin Shidong"));
 });
 
 test("asian-games-tt event details are localized across all supported locales", async () => {
@@ -1968,6 +1979,12 @@ test("asian-games-tt event details are localized across all supported locales", 
   assert.ok(womenSinglesFinal);
   assert.equal(localizeAsianGamesTtMission(menDoublesFinal, "zh-CN").title, "2026 亚运会：男子双打金牌战 — 黄友政 / 林诗栋 对阵 张本智和 / 篠塚大登 🥇");
   assert.equal(localizeAsianGamesTtMission(womenSinglesFinal, "zh-CN").title, "2026 亚运会：女子单打金牌战 — 王曼昱 对阵 孙颖莎 🥇");
+
+  const menSinglesFinal = data.missions.find(m => m.id === "ag2026-tt-ms-final");
+  assert.ok(menSinglesFinal);
+  assert.equal(localizeAsianGamesTtMission(menSinglesFinal, "zh-CN").title, "2026 亚运会：男子单打金牌战 — 王楚钦 对阵 林诗栋 🥇");
+  assert.equal(localizeAsianGamesTtMission(menSinglesFinal, "zh-CN").winner, "林诗栋");
+  assert.equal(localizeAsianGamesTtMission(menSinglesFinal, "en").winner, "Lin Shidong");
 
   const expectedTitles = {
     "zh-CN": "2026 亚运会：女子单打半决赛",

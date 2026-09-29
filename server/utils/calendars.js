@@ -1573,12 +1573,12 @@ export const ASIAN_GAMES_TT_2026_EVENTS = [
     missionType: "Men's Singles Semifinals",
     launchSite: 'Sky Hall Toyota, Toyota, Aichi',
     missionUrl: 'https://results.asiangames2026.org/#/discipline/TTE/schedule/daily/2026-09-28',
-    status: 'Confirmed',
+    status: 'Finished',
     gameScores: [
-      'Wang Chuqin 4-1 Noshad Alamiyan',
-      'Lin Yun-ju 3-2 Lin Shidong'
+      'Wang Chuqin 4-1 Noshad Alamiyan (11-4, 11-7, 9-11, 11-4, 11-6)',
+      'Lin Yun-ju 3-4 Lin Shidong (12-10, 11-9, 8-11, 9-11, 11-9, 6-11, 9-11)'
     ],
-    isLive: true
+    isLive: false
   },
   {
     id: 'ag2026-tt-wd-sf',
@@ -1609,23 +1609,43 @@ export const ASIAN_GAMES_TT_2026_EVENTS = [
     missionType: "Women's Doubles Gold Medal Match",
     launchSite: 'Sky Hall Toyota, Toyota, Aichi',
     missionUrl: 'https://results.asiangames2026.org/#/discipline/TTE/schedule/daily/2026-09-28',
-    status: 'Confirmed',
+    status: 'Finished',
+    scores: '0-4',
+    winner: '快曼 / 王曼昱 (Kuai Man / Wang Manyu)',
+    gameScores: [
+      'Miwa Harimoto / Hina Hayata 0-4 Kuai Man / Wang Manyu',
+      '0-11',
+      '11-13',
+      '4-11',
+      '9-11'
+    ],
     competitor1: { name: 'Japan', code: 'JPN' },
     competitor2: { name: 'China', code: 'CHN' },
     isLive: false
   },
   {
     id: 'ag2026-tt-ms-final',
-    title: "Asian Games 2026: Men's Singles Gold Medal Match 🥇",
-    titleEn: "Asian Games 2026: Men's Singles Gold Medal Match 🥇",
-    titleZh: '2026 亚运会：男子单打金牌战 🥇',
+    title: "Asian Games 2026: Men's Singles Gold Medal Match - Wang Chuqin vs Lin Shidong 🥇",
+    titleEn: "Asian Games 2026: Men's Singles Gold Medal Match - Wang Chuqin vs Lin Shidong 🥇",
+    titleZh: '2026 亚运会：男子单打金牌战 - 王楚钦 对阵 林诗栋 🥇',
     launchAt: '2026-09-28T11:30:00.000Z',
     launchWindow: { close: '2026-09-28T13:00:00.000Z' },
     vehicle: "男子单打 金牌战 🥇 · Men's Singles Gold Medal Match",
     missionType: "Men's Singles Gold Medal Match",
     launchSite: 'Sky Hall Toyota, Toyota, Aichi',
     missionUrl: 'https://results.asiangames2026.org/#/discipline/TTE/schedule/daily/2026-09-28',
-    status: 'Confirmed',
+    status: 'Finished',
+    scores: '0-4',
+    winner: '林诗栋 (Lin Shidong)',
+    gameScores: [
+      'Wang Chuqin 0-4 Lin Shidong',
+      '5-11',
+      '8-11',
+      '11-13',
+      '5-11'
+    ],
+    competitor1: { name: 'Wang Chuqin', code: 'CHN' },
+    competitor2: { name: 'Lin Shidong', code: 'CHN' },
     isLive: false
   }
 ];

@@ -25,6 +25,12 @@ Use this skill when a static sports calendar in `server/utils/calendars.js` need
 
 - A daily schedule may group several events into one broad time window; do not invent more precise times.
 - For 2026 Aichi-Nagoya table tennis, the official results hub is client-rendered. Its daily results page uses `https://results.asiangames2026.org/#/discipline/TTE/schedule/daily/YYYY-MM-DD`; the verified daily-data route is `https://back.results.asiangames2026.org/s/AG2026/en/TTE/schedule/daily/YYYY-MM-DD`. The API response is compressed, so use the official page or decode it before parsing, and check each match's status and start time inside the shared session.
+- The daily-data route can report `Content-Encoding: br` while its body is a UTF-8 representation of zlib bytes (the decoded text begins with `x\u009c`), so the normal response body is not JSON. If inflating the returned `ArrayBuffer` directly fails, recover the original 8-bit byte values from the UTF-8-decoded characters before calling `inflateSync`:
+  ```js
+  const body = Buffer.from(await response.arrayBuffer()).toString('utf8')
+  const compressed = Buffer.from(Array.from(body, character => character.codePointAt(0) & 0xff))
+  const rows = JSON.parse(inflateSync(compressed).toString('utf8'))
+  ```
 - A fixture's competitor order can differ from the official page's display order. Convert scores and winners carefully before storing them.
 - A finished event without a verified result should not receive a guessed score.
 - Do not alter SpaceX UID generation, ICS response headers, or field escaping while correcting a different sports calendar.

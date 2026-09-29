@@ -21,6 +21,8 @@ const eventLabels = {
     participants: {
       'Huang Youzheng / Lin Shidong': '黄友政 / 林诗栋',
       'Tomokazu Harimoto / Hiroto Shinozuka': '张本智和 / 篠塚大登',
+      'Wang Chuqin': '王楚钦',
+      'Lin Shidong': '林诗栋',
       'Wang Manyu': '王曼昱',
       'Sun Yingsha': '孙颖莎',
     },
