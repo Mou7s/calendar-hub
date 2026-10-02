@@ -7,9 +7,11 @@ import detailsApi from "../server/api/launches/[slug].get.js";
 import spacexIcsRoute from "../server/routes/spacex.ics.js";
 import calendarIcsRoute from "../server/routes/calendar.ics.js";
 import topicIcsRoute from "../server/routes/ics/[topic].ics.js";
+import topicCalendarApi from "../server/api/calendar/[topic].get.js";
 import fixUrlMiddleware from "../server/middleware/fix-url.js";
 import {
   buildTopicCalendarFeed,
+  CALENDAR_TOPICS,
   getTopicCalendarData,
   loadCachedDota2TournamentMeta,
   loadDota2CalendarData,
@@ -1759,6 +1761,28 @@ test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async 
   assert.deepEqual(calendarWrites, []);
   assert.equal(values.get("calendar:sync:status").calendars.f1.ok, true);
   assert.ok(values.get("calendar:sync:status").calendars.f1.lastSuccessfulAt);
+});
+
+test("removed static topics return 404 without reading cached data", async () => {
+  assert.deepEqual(CALENDAR_TOPICS.map(topic => topic.id), ['spacex', 'f1', 'wtt', 'dota2']);
+  for (const topic of ['tech-events', 'games', 'holidays']) {
+    const event = {
+      context: {
+        params: { topic },
+        cloudflare: { env: { SPACEX_KV: {
+          get: async () => { assert.fail('Removed topic must not read stale KV data'); },
+          put: async () => { assert.fail('Removed topic must not write KV data'); }
+        } } }
+      },
+      node: {
+        req: { url: `/ics/${topic}.ics` },
+        res: { setHeader() {} }
+      }
+    };
+    await assert.rejects(topicIcsRoute(event), error => error.statusCode === 404);
+    await assert.rejects(topicCalendarApi(event), error => error.statusCode === 404);
+    await assert.rejects(getTopicCalendarData(topic), /Unsupported calendar topic/);
+  }
 });
 
 test("F1 ICS route resolves the topic from an extension URL", async () => {

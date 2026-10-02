@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 mode = "smart"
 
 [triggers]
-crons = ["7 * * * *"]
+crons = ["0 * * * *"]
 
 [[routes]]
 pattern = "calendarhub.mou7s.com"

@@ -56,7 +56,7 @@
   - `calendars.js`：主题注册、F1 赛程、WTT 官方赛程解析、通用 ICS 序列化。
   - `kv.js`：NuxtHub KV 上的 SWR 缓存（版本 Sequence + `LAST-MODIFIED`）。
   - `calendar-sync.js` / `launches.js`：主题同步与发射数据装载。
-- **其它**：`server/tasks/calendar/sync.js`（定时任务，`nuxt.config.ts` 里 `7 * * * *` 触发）、`server/middleware/fix-url.js` + `server/plugins/fix-url.js`（绝对 URL 归一化）。
+- **其它**：`server/tasks/calendar/sync.js`（定时任务，`nuxt.config.ts` 里 `0 * * * *` 触发）、`server/middleware/fix-url.js` + `server/plugins/fix-url.js`（绝对 URL 归一化）。
 
 ### 3. 共享契约 (`shared/`)
 

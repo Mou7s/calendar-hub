@@ -112,7 +112,7 @@ export default defineNuxtConfig({
       tasks: true
     },
     scheduledTasks: {
-      '7 * * * *': ['calendar:sync']
+      '0 * * * *': ['calendar:sync']
     }
   },
 

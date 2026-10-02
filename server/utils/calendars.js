@@ -1,6 +1,6 @@
 /**
  * Calendar Hub - 多主题在线日历注册与数据生成中心
- * 本模块负责管理全站各种主题日历（SpaceX、科技发布会、F1赛车、游戏发售、节假日调休等）
+ * 本模块负责管理全站各种主题日历（SpaceX、F1 赛车、WTT 乒乓球和 Dota 2 比赛）
  * 提供统一的数据拉取、标准化清洗以及 RFC 5545 ICS 序列化能力。
  */
 
@@ -32,17 +32,6 @@ export const CALENDAR_TOPICS = [
     description: '实时追踪 SpaceX 猎鹰九号、重型猎鹰及星舰的最新发射日程与官方直播地址。',
     descriptionEn: 'Real-time schedule for SpaceX Falcon 9, Falcon Heavy and Starship launches.',
     icsPath: '/ics/spacex.ics'
-  },
-  {
-    id: 'tech-events',
-    name: '科技大厂发布会日历',
-    nameEn: 'Tech Keynote & Events Calendar',
-    category: 'tech',
-    icon: 'i-lucide-cpu',
-    color: 'emerald',
-    description: '涵盖 Apple WWDC/秋季发布会、Google I/O、OpenAI 开发者大会及各大科技巨头重磅活动。',
-    descriptionEn: 'Upcoming tech keynotes from Apple, Google, OpenAI, Microsoft, and tech giants.',
-    icsPath: '/ics/tech-events.ics'
   },
   {
     id: 'f1',
@@ -80,28 +69,6 @@ export const CALENDAR_TOPICS = [
     icsPath: '/ics/dota2.ics',
     sourceUrl: 'https://liquipedia.net/dota2/Liquipedia:Matches'
   },
-  {
-    id: 'games',
-    name: '重磅 3A 游戏发售日历',
-    nameEn: 'Major Game Releases',
-    category: 'entertainment',
-    icon: 'i-lucide-smartphone',
-    color: 'purple',
-    description: '汇总全平台 Steam、PlayStation、Xbox 及 Switch 备受瞩目的重磅大作发售日期。',
-    descriptionEn: 'Upcoming AAA game release dates across PC, PlayStation, Xbox, and Nintendo.',
-    icsPath: '/ics/games.ics'
-  },
-  {
-    id: 'holidays',
-    name: '中国法定节假日与调休',
-    nameEn: 'China Public Holidays',
-    category: 'lifestyle',
-    icon: 'i-lucide-calendar-days',
-    color: 'amber',
-    description: '精准包含国务院公布的元旦、春节、清明、劳动、端午、中秋及国庆放假与调休提醒。',
-    descriptionEn: 'Official China public holidays and adjusted working days schedule.',
-    icsPath: '/ics/holidays.ics'
-  }
 ]
 
 const F1_2026_RACES = [
@@ -378,18 +345,6 @@ const createF1Session = (race, sessionId, sessionEn, sessionZh, localDateTime, d
     isLive: false
   }
 }
-
-const createF1Events = (races) => races.flatMap((race) => {
-  const sessions = [
-    race.sessions.sprint ? createF1Session(race, 'sprint', 'Sprint', '冲刺赛', race.sessions.sprint, 90) : null,
-    createF1Session(race, 'qualifying', 'Qualifying', '排位赛', race.sessions.qualifying, 60),
-    createF1Session(race, 'race', 'Race', '正赛', race.sessions.race, 120)
-  ]
-
-  return sessions.filter(Boolean)
-})
-
-const F1_2026_EVENTS = createF1Events(F1_2026_RACES)
 
 const WTT_REQUEST_HEADERS = {
   Accept: 'application/json',
@@ -995,96 +950,8 @@ export function extractDota2VenueFromInfobox(pageHtml) {
     .trim()
 }
 
-// 内置预设的非 SpaceX 主题静态/精选日历事件数据
-const STATIC_TOPIC_DATA = {
-  'tech-events': [
-    {
-      id: 'tech-apple-wwdc-2026',
-      title: 'Apple WWDC 2026 全球开发者大会',
-      launchAt: '2026-06-08T17:00:00.000Z',
-      launchWindow: { close: '2026-06-08T19:00:00.000Z' },
-      vehicle: 'Keynote 演讲',
-      launchSite: 'Apple Park / 在线直播',
-      missionType: 'Tech Conference',
-      missionUrl: 'https://developer.apple.com/wwdc/',
-      isLive: false
-    },
-    {
-      id: 'tech-google-io-2026',
-      title: 'Google I/O 2026 开发者大会',
-      launchAt: '2026-05-19T17:00:00.000Z',
-      launchWindow: { close: '2026-05-19T19:00:00.000Z' },
-      vehicle: 'Google AI & Android Update',
-      launchSite: 'Mountain View, CA',
-      missionType: 'Tech Conference',
-      missionUrl: 'https://io.google/',
-      isLive: false
-    },
-    {
-      id: 'tech-apple-fall-2026',
-      title: 'Apple 2026 秋季新品发布会 (iPhone 18)',
-      launchAt: '2026-09-15T17:00:00.000Z',
-      launchWindow: { close: '2026-09-15T19:00:00.000Z' },
-      vehicle: 'iPhone & Apple Watch',
-      launchSite: 'Steve Jobs Theater',
-      missionType: 'Product Event',
-      missionUrl: 'https://www.apple.com/apple-events/',
-      isLive: false
-    }
-  ],
-  'f1': F1_2026_EVENTS,
-  'games': [
-    {
-      id: 'game-gta6-2026',
-      title: '《Grand Theft Auto VI》(GTA6) 正式发售',
-      launchAt: '2026-10-27T00:00:00.000Z',
-      launchWindow: { close: null },
-      vehicle: 'PS5 / Xbox Series X|S',
-      launchSite: 'Global Digital Release',
-      missionType: 'Game Launch',
-      missionUrl: 'https://www.rockstargames.com/VI',
-      isLive: false
-    },
-    {
-      id: 'game-elder-scrolls-6',
-      title: '《上古卷轴6》最新重磅情报公布',
-      launchAt: '2026-06-14T18:00:00.000Z',
-      launchWindow: { close: null },
-      vehicle: 'Bethesda Games Showcase',
-      launchSite: 'Xbox Games Showcase 2026',
-      missionType: 'Game Reveal',
-      missionUrl: 'https://bethesda.net',
-      isLive: false
-    }
-  ],
-  'holidays': [
-    {
-      id: 'holiday-laborday-2026',
-      title: '🇨🇳 劳动节假期 (5月1日 ~ 5月5日)',
-      launchAt: '2026-05-01T00:00:00.000Z',
-      launchWindow: { close: '2026-05-05T23:59:59.000Z' },
-      vehicle: '法定节假日',
-      launchSite: '中国',
-      missionType: 'Public Holiday',
-      missionUrl: 'http://www.gov.cn',
-      isLive: false
-    },
-    {
-      id: 'holiday-nationalday-2026',
-      title: '🇨🇳 国庆节与中秋节黄金周 (10月1日 ~ 10月8日)',
-      launchAt: '2026-10-01T00:00:00.000Z',
-      launchWindow: { close: '2026-10-08T23:59:59.000Z' },
-      vehicle: '法定节假日',
-      launchSite: '中国',
-      missionType: 'Public Holiday',
-      missionUrl: 'http://www.gov.cn',
-      isLive: false
-    }
-  ]
-}
-
 /**
- * 根据 Topic ID 获取主题日历数据（SpaceX 实时 API 或预设数据）
+ * 根据 Topic ID 获取主题日历数据（SpaceX、F1、WTT 或 Dota 2 数据源）
  */
 export async function getTopicCalendarData(topicId, fetchImpl = fetch, options = {}) {
   if (topicId === 'spacex') {
@@ -1101,7 +968,7 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch, options =
     return await loadDota2CalendarData(fetchImpl, new Date(), options)
   }
 
-  return buildTopicCalendarData(topicId, STATIC_TOPIC_DATA[topicId] || []);
+  throw new Error(`Unsupported calendar topic: ${topicId}`);
 }
 
 function buildTopicCalendarData(topicId, items) {

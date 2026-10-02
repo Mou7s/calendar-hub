@@ -16,11 +16,8 @@
 | F1 | [f1.ics](https://calendarhub.mou7s.com/ics/f1.ics) | 从 F1 官方当前 2026 赛历和分站页面获取练习赛、冲刺赛、排位赛及正赛时间 |
 | WTT | [wtt.ics](https://calendarhub.mou7s.com/ics/wtt.ics) | 已公布双方选手与开赛时间的比赛；通常保留十六强及以后轮次，普通 Contender 仅保留决赛 |
 | Dota 2 | [dota2.ics](https://calendarhub.mou7s.com/ics/dota2.ics) | Liquipedia 赛事与赛程，按服务端规则筛选；已结束比赛保留 48 小时，附比分及胜者 |
-| 科技活动 | [tech-events.ics](https://calendarhub.mou7s.com/ics/tech-events.ics) | 随代码维护的静态活动数据 |
-| 游戏发售 | [games.ics](https://calendarhub.mou7s.com/ics/games.ics) | 随代码维护的静态游戏数据 |
-| 中国节假日 | [holidays.ics](https://calendarhub.mou7s.com/ics/holidays.ics) | 随代码维护的静态节假日数据 |
 
-页面展示前四个图层，`/api/topics` 列出全部七个主题。后三个主题属于内置静态数据，不保证完整覆盖或自动更新。
+页面与 `/api/topics` 均提供以上四个主题。
 
 SpaceX 还保留 `/calendar.ics`、`/launches.ics` 和 `/ics/spacex.ics` 入口，兼容已有订阅。
 
@@ -45,7 +42,7 @@ SpaceX 还保留 `/calendar.ics`、`/launches.ics` 和 `/ics/spacex.ics` 入口�
 - SpaceX 合并官网前端使用的 GraphQL Page Tiles 与 TIMING JSON 数据源。
 - F1 根据官方当前赛历加载分站会话，限制并发抓取，避免将不完整赛季写入 KV。
 - WTT 解析官方赛事与比赛数据；Dota 2 解析 Liquipedia 数据，使用明确的 `User-Agent` 并缓存结果。
-- 每小时第 7 分钟执行 `calendar:sync`，同步 SpaceX 和 F1；其它主题按请求使用各自缓存流程。
+- 每小时整点执行 `calendar:sync`，同步 SpaceX 和 F1；其它主题按请求使用各自缓存流程。
 - `/api/events` 独立加载各源，按时间交叠筛选、按 ID 去重，并根据 `locale` 选择标题；全部数据源失败才返回 502。
 - 事件起止时间使用绝对 ISO 时间，网页和日历客户端按用户本地时区显示。
 
@@ -168,7 +165,7 @@ git diff --check
 
 前端静态资源通过 Workers Assets 提供，SSR、API 与 ICS 由 Nitro Worker 处理。
 
-部署前检查 `wrangler.toml`：自定义域名、当前账户的 KV namespace，以及每小时第 7 分钟的 Cron 配置。`SPACEX_KV` 与 `KV` 使用同一个生产 namespace。
+部署前检查 `wrangler.toml`：自定义域名、当前账户的 KV namespace，以及每小时整点的 Cron 配置。`SPACEX_KV` 与 `KV` 使用同一个生产 namespace。
 
 ```bash
 bun run preview:worker   # 构建并在本地 Workers 运行时预览
