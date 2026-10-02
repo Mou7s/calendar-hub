@@ -1,3 +1,4 @@
+import type { CalendarEvent } from '#shared/types'
 import { getCalendarFromKv } from '../utils/calendar-sync.js'
 import { getCachedData, getKvStorage } from '../utils/kv.js'
 import { loadGlobalLaunches } from '../utils/launches.js'

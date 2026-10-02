@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '#shared/types'
 // 只读任务详情卡：发射时间、载具/地点、比分、官方链接。
 // 文案复用现有 i18n 词条（mission.* / status.* / subscribe.*），零新增。
 // 各图层的字段名与图标走 calendar-event-presentation.js（F1 = 赛道、WTT = 场馆…）

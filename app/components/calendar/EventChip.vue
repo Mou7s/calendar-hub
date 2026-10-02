@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '#shared/types'
 defineOptions({ inheritAttrs: false })
 
 // 只读事件 chip：无拖拽。LIVE 显示红点，比分（如 WTT 完赛）

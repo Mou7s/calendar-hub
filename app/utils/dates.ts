@@ -1,3 +1,4 @@
+import type { CalendarView, DateRange } from '#shared/types'
 import { CalendarDate, getLocalTimeZone, parseDate, Time, toCalendarDateTime, today } from '@internationalized/date'
 import { addDays, lightFormat, startOfMonth, startOfWeek } from 'date-fns'
 

@@ -8,6 +8,17 @@ import { de, en, es, fr, ja, ko, zh_cn } from '@nuxt/ui/locale'
 useCalendarEvents()
 
 const { t, locale } = useI18n()
+const { isSearchOpen, isSubscribeOpen } = useCalendar()
+
+// Load optional dialogs on first use and retain their state afterwards.
+const hasOpenedSearch = ref(isSearchOpen.value)
+const hasOpenedSubscribe = ref(isSubscribeOpen.value)
+watch(isSearchOpen, (open) => {
+  if (open) hasOpenedSearch.value = true
+})
+watch(isSubscribeOpen, (open) => {
+  if (open) hasOpenedSubscribe.value = true
+})
 
 // Nuxt UI 自己的文案和日期格式化走它内部的 locale 上下文：UApp 的 locale 会把它交给
 // ConfigProvider，迷你日历的月份/星期名、组件内置的「关闭/上个月」等才会跟着语言走
@@ -115,9 +126,9 @@ useHead(() => ({
 
       <NuxtPage />
 
-      <AppSearch />
+      <LazyAppSearch v-if="hasOpenedSearch" />
 
-      <SubscribeModal />
+      <LazySubscribeModal v-if="hasOpenedSubscribe" />
     </div>
   </UApp>
 </template>

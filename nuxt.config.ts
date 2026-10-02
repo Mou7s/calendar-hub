@@ -23,7 +23,11 @@ export default defineNuxtConfig({
   },
 
   experimental: {
-    viewTransition: true
+    viewTransition: true,
+    ssrStreaming: true,
+    // Current i18n/fonts plugins still rely on Vite config/server hooks.
+    // Keep their supported pipeline while retaining other Nuxt 5 defaults.
+    viteEnvironmentApi: false
   },
 
   compatibilityDate: '2026-06-30',
@@ -85,7 +89,7 @@ export default defineNuxtConfig({
   },
 
   future: {
-    compatibilityVersion: 4
+    compatibilityVersion: 5
   },
 
   // Nitro 服务器引擎：以 Cloudflare Workers Module Worker 形式部署
@@ -96,6 +100,24 @@ export default defineNuxtConfig({
     },
     scheduledTasks: {
       '7 * * * *': ['calendar:sync']
+    }
+  },
+
+  // Only split browser dependencies; preserve the Workers server pipeline.
+  hooks: {
+    'vite:extendConfig'(config, { isClient }) {
+      if (!isClient) return
+      if (!config.build) return
+      config.build.rolldownOptions ||= {}
+      config.build.rolldownOptions.output = {
+        ...config.build.rolldownOptions.output,
+        codeSplitting: {
+          groups: [
+            { name: 'vue', test: /node_modules[\\/](?:@vue[\\/]|vue[\\/]|vue-router[\\/])/ },
+            { name: 'ui-primitives', test: /node_modules[\\/](?:reka-ui|@floating-ui|@internationalized|tailwind-variants|tailwind-merge|vaul-vue)[\\/]/ }
+          ]
+        }
+      }
     }
   },
 

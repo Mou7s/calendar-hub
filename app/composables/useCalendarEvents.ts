@@ -1,3 +1,4 @@
+import type { CalendarEvent, DateRange, Calendar } from '#shared/types'
 import { addDays, startOfDay } from 'date-fns'
 import { FetchError } from 'ofetch'
 

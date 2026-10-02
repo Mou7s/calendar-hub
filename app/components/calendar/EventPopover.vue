@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '#shared/types'
 // 只读订阅源：popover 只展示任务详情（MissionDetail），无编辑表单、
 // 无右键菜单。保留模板的延迟挂载优化：几百个事件同时在屏时，
 // popover 首次可达（hover/focus）前不挂载。

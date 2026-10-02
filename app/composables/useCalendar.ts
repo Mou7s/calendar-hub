@@ -1,3 +1,4 @@
+import type { CalendarView, DateRange } from '#shared/types'
 import { breakpointsTailwind } from '@vueuse/core'
 import { parseDate, type CalendarDate } from '@internationalized/date'
 

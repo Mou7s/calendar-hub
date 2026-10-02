@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarView } from '#shared/types'
 import { parseDate } from '@internationalized/date'
 import type { TabsItem } from '@nuxt/ui'
 

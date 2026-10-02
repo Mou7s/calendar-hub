@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Calendar } from '#shared/types'
 import { calendarDotClasses } from '~/utils/calendars'
 import { CALENDAR_LAYER_COLORS } from '~/utils/calendar-colors'
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '#shared/types'
 import { isSameDay, isToday } from 'date-fns'
 
 // Placeholder blocks shown while a range loads, as [start hour, hours]
