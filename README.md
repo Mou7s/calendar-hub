@@ -157,6 +157,7 @@ node --check server/utils/spacex.js
 node --check server/utils/kv.js
 node --check server/routes/spacex.ics.js
 bun run typecheck
+bun run lint
 bun run build
 git diff --check
 ```

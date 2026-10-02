@@ -10,9 +10,7 @@ import {
   formatIcsDate,
   foldIcsLine,
   buildSequence,
-  buildMissionUrl,
-  sortMissions,
-  isFutureMission
+  sortMissions
 } from './spacex.js';
 
 export const PROVIDERS = [

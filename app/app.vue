@@ -65,7 +65,7 @@ const { data: launchPayload } = useFetch('/api/launches', {
   default: () => null
 })
 
-const nextLaunch = computed(() => (launchPayload.value as { nextLaunch?: any } | null)?.nextLaunch ?? null)
+const nextLaunch = computed(() => launchPayload.value?.nextLaunch ?? null)
 
 useHead(() => ({
   script: [

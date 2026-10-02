@@ -12,6 +12,7 @@ const { locale } = useI18n()
 
 const event = computed(() => props.positioned.event)
 const calendar = computed(() => calendars.value.find(item => item.id === event.value.calendarId))
+const color = computed(() => calendar.value?.color ?? 'primary')
 
 const times = computed(() => {
   const start = new Date(event.value.start)
@@ -33,8 +34,8 @@ const compact = computed(() => props.positioned.height < 40)
       data-event
       class="absolute flex flex-col items-start overflow-hidden rounded-xs px-3 py-1 text-xs text-start transition-colors select-none focus-visible:outline-3 z-5"
       :class="[
-        eventBlockClasses[calendar?.color ?? 'primary'],
-        eventOutlineClasses[calendar?.color ?? 'primary']
+        eventBlockClasses[color],
+        eventOutlineClasses[color]
       ]"
       :style="eventBlockStyle(positioned)"
       :aria-label="`${event.title}, ${times}`"
@@ -42,7 +43,7 @@ const compact = computed(() => props.positioned.height < 40)
     >
       <span
         class="absolute inset-s-1 inset-y-1 w-1 rounded-full"
-        :class="event.live ? 'bg-error' : calendarDotClasses[calendar?.color ?? 'primary']"
+        :class="event.live ? 'bg-error' : calendarDotClasses[color]"
       />
 
       <span class="w-full font-medium truncate flex items-center gap-1.5">

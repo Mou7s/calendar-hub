@@ -815,7 +815,7 @@ export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date(),
       cachedMeta = new Map()
     }
   }
-  let venuesByTournamentPath = new Map(cachedMeta)
+  let venuesByTournamentPath
   try {
     venuesByTournamentPath = await loadDota2TournamentVenues(html, fetchImpl, {
       cachedMeta,

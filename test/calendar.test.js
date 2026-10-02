@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 
 import launchesApi from "../server/api/launches.get.js";
 import historyApi from "../server/api/history-launches.get.js";
@@ -736,7 +735,7 @@ test("calendar requests return KV data without request-time revalidation", async
       if (key === "spacex_launches_data") return staleData;
       return null;
     },
-    put: async (key, val, options) => {
+    put: async (key) => {
       if (key === "spacex_launches_data") {
         kvPutCalled = true;
       }
@@ -910,7 +909,7 @@ test("translateMissionDetails executes structured translation and handles fallba
       try {
         parsedUserMessage = JSON.parse(userMessage);
         isJson = true;
-      } catch (e) {
+      } catch {
         // Plain text translation
       }
 

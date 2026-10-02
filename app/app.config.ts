@@ -38,8 +38,15 @@ export default defineAppConfig({
     },
     checkbox: {
       slots: {
-        base: ['rounded-xs', ring]
-      }
+        base: 'rounded-xs'
+      },
+      // Preserve Nuxt UI's colored ring when a checkbox is highlighted.
+      compoundVariants: [{
+        highlight: false,
+        class: {
+          base: ring
+        }
+      }]
     },
     chip: {
       slots: {

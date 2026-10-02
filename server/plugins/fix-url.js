@@ -15,7 +15,7 @@ export default defineNitroPlugin((nitroApp) => {
           const cleanPath = parsed.pathname + parsed.search + parsed.hash;
           event.node.req.url = cleanPath;
           event._path = cleanPath;
-        } catch (e) {
+        } catch {
           // 静默忽略无法解析的 URL 格式
         }
       }

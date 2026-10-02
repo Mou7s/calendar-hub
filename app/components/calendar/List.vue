@@ -26,6 +26,14 @@ function colorFor(id: string) {
   return calendars.value.find(calendar => calendar.id === id)
 }
 
+function dotClass(color: string) {
+  return calendarDotClasses[color as Calendar['color']]
+}
+
+function dotClassFor(id: string) {
+  return dotClass(colorFor(id)?.color ?? 'primary')
+}
+
 function pickColor(id: string, color: Calendar['color']) {
   setCalendarColor(id, color)
   openColorFor.value = null
@@ -58,7 +66,7 @@ function pickColor(id: string, color: Calendar['color']) {
             square
             :aria-label="t('calendar.sidebar.layerColor', { name: item.label })"
           >
-            <span :class="['inline-block size-3 rounded-full', calendarDotClasses[colorFor(item.value!)?.color ?? 'primary']]" />
+            <span :class="['inline-block size-3 rounded-full', dotClassFor(item.value!)]" />
           </UButton>
 
           <template #content>
@@ -73,7 +81,7 @@ function pickColor(id: string, color: Calendar['color']) {
                 :aria-label="color"
                 @click="pickColor(item.value!, color as Calendar['color'])"
               >
-                <span :class="['inline-block size-3.5 rounded-full', calendarDotClasses[color as Calendar['color']], colorFor(item.value!)?.color === color ? 'ring-2 ring-neutral-500 ring-offset-1' : 'opacity-40']" />
+                <span :class="['inline-block size-3.5 rounded-full', dotClass(color), colorFor(item.value!)?.color === color ? 'ring-2 ring-neutral-500 ring-offset-1' : 'opacity-40']" />
               </UButton>
             </div>
           </template>

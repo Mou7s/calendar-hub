@@ -8,11 +8,21 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@nuxthub/core',
-    '@nuxtjs/i18n'
+    '@nuxtjs/i18n',
+    '@nuxt/eslint'
   ],
 
   devtools: {
     enabled: true
+  },
+
+  eslint: {
+    config: {
+      // The root config is maintained here; avoid find-up 8's invalid
+      // unicorn-magic import in the optional config creation path.
+      autoInit: false,
+      configFile: '.nuxt/eslint.config.mjs'
+    }
   },
 
   css: ['~/assets/css/main.css'],
@@ -131,12 +141,12 @@ export default defineNuxtConfig({
       {
         name: 'fix-absolute-url-middleware',
         configureServer(server) {
-          server.middlewares.use((req: any, res: any, next: any) => {
+          server.middlewares.use((req, res, next) => {
             if (req.url && (req.url.startsWith('http://') || req.url.startsWith('https://'))) {
               try {
                 const parsed = new URL(req.url)
                 req.url = parsed.pathname + parsed.search + parsed.hash
-              } catch (e) {
+              } catch {
                 // ignore
               }
             }

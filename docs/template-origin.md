@@ -22,3 +22,13 @@
 优先评估展示、布局、无障碍和性能修复。依赖更新需核对 Nuxt 与 Cloudflare Workers 的兼容性。
 不得恢复事件新建、编辑、拖拽和服务端写入链路；保持 AGENTS.md 的 ICS UID、响应头、转义、直播保活、时间和多语言约束。
 每次同步记录上游 SHA、吸收或跳过的原因，并执行 AGENTS.md 的验证流程。
+
+## 已吸收的上游更新
+
+2026-10-02：
+
+- `11809148a32a40612d1d7ddab8aef5372ad46edf`（#24）：复选框仅在 `highlight: false` 时应用玻璃边框，保留高亮状态的主题色边框。
+- `c55df554aacf014f1d600cb32d33857086ec387a`（#21）：接入 Nuxt ESLint 与 Tailwind correctness 检查，支持普通类名和 `:ui` 对象；移植事件块颜色计算，跳过已移除的事件编辑表单改动。
+- 依赖对齐：Nuxt UI 等运行依赖已有上游版本；新增开发依赖 `@nuxt/eslint`、`eslint`、`eslint-plugin-better-tailwindcss`，提升 Lucide 声明至 `^1.2.137`（锁定安装版本为 `1.2.138`）。保留 Bun，不引入只读应用不需要的 `gpu-time` 和 `zod`。
+
+运行 `bun run lint` 会先生成 Nuxt 配置再执行检查。根 ESLint 配置由项目维护，关闭自动创建配置以避开 `find-up` 8 的无效 `unicorn-magic` 导入；这不关闭任何检查规则。

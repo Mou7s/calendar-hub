@@ -25,8 +25,8 @@ interface SourceMission {
   isLive?: boolean
   winner?: string
   gameScores?: string[]
-  competitor1?: any
-  competitor2?: any
+  competitor1?: string | { name?: string }
+  competitor2?: string | { name?: string }
 }
 
 function pickTitle(mission: SourceMission, locale: string): string {
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
 
   // 各源独立降级：单个源失败不拖累其它图层
   // Dota 2 锦标赛 Tier 元数据走 KV 长缓存：Worker 抓取抖动时仍能执行 Tier 1 过滤
-  const dota2Kv = getKvStorage((event as any).context?.cloudflare?.env || {})
+  const dota2Kv = getKvStorage(event.context?.cloudflare?.env || {})
   const settled = await Promise.allSettled([
     getCalendarFromKv(event, 'spacex', loadGlobalLaunches),
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),

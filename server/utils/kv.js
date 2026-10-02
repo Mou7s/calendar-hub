@@ -34,7 +34,7 @@ export function getKvStorage(env) {
         await hubStorage.set(key, val, options);
       }
     };
-  } catch (e) {
+  } catch {
     // Falls back to null when running in Node unit tests without hubKV global
     return null;
   }

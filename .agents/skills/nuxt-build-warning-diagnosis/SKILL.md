@@ -21,7 +21,13 @@ For optional dialogs, Nuxt's Lazy component prefix needs conditional rendering t
 
 Scope Rolldown chunk groups to the client in vite:extendConfig. Use Windows-compatible path separators in regexes. Validate actual production JavaScript in a browser because module splitting can change initialization order. Reference: https://rolldown.rs/reference/OutputOptions.codeSplitting.
 
-## Verify
+## Nuxt ESLint and Tailwind checks
+
+`bun run lint` prepares Nuxt before ESLint. The maintained root config imports `.nuxt/eslint.config.mjs`; the module explicitly generates there even when other Nuxt outputs use a cache directory. Keep `eslint.config.autoInit: false`: @nuxt/eslint 1.17's optional root-config creation imports find-up 8, whose unicorn-magic import is invalid. The normal generated config and checks remain enabled.
+
+Use better-tailwindcss's correctness preset with the actual CSS entry point and object-value extraction for `v-bind:ui`. Inline class-map index expressions with string fallback or type assertions can be mistaken for class literals; move color selection to a computed value or typed helper, as in EventBlock and List, rather than allowing arbitrary unknown classes. Declare the Nitro-provided hubKV global only for its consuming file. Verify unknown classes, conflicting classes and :ui values with ESLint.lintText as well as a clean whole-repository lint run.
+
+## Build verification
 
 Follow AGENTS.md's complete tests, syntax checks, typecheck, build, and diff check. Also make real requests to the dev server and test the production Workers bundle locally. Confirm all seven language changes, font resource loading, search and subscription first-open/reopen, date views, and invalid-route status. Keep ICS headers, UIDs, escaping, and read-only behavior stable.
 
