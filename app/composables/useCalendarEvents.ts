@@ -193,7 +193,12 @@ const _useCalendarEvents = () => {
     return buckets
   })
 
+  // UTC SSR and the viewer timezone must not hydrate different event geometry.
+  // Keep prefetched data, but first paint event buckets after client mount.
+  const ready = useMounted()
+
   function eventsForDay(day: Date): CalendarEvent[] {
+    if (!ready.value) return []
     return eventsByDay.value.get(dayKey(day)) ?? []
   }
 
@@ -377,6 +382,7 @@ const _useCalendarEvents = () => {
     toggleCalendar,
     setCalendarColor,
     events,
+    ready,
     eventsForDay,
     eventsForDays,
     status,

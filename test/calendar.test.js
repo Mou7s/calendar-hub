@@ -24,6 +24,9 @@ import {
   normalizeWttScheduleUnit,
   parseDota2Matches,
   parseF1OfficialStartTimes,
+  parseF1CurrentCalendar,
+  parseF1RacePage,
+  loadF1CalendarData,
 } from "../server/utils/calendars.js";
 import {
   CALENDAR_KEYS,
@@ -1051,7 +1054,7 @@ test("fixUrlMiddleware normalizes absolute request URLs into relative paths", ()
 });
 
 test("F1 topic exposes the complete 2026 race and session schedule", async () => {
-  const data = await getTopicCalendarData("f1");
+  const data = await getTopicCalendarData("f1", fetchF1Fixture);
   const raceEvents = data.missions.filter((mission) => mission.id.endsWith("-race"));
   const sprintEvents = data.missions.filter((mission) => mission.id.endsWith("-sprint"));
   const qualifyingEvents = data.missions.filter((mission) => mission.id.endsWith("-qualifying"));
@@ -1657,6 +1660,56 @@ const officialF1Html = `
   </tbody></table>
 `;
 
+const f1Page = race => '<script>self.__next_f.push([1,' + JSON.stringify('0:' + JSON.stringify({ race }) + '\n') + '])</script>';
+const fixtureRaces = parseF1OfficialStartTimes(officialF1Html);
+const fetchF1Fixture = async input => {
+  const slug = String(input).split('/2026/')[1];
+  if (!slug) return new Response(fixtureRaces.map(r => '<a href="/en/racing/2026/' + r.slug + '">race</a>').join(''));
+  const race = fixtureRaces.find(r => r.slug === slug);
+  const offset = (race.offsetMinutes < 0 ? '-' : '+') + String(Math.floor(Math.abs(race.offsetMinutes) / 60)).padStart(2, '0') + ':' + String(Math.abs(race.offsetMinutes) % 60).padStart(2, '0');
+  return new Response(f1Page({ url: '/en/racing/2026/' + slug, meetingName: race.nameEn, circuitOfficialName: race.venue,
+    meetingStartDate: race.sessions.qualifying.slice(0, 10), meetingEndDate: race.sessions.race.slice(0, 10),
+    meetingSessions: Object.entries(race.sessions).map(([key, start]) => ({ session: { qualifying: 'q', race: 'r', sprint: 's' }[key],
+      startTime: start + ':00', endTime: start.slice(0, 11) + String(Number(start.slice(11, 13)) + 1).padStart(2, '0') + start.slice(13) + ':00', gmtOffset: offset })) }));
+};
+
+const malaysiaFixture = { url: '/en/racing/2026/bahrain', meetingName: 'Bahrain Grand Prix', circuitOfficialName: 'Sepang International Circuit', circuitLocation: 'Malaysia',
+  meetingStartDate: '2026-10-02', meetingEndDate: '2026-10-04', meetingSessions: [
+    { session: 'q', startTime: '2026-10-03T16:00:00', endTime: '2026-10-03T17:00:00', gmtOffset: '+08:00' },
+    { session: 'r', startTime: '2026-10-04T15:00:00', endTime: '2026-10-04T17:00:00', gmtOffset: '+08:00' }] };
+
+test('current F1 calendar follows membership and preserves relocated Bahrain UIDs', async () => {
+  const data = await loadF1CalendarData(async url => new Response(String(url).endsWith('/bahrain') ? f1Page(malaysiaFixture) : '<a href="/en/racing/2026/bahrain">Bahrain</a><a href="/en/racing/2026/pre-season-testing-1">Testing</a>'));
+  assert.equal(data.missions.length, 2);
+  const race = data.missions.find(x => x.id.endsWith('-race'));
+  assert.equal(race.id, 'f1-2026-bahrain-race');
+  assert.equal(race.launchAt, '2026-10-04T07:00:00.000Z');
+  assert.equal(race.launchWindow.close, '2026-10-04T09:00:00.000Z');
+  assert.equal(race.launchSite, 'Sepang International Circuit');
+  assert.match(race.titleZh, /马来西亚/);
+  assert.ok(!data.missions.some(x => x.id.includes('saudi')));
+  assert.match(buildTopicCalendarFeed('f1', data), /UID:f1-2026-bahrain-race@calendarhub\.local/);
+});
+
+test('F1 practice sessions use official times and distinct stable ICS UIDs', () => {
+  const practice = [1, 2, 3].map(n => ({ session: 'p' + n, startTime: '2026-10-0' + (n === 3 ? '3' : '2') + 'T12:30:00', endTime: '2026-10-0' + (n === 3 ? '3' : '2') + 'T13:30:00', gmtOffset: '+08:00' }));
+  const events = parseF1RacePage(f1Page({ ...malaysiaFixture, meetingSessions: [...practice, ...malaysiaFixture.meetingSessions] }), 'bahrain');
+  assert.equal(events.length, 5);
+  assert.equal(events[0].id, 'f1-2026-bahrain-practice-1');
+  assert.equal(events[0].launchAt, '2026-10-02T04:30:00.000Z');
+  assert.equal(events[0].launchWindow.close, '2026-10-02T05:30:00.000Z');
+  assert.match(events[0].titleZh, /第一次练习赛/);
+  const sprintWeekend = parseF1RacePage(f1Page({ ...malaysiaFixture, meetingSessions: [practice[0], ...malaysiaFixture.meetingSessions] }), 'bahrain');
+  assert.equal(sprintWeekend.filter(x => x.id.includes('practice')).length, 1);
+  assert.ok(!sprintWeekend.some(x => x.id.endsWith('practice-2')));
+});
+
+test('F1 rejects missing calendars, partial sessions and inconsistent dates', () => {
+  assert.throws(() => parseF1CurrentCalendar('<html/>'), /no race links/);
+  assert.throws(() => parseF1RacePage(f1Page({ ...malaysiaFixture, meetingSessions: malaysiaFixture.meetingSessions.slice(1) }), 'bahrain'), /Incomplete/);
+  assert.throws(() => parseF1RacePage(f1Page({ ...malaysiaFixture, meetingEndDate: '2026-04-12' }), 'bahrain'), /Inconsistent/);
+});
+
 test("official F1 start times are parsed into correctly ordered session dates", () => {
   const races = parseF1OfficialStartTimes(officialF1Html);
   assert.equal(races.length, 24);
@@ -1683,9 +1736,7 @@ test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async 
   };
   const fetchStub = async (url) => {
     const value = String(url);
-    if (value.includes("formula-1-and-fia-announce")) {
-      return new Response(officialF1Html, { status: 200 });
-    }
+    if (value.includes("formula1.com/en/racing/2026")) return fetchF1Fixture(value);
     if (value.includes("launches-page-tiles")) {
       return new Response(JSON.stringify(sampleTiles), { status: 200 });
     }
@@ -1707,6 +1758,8 @@ test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async 
   assert.equal(second.calendars.spacex.changed, false);
   assert.equal(second.calendars.f1.changed, false);
   assert.deepEqual(calendarWrites, []);
+  assert.equal(values.get("calendar:sync:status").calendars.f1.ok, true);
+  assert.ok(values.get("calendar:sync:status").calendars.f1.lastSuccessfulAt);
 });
 
 test("F1 ICS route resolves the topic from an extension URL", async () => {
@@ -1726,6 +1779,7 @@ test("F1 ICS route resolves the topic from an extension URL", async () => {
     },
   };
 
+  event.context.cloudflare.env.SPACEX_KV = { get: async () => await getTopicCalendarData('f1', fetchF1Fixture), put: async () => {} };
   const feed = await topicIcsRoute(event);
   assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
   assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
@@ -1747,6 +1801,7 @@ test("F1 ICS route prefers the request pathname in a Cloudflare-style event", as
     },
   };
 
+  event.context.cloudflare.env.SPACEX_KV = { get: async () => await getTopicCalendarData('f1', fetchF1Fixture), put: async () => {} };
   const feed = await topicIcsRoute(event);
   assert.match(feed, /X-WR-CALNAME:F1 Grand Prix Schedule/);
   assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
@@ -1857,10 +1912,12 @@ test("runCalendarSyncTask skips gracefully when no KV binding is available", asy
   assert.equal(outcome.skipped, true);
   assert.match(outcome.reason, /KV binding is unavailable/);
 
-  // 有 KV stub 时不应走 skipped 分支：证明它真的尝试执行了同步（fetch 外网会 reject，
-  // 但关键是不能命中 skipped 分支——锁定"有绑定就走真同步"的契约）
-  const attempted = await runCalendarSyncTask({
-    cloudflare: { env: { SPACEX_KV: { get: async () => null, put: async () => {} } } },
-  }).catch((e) => e);
-  assert.equal(attempted?.skipped, undefined);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error('offline fixture'); };
+  try {
+    const attempted = await runCalendarSyncTask({
+      cloudflare: { env: { SPACEX_KV: { get: async () => null, put: async () => {} } } },
+    }).catch(e => e);
+    assert.equal(attempted?.skipped, undefined);
+  } finally { globalThis.fetch = originalFetch; }
 });

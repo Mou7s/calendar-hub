@@ -2,7 +2,7 @@
 import { isToday } from 'date-fns'
 
 const { range } = useCalendar()
-const { eventsForDay, eventsForDays, status } = useCalendarEvents()
+const { ready, eventsForDay, eventsForDays, status } = useCalendarEvents()
 
 // 农历/节气标签只在简体中文下显示
 const { t, locale } = useI18n()
@@ -35,7 +35,7 @@ const allDayEvents = computed(() => layoutAllDay(
 
 // A pending fetch keeps serving the previous range, so the placeholders wait
 // until the visible days have nothing of their own to show
-const loading = computed(() => status.value === 'pending'
+const loading = computed(() => !ready.value || status.value === 'pending'
   && !allDayEvents.value.length
   && timedEvents.value.every(day => !day.length))
 

@@ -6,7 +6,7 @@
 
 import { loadLaunchData, escapeIcsText, formatIcsDate, foldIcsLine, buildSequence } from './spacex.js'
 
-export const F1_2026_SOURCE_URL = 'https://www.formula1.com/en/latest/article/formula-1-and-fia-announce-2026-sprint-calendar.3PyLPAazrBNe8kQIS3wOfY'
+export const F1_2026_SOURCE_URL = 'https://www.formula1.com/en/racing/2026'
 
 export const WTT_EVENTS_SOURCE_URL = 'https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/general/wtt_upcoming_only_events_list.json'
 export const WTT_SCHEDULE_SOURCE_URL = 'https://wtt-website-api-vm-frontdoor-hhaec5epbhdyfugz.a01.azurefd.net/liveeventsapi/api/cms/GetEventSchedule'
@@ -51,8 +51,8 @@ export const CALENDAR_TOPICS = [
     category: 'sports',
     icon: 'i-lucide-trophy',
     color: 'red',
-    description: '包含 2026 赛季一级方程式赛车 24 站大奖赛，以及 Sprint、排位赛和正赛时间。',
-    descriptionEn: 'The complete 2026 Formula 1 calendar with 24 Grands Prix, Sprint, qualifying and race sessions.',
+    description: '同步 2026 赛季一级方程式赛车官方当前赛历，以及练习赛、冲刺赛、排位赛和正赛时间。',
+    descriptionEn: 'The current official 2026 Formula 1 calendar with practice, Sprint, qualifying and race sessions.',
     icsPath: '/ics/f1.ics',
     sourceUrl: 'https://www.formula1.com/en/racing/2026'
   },
@@ -1091,6 +1091,8 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch, options =
     return await loadLaunchData(fetchImpl);
   }
 
+  if (topicId === 'f1') return loadF1CalendarData(fetchImpl)
+
   if (topicId === 'wtt') {
     return await loadWttCalendarData(fetchImpl);
   }
@@ -1163,19 +1165,81 @@ function buildTopicCalendarData(topicId, items) {
   };
 }
 
-export async function loadF1CalendarData(fetchImpl = fetch) {
-  const response = await fetchImpl(F1_2026_SOURCE_URL, {
-    headers: {
-      Accept: 'text/html',
-      'User-Agent': 'calendarhub-cloudflare-worker'
-    }
-  })
-  if (!response.ok) {
-    throw new Error(`Unable to load official F1 schedule: ${response.status}`)
-  }
+export function parseF1CurrentCalendar(html) {
+  const slugs = [...new Set(Array.from(html.matchAll(/href="\/en\/racing\/2026\/([a-z-]+)"/g), match => match[1]))]
+    .filter(slug => !slug.startsWith('pre-season-testing'))
+  if (!slugs.length) throw new Error('Current F1 calendar has no race links')
+  if (slugs.length > 30) throw new Error('Unexpected F1 calendar size')
+  return slugs
+}
 
-  const races = parseF1OfficialStartTimes(await response.text())
-  return buildTopicCalendarData('f1', createF1Events(races))
+export function parseF1RacePage(html, slug) {
+  // Next streams JSON records across script chunks; concatenate before parsing records.
+  const stream = Array.from(html.matchAll(/self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)/g), match => JSON.parse(match[1])).join('')
+  let race
+  const visit = (value) => {
+    if (!value || typeof value !== 'object') return
+    if (Array.isArray(value.meetingSessions) && value.url === '/en/racing/2026/' + slug) race = value
+    for (const child of Object.values(value)) visit(child)
+  }
+  for (const line of stream.split('\n')) {
+    let record
+    try { record = JSON.parse(line.slice(line.indexOf(':') + 1)) } catch { continue }
+    visit(record)
+  }
+  if (!race || !race.circuitOfficialName) throw new Error('Missing official F1 race metadata: ' + slug)
+  const aliases = { brazil: 'sao-paulo', 'united-arab-emirates': 'abu-dhabi' }
+  const known = F1_2026_RACES.find(item => item.slug === (aliases[slug] || slug))
+  if (!known) throw new Error('Unmapped F1 race identity: ' + slug)
+  const relocated = slug === 'bahrain' && race.circuitLocation === 'Malaysia'
+  const metadata = { ...known, slug, venue: race.circuitOfficialName,
+    nameEn: relocated ? 'Bahrain Grand Prix in Malaysia' : race.meetingName,
+    nameZh: relocated ? '巴林大奖赛（马来西亚）' : known.nameZh }
+  const types = { p1: ['practice-1', 'Practice 1', '第一次练习赛'], p2: ['practice-2', 'Practice 2', '第二次练习赛'], p3: ['practice-3', 'Practice 3', '第三次练习赛'], q: ['qualifying', 'Qualifying', '排位赛'], r: ['race', 'Race', '正赛'], s: ['sprint', 'Sprint', '冲刺赛'] }
+  const events = race.meetingSessions.filter(session => types[session.session]).map(session => {
+    if (!/^[+-]\d{2}:\d{2}$/.test(session.gmtOffset)) throw new Error('Missing F1 session UTC offset: ' + slug)
+    const start = new Date(session.startTime + session.gmtOffset).toISOString()
+    const end = new Date(session.endTime + session.gmtOffset).toISOString()
+    if (!start.startsWith('2026-') || Date.parse(end) <= Date.parse(start)
+      || session.startTime.slice(0, 10) < race.meetingStartDate.slice(0, 10)
+      || session.startTime.slice(0, 10) > race.meetingEndDate.slice(0, 10)) throw new Error('Inconsistent F1 session dates: ' + slug)
+    const [id, en, zh] = types[session.session]
+    const event = createF1Session(metadata, id, en, zh, '2026-01-01T00:00', 60)
+    return { ...event, launchAt: start, launchWindow: { open: start, close: end } }
+  })
+  if (!events.some(event => event.id.endsWith('-race')) || !events.some(event => event.id.endsWith('-qualifying'))
+    || new Set(events.map(event => event.id)).size !== events.length) throw new Error('Incomplete F1 sessions: ' + slug)
+  return events
+}
+
+export async function loadF1CalendarData(fetchImpl = fetch) {
+  const read = async (url) => {
+    const response = await fetchImpl(url, { headers: { Accept: 'text/html', 'User-Agent': 'calendarhub-cloudflare-worker' }, signal: AbortSignal.timeout(15000) })
+    if (!response.ok) throw new Error('Unable to load official F1 schedule: ' + response.status)
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Empty official F1 response')
+    const decoder = new TextDecoder()
+    let html = '', bytes = 0
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        bytes += value.byteLength
+        if (bytes > 2500000) { await reader.cancel(); throw new Error('Official F1 page exceeds size limit') }
+        html += decoder.decode(value, { stream: true })
+      }
+      return html + decoder.decode()
+    } finally { reader.releaseLock() }
+  }
+  const slugs = parseF1CurrentCalendar(await read(F1_2026_SOURCE_URL))
+  const events = []
+  // Keep concurrent upstream requests bounded. A partial season must never replace KV.
+  for (let index = 0; index < slugs.length; index += 3) {
+    const batch = await Promise.all(slugs.slice(index, index + 3).map(async slug =>
+      parseF1RacePage(await read(F1_2026_SOURCE_URL + '/' + slug), slug)))
+    events.push(...batch.flat())
+  }
+  return buildTopicCalendarData('f1', events.sort((a, b) => a.launchAt.localeCompare(b.launchAt)))
 }
 
 /**

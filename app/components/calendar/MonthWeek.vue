@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const { pathFor } = useCalendar()
-const { eventsForDay, eventsForDays, pendingRanges } = useCalendarEvents()
+const { ready, eventsForDay, eventsForDays, pendingRanges } = useCalendarEvents()
 
 // 农历/节气标签只在简体中文下显示（与旧版 landing 日历口径一致）
 const { locale } = useI18n()
@@ -103,7 +103,7 @@ const SKELETONS: [number, number][] = [[0, 0], [1, 0], [1, 1], [3, 0], [4, 0], [
 
 // The range test first: it is the cheap one and the false one for almost
 // every row
-const loading = computed(() => Object.values(pendingRanges.value).some(range => props.weekStart >= range.start && props.weekStart < range.end)
+const loading = computed(() => !ready.value || Object.values(pendingRanges.value).some(range => props.weekStart >= range.start && props.weekStart < range.end)
   && !bars.value.length
   && cells.value.every(cell => !cell.events.length && !cell.more))
 

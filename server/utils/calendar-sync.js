@@ -11,6 +11,8 @@ const stablePayload = (data) => JSON.stringify(
   (data?.missions || []).map(mission => ({
     id: mission.correlationId || mission.id,
     title: mission.title,
+    titleZh: mission.titleZh,
+    missionUrl: mission.missionUrl,
     launchAt: mission.launchAt,
     launchSite: mission.launchSite,
     vehicle: mission.vehicle,
@@ -59,6 +61,13 @@ export async function syncCalendars(env, fetchImpl = fetch, now = new Date()) {
   }
 
   status.completedAt = new Date().toISOString()
+  const previous = await kv.get('calendar:sync:status')
+  for (const topic of ['spacex', 'f1']) {
+    status.calendars[topic].lastSuccessfulAt = status.calendars[topic].ok
+      ? status.completedAt : previous?.calendars?.[topic]?.lastSuccessfulAt || null
+  }
+  await kv.set('calendar:sync:status', status)
+  console.log(JSON.stringify({ event: 'calendar-sync', ...status }))
 
   if (results.every(result => result.status === 'rejected')) {
     throw new Error('All calendar synchronization jobs failed')

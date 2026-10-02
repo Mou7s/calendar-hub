@@ -27,3 +27,9 @@ Use this skill when a static sports calendar in `server/utils/calendars.js` need
 - A fixture's competitor order can differ from the official page's display order. Convert scores and winners carefully before storing them.
 - A finished event without a verified result should not receive a guessed score.
 - Do not alter SpaceX UID generation, ICS response headers, or field escaping while correcting a different sports calendar.
+
+## F1 live synchronization
+
+- Use the current season calendar for race membership and each race page for session timestamps, UTC offsets and circuit metadata. An official news article can remain stale while returning HTTP 200; successful parsing alone does not prove freshness.
+- Preserve historical ID keys when official URL slugs change (Brazil and Abu Dhabi aliases) or a race relocates. Validate venue-local session dates before converting to UTC; Las Vegas night sessions cross the UTC day boundary.
+- Fetch with bounded concurrency, timeout and response size. Reject incomplete seasons rather than replacing good KV with partial data. Verify the production JSON and ICS, and keep last successful check time separate from content modification time.
