@@ -44,16 +44,10 @@ export default defineNuxtConfig({
     }
   },
 
-  // 全局 Head 配置：favicon、PWA manifest、主题色
+  // 全局 Head 配置：主题色与日历 favicon
   app: {
     head: {
-      link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16.png?v=3' },
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png?v=3' },
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png?v=3' },
-        { rel: 'manifest', href: '/manifest.json' }
-      ],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
       meta: [
         { name: 'theme-color', content: '#080d1c', media: '(prefers-color-scheme: dark)' },
         { name: 'theme-color', content: '#f2f2f7', media: '(prefers-color-scheme: light)' }

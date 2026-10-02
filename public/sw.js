@@ -16,13 +16,6 @@ const ASSETS_TO_CACHE = [
   "/locales/ko.json",
   "/locales/zh-CN.json",
   "/D-DIN.woff2",
-  "/favicon.svg",
-  "/favicon-16.png",
-  "/favicon-32.png",
-  "/apple-touch-icon.png",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {

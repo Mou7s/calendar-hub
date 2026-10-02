@@ -1,34 +1,30 @@
 # Calendar Hub
 
-<p align="center">
-  <img src="public/icon-512.png" width="128" height="128" alt="Calendar Hub Icon" />
-</p>
+A **read-only calendar aggregator** built on **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers**: upstream schedules are normalized into RFC 5545-compliant **ICS / webcal feeds**, with a multilingual calendar UI on top.
 
-基于 **Nuxt 4** + **Nuxt Hub** + **Cloudflare Workers** 的**只读日历聚合站**：把上游日程抓取标准化后输出符合 RFC 5545 的 **ICS / webcal 订阅源**，再用一个多语言的日历界面把它们展示出来。
-
-**内容价值在 `.ics` 订阅源，页面只是入口。** 线上站点：<https://calendarhub.mou7s.com>
+**The value is in the `.ics` feeds; the pages are just the entry point.** Live site: <https://calendarhub.mou7s.com>
 
 ---
 
-## 📡 订阅源
+## Feeds
 
-| 路径 | 主题 | 口径 |
+| Path | Topic | Coverage |
 | --- | --- | --- |
-| `/spacex.ics` | SpaceX 发射 | 主订阅源。双源合并（GraphQL Page Tiles + TIMING JSON），带载具、发射场、官方直播链接；**直播中的任务即使过了原定时刻也保活**，方便看直播时仍能跳转 |
-| `/calendar.ics`、`/launches.ics` | SpaceX 发射 | 同一份订阅源的别名路径，历史订阅者继续可用 |
-| `/ics/spacex.ics` | SpaceX 发射 | 主题路径形式，与其他主题对齐 |
-| `/ics/f1.ics` | F1 赛程 | 2026 赛季 24 站，每站的冲刺赛 / 排位 / 正赛按各场地对 UTC 的固定偏移换算为绝对时刻 |
-| `/ics/wtt.ics` | WTT 乒乓球 | 官方赛历解析，只输出**已公布双方选手与开赛时间**的比赛；轮次口径 R16 起，`WTT Contender` 级别**只保留决赛** |
-| `/ics/dota2.ics` | Dota 2 赛事 | Liquipedia 已公布时间的未来对阵（含赛制、双方队伍、赛事链接），完赛场次保留 48 小时并附比分与胜者；举办地按锦标赛 infobox 的 `Location:` 解析 |
-| `/ics/tech-events.ics` | 科技大厂发布会 | 内置静态数据 |
-| `/ics/games.ics` | 3A 游戏发售 | 内置静态数据 |
-| `/ics/holidays.ics` | 中国法定节假日与调休 | 内置静态数据 |
+| `/spacex.ics` | SpaceX launches | Primary feed. Merges two sources (GraphQL Page Tiles + TIMING JSON) with vehicle, launch site, and official livestream links; **missions that are live stay in the feed past their scheduled time** so viewers can still jump to the stream |
+| `/calendar.ics`, `/launches.ics` | SpaceX launches | Aliases of the same feed, kept for existing subscribers |
+| `/ics/spacex.ics` | SpaceX launches | Topic-style path, aligned with the other topics |
+| `/ics/f1.ics` | F1 schedule | 2026 season, 24 rounds; sprint / qualifying / race times per venue converted to absolute times using fixed per-circuit UTC offsets |
+| `/ics/wtt.ics` | WTT table tennis | Parsed from the official calendar; only matches with **both players and a start time published** are emitted; R16 and later, except `WTT Contender` events which keep **the final only** |
+| `/ics/dota2.ics` | Dota 2 matches | Upcoming Liquipedia fixtures with published times (format, teams, event links); finished matches kept for 48 hours with scores and winners; venues parsed from the tournament infobox `Location:` |
+| `/ics/tech-events.ics` | Big-tech launches | Built-in static data |
+| `/ics/games.ics` | AAA game releases | Built-in static data |
+| `/ics/holidays.ics` | China public holidays & makeup workdays | Built-in static data |
 
-后三个主题只在 ICS / JSON 接口层提供（`/api/topics` 可列出全部 7 个），**日历界面只挂前 4 个图层**。
+The last three topics are served at the ICS / JSON layer only (`/api/topics` lists all 7). **The calendar UI mounts the first 4 layers.**
 
-订阅方式：站点里的订阅弹窗为每个图层提供 `webcal://` 一键订阅与 HTTPS 链接复制；也可以直接把上面的路径填进 Apple Calendar / Google Calendar / Outlook 的「订阅日历」。
+How to subscribe: the in-site Subscribe dialog offers one-click `webcal://` subscribe plus HTTPS link copy per layer; you can also paste any path above into Apple Calendar / Google Calendar / Outlook via "Subscribe to calendar".
 
-响应头是与日历客户端的硬约定，改动会让既有订阅失效：
+Response headers are a hard contract with calendar clients - changing them breaks existing subscriptions:
 
 ```text
 content-type: text/calendar; charset=utf-8
@@ -38,176 +34,179 @@ content-disposition: inline; filename="spacex-launches.ics"
 
 ---
 
-## ✨ 功能
+## Features
 
-### 日历界面（模板基底 `nuxt-ui-templates/calendar`）
+### Calendar UI (based on the `nuxt-ui-templates/calendar` template)
 
-- **路由即状态**：`/day|week|month/<YYYY-MM-DD>`，非法 view 或日期直接 404；`/` 302 到今天。上/下一页、切视图都只改 URL。
-- **月视图**：虚拟滚动的无限加载，一次拉 6 周分块，滚动时同步 URL，月份标签随滚动停靠。
-- **周视图 / 日视图**：共用小时网格 + 全天行，窗口窄于 `lg` 时收窄为 3 天。
-- **侧边栏**：floating 玻璃材质（`<lg` 变 slideover），内含图层开关（cookie 持久化）、迷你日历（点日期跳转，主视图跟随）、订阅入口、设置菜单。
-- **命令面板**：搜索已加载事件、跳日期、切图层（入口在侧边栏）。
-- **事件详情**：点击事件弹出任务详情，字段名与图标按图层取自 `app/utils/calendar-event-presentation.js`（时间、载具、地点、比分、官方链接）。
-- **玻璃拟态与主题**：`app/app.config.ts` 定主色，`app/assets/css/main.css` 提供 `glass-material` 材质与视图过渡；主色 / 中性色可选并持久化（localStorage + 首帧内联脚本，避免刷新闪色）。
-- **农历与节气**：仅 `zh-CN` 下在日号旁 / 周表头显示，其他语言不渲染。
-- **离线徽章**：离线时显示排队中的请求数。
+- **URL is the state**: `/day|week|month/<YYYY-MM-DD>`; invalid views or dates 404; `/` 302s to today. Prev/next and view switches only change the URL.
+- **Month view**: virtualized infinite scroll, fetched in 6-week chunks, URL synced while scrolling, sticky month labels.
+- **Week / day views**: shared hour grid + all-day row, collapsing to 3 days below the `lg` breakpoint.
+- **Sidebar**: floating glass panel (slideover below `lg`) with layer toggles (cookie-persisted), mini calendar (click-to-jump, main view follows), subscribe entry, and settings menu.
+- **Command palette**: search loaded events, jump to dates, switch layers (opened from the sidebar).
+- **Event details**: clicking an event opens the mission detail; field names and icons come from `app/utils/calendar-event-presentation.js` by layer (time, vehicle, venue, scores, official links).
+- **Glassmorphism & theming**: primary color in `app/app.config.ts`, `glass-material` utilities and view transitions in `app/assets/css/main.css`; primary / neutral palettes are user-selectable and persisted (localStorage + first-paint inline script, no flash on reload).
+- **Lunar calendar & solar terms**: shown next to the day number / in week headers under `zh-CN` only, hidden in other locales.
+- **Offline badge**: shows the number of queued requests while offline.
 
-### 数据接入与缓存
+### Data ingestion & caching
 
-- **多源聚合**：`/api/events` 把 SpaceX（upcoming + history）、F1、WTT、Dota 2 聚合成统一的 `CalendarEvent[]`，按 `start`/`end` 区间交叠过滤（窗口上限 90 天，月视图一次要 84 天刚好放得下），按 `locale` 选标题，按 id 去重。
-- **独立降级**：各源 `Promise.allSettled` 分别兜底，只有全部失败才返回 502。
-- **KV + SWR**：上游数据落 Nuxt Hub KV，过期先返回旧数据、后台异步刷新，避免上游限流。TTL 动态：常规 5 分钟，无直播且距下次发射超过 3 小时降到 30 分钟，任务详情卡片 24 小时。
-- **版本追踪**：`SEQUENCE` 与 `LAST-MODIFIED` 随发射窗口微调更新，避免日历客户端把所有日程当成变更重推。
-- **定时同步**：Nitro 定时任务 `calendar:sync` 每小时第 7 分钟跑一次（`nuxt.config.ts` 的 `scheduledTasks`，与 `wrangler.toml` 的 `crons` 对应）。
+- **Multi-source aggregation**: `/api/events` merges SpaceX (upcoming + history), F1, WTT, and Dota 2 into a single `CalendarEvent[]`, filtered by `start`/`end` overlap (90-day window cap; month view needs 84 days so it just fits), titles picked by `locale`, deduplicated by id.
+- **Independent degradation**: sources resolve via `Promise.allSettled` with separate fallbacks; only a total failure returns 502.
+- **KV + SWR**: upstream data lands in Nuxt Hub KV; stale data is served while a background refresh runs, so upstream rate limits never block readers. Dynamic TTLs: 5 minutes normally, 30 minutes when there is no live mission and the next launch is 3+ hours away, 24 hours for mission-detail cards.
+- **Version tracking**: `SEQUENCE` and `LAST-MODIFIED` advance with the launch window so calendar clients don't re-push every event as changed.
+- **Scheduled sync**: the Nitro task `calendar:sync` runs at minute 7 every hour (`scheduledTasks` in `nuxt.config.ts`, mirrored by `crons` in `wrangler.toml`).
 
-### 多语言
+### i18n
 
-`@nuxtjs/i18n`，`strategy: 'no_prefix'`，首屏自动检测浏览器语言，7 种语言：简体中文 / English / 日本語 / 한국어 / Español / Français / Deutsch。
+`@nuxtjs/i18n` with `strategy: 'no_prefix'`, auto-detecting the browser language on first paint. 7 locales: zh-CN / English / Japanese / Korean / Spanish / French / German.
 
 ### SEO
 
-`app/app.vue` 注入 JSON-LD：`WebSite`、`SoftwareApplication`，以及下一次发射的 `Event`；配合 `public/robots.txt`、`public/sitemap.xml` 与 PWA manifest。
+`app/app.vue` injects JSON-LD: `WebSite`, `SoftwareApplication`, plus an `Event` for the next launch; backed by `public/robots.txt` and `public/sitemap.xml`.
 
-### 只读边界
+### Read-only boundary
 
-本站**不提供事件的增删改**，数据来自上游 API + KV 缓存。模板自带的写链路（store、`events.post/patch/delete`、zod schema、拖拽改期、双击新建）在迁移时已删除，事件点击只做展示。
-
----
-
-## 🛠️ 技术栈
-
-- **框架**：Nuxt 4（`future.compatibilityVersion: 4`）
-- **UI**：Nuxt UI 4 + Tailwind CSS + Lucide / Heroicons 图标（客户端内联打包）
-- **平台**：Nuxt Hub（KV）+ Cloudflare Workers（`nitro.preset: 'cloudflare_module'`）
-- **国际化**：`@nuxtjs/i18n`
-- **工具**：`@vueuse/core`、`date-fns`、`@internationalized/date`、`h3`
-- **包管理 / 运行**：Bun（`packageManager: bun@1.4.0`）
-- **测试**：`bun test`（bun 内置运行器）
+This site offers **no event create/update/delete** - data comes from upstream APIs + KV cache. The template's write path (store, `events.post/patch/delete`, zod schemas, drag-to-reschedule, double-click-to-create) was removed during migration; clicking an event only displays it.
 
 ---
 
-## 📁 项目结构
+## Stack
+
+- **Framework**: Nuxt 4 (`future.compatibilityVersion: 4`)
+- **UI**: Nuxt UI 4 + Tailwind CSS + Lucide / Heroicons icons (inlined into the client bundle)
+- **Platform**: Nuxt Hub (KV) + Cloudflare Workers (`nitro.preset: 'cloudflare_module'`)
+- **i18n**: `@nuxtjs/i18n`
+- **Utilities**: `@vueuse/core`, `date-fns`, `@internationalized/date`, `h3`
+- **Package manager / runtime**: Bun (`packageManager: bun@1.4.0`)
+- **Tests**: `bun test` (built-in runner)
+
+---
+
+## Project structure
 
 ```text
-├── app/                          # Nuxt 4 前端应用层
-│   ├── app.vue                   # 应用根：UApp 外壳 + 全站 SEO/JSON-LD + 共享事件状态
-│   ├── app.config.ts             # Nuxt UI 主题与玻璃拟态组件的 slot 覆盖
-│   ├── error.vue
-│   ├── assets/css/               # main.css（玻璃材质/过渡）、theme-colors.css（生成产物）
-│   ├── components/
-│   │   ├── AppSidebar.vue        # floating 侧边栏（图层开关 / 迷你日历 / 订阅 / 设置）
-│   │   ├── AppSearch.vue         # UCommandPalette 命令面板
-│   │   ├── SubscribeModal.vue    # 订阅弹窗：webcal 一键订阅 + ICS 链接复制
-│   │   ├── SettingsMenu.vue      # 语言 / 主题 / 外观
-│   │   ├── AppLogo.vue
-│   │   └── calendar/             # DayColumn / EventBlock / EventChip / EventPopover /
-│   │                             # List / Mini / MissionDetail / MonthView / MonthWeek /
-│   │                             # NowIndicator / WeekView
-│   ├── composables/
-│   │   ├── createAppComposable.ts  # 应用级单例包装
-│   │   ├── useCalendar.ts          # 路由即状态、翻页、侧边栏与弹窗开关
-│   │   ├── useCalendarEvents.ts    # 图层 + 按可见区间分块拉取、按天分桶、离线队列
-│   │   ├── useLunar.js             # 农历 / 节气（1900–2100 完整表）
-│   │   └── useThemeColors.ts       # 主色 / 中性色选择与持久化
-│   ├── pages/
-│   │   ├── index.vue               # / → 302 /month/<今天>
-│   │   └── [view]/[date].vue       # 日历主页面（validate 非法即 404）
-│   ├── plugins/theme-colors.client.ts
-│   └── utils/                      # dates / layout / calendars / calendar-colors /
-│                                   # calendar-event-presentation / theme-colors
-├── server/                       # Nitro 服务端
-│   ├── api/
-│   │   ├── events.get.ts               # 模板契约接口：多源聚合成 CalendarEvent[]
-│   │   ├── calendars.get.ts            # 界面图层（4 个，映射 Nuxt UI 主题色）
-│   │   ├── topics.get.ts               # 全部主题（7 个，含 ICS 路径）
-│   │   ├── launches.get.js             # 即将发射（SWR 缓存，也是 SEO Event 数据源）
-│   │   ├── history-launches.get.js     # 历史发射
-│   │   ├── calendar/[topic].get.js     # 主题日历 JSON
-│   │   └── launches/[slug].get.js      # 单个任务详情
-│   ├── routes/                     # ICS 订阅路由
-│   │   ├── spacex.ics.js / calendar.ics.js / launches.ics.js
-│   │   └── ics/[topic].ics.js          # 主题订阅源（含 Content-Type / SEQ 红线）
-│   ├── utils/                      # spacex.js（双源抓取 + ICS 序列化）、calendars.js（主题注册 /
-│   │                               # F1 / WTT / Dota 2 解析 + 通用 ICS）、kv.js（SWR）、
-│   │                               # calendar-sync.js、launches.js
-│   ├── tasks/calendar/sync.js      # 定时同步任务
-│   ├── middleware/fix-url.js
-│   └── plugins/fix-url.js
-├── shared/                       # 前后端契约
-│   ├── types/index.d.ts          # CalendarEvent / Calendar / DateRange / CalendarView
-│   └── utils/time.ts
-├── i18n/locales/                 # 7 语言词条 + supported.json
-├── scripts/                      # translate-locales.js / generate-theme-colors.js /
-│                                 # check-theme-colors-css.js
-├── test/                         # calendar.test.js / calendar-layer-colors.test.js /
-│                                 # theme-colors.test.js
-├── public/                       # 图标、manifest.json、sw.js、robots.txt、sitemap.xml
-├── nuxt.config.ts
-└── wrangler.toml
+app/                          # Nuxt 4 frontend
+  |-- app.vue                 # App root: UApp shell + site-wide SEO/JSON-LD + shared event state
+  |-- app.config.ts           # Nuxt UI theme and glass-component slot overrides
+  |-- error.vue
+  |-- assets/css/             # main.css (glass utilities/transitions), theme-colors.css (generated)
+  |-- components/
+  |   |-- AppSidebar.vue      # Floating sidebar (layer toggles / mini calendar / subscribe / settings)
+  |   |-- AppSearch.vue       # UCommandPalette command palette
+  |   |-- SubscribeModal.vue  # Subscribe dialog: webcal one-click + ICS link copy
+  |   |-- SettingsMenu.vue    # Language / theme / appearance
+  |   |-- AppLogo.vue
+  |   `-- calendar/           # DayColumn / EventBlock / EventChip / EventPopover /
+  |                           # List / Mini / MissionDetail / MonthView / MonthWeek /
+  |                           # NowIndicator / WeekView
+  |-- composables/
+  |   |-- createAppComposable.ts  # App-level singleton wrapper
+  |   |-- useCalendar.ts          # URL-as-state, paging, sidebar & modal switches
+  |   |-- useCalendarEvents.ts    # Layers + range-chunked fetching, day bucketing, offline queue
+  |   |-- useLunar.js             # Lunar / solar-term conversion (full 1900-2100 tables)
+  |   `-- useThemeColors.ts       # Primary / neutral selection & persistence
+  |-- pages/
+  |   |-- index.vue               # / -> 302 /month/<today>
+  |   `-- [view]/[date].vue       # Calendar page (validate -> 404 on bad input)
+  |-- plugins/theme-colors.client.ts
+  `-- utils/                  # dates / layout / calendars / calendar-colors /
+                              # calendar-event-presentation / theme-colors
+server/                       # Nitro backend
+  |-- api/
+  |   |-- events.get.ts               # Template-contract endpoint: multi-source CalendarEvent[]
+  |   |-- calendars.get.ts            # UI layers (4, mapped to Nuxt UI theme colors)
+  |   |-- topics.get.ts               # All topics (7, with ICS paths)
+  |   |-- launches.get.js             # Upcoming launches (SWR cache, also the SEO Event source)
+  |   |-- history-launches.get.js     # Past launches
+  |   |-- calendar/[topic].get.js     # Per-topic calendar JSON
+  |   `-- launches/[slug].get.js      # Single mission detail
+  |-- routes/                 # ICS feed routes
+  |   |-- spacex.ics.js / calendar.ics.js / launches.ics.js
+  |   `-- ics/[topic].ics.js          # Topic feeds (Content-Type / SEQ red lines live here)
+  |-- utils/                  # spacex.js (dual-source fetch + ICS serialization),
+  |                           # calendars.js (topic registry / F1 / WTT / Dota 2 parsing +
+  |                           # generic ICS), kv.js (SWR), calendar-sync.js, launches.js
+  |-- tasks/calendar/sync.js  # Scheduled sync task
+  |-- middleware/fix-url.js
+  `-- plugins/fix-url.js
+shared/                       # Frontend/backend contract
+  |-- types/index.d.ts        # CalendarEvent / Calendar / DateRange / CalendarView
+  `-- utils/time.ts
+i18n/locales/                 # 7 locale files + supported.json
+scripts/                      # translate-locales.js / generate-theme-colors.js /
+                              # check-theme-colors-css.js
+test/                         # calendar.test.js / calendar-layer-colors.test.js /
+                              # theme-colors.test.js
+public/                       # sw.js, robots.txt, sitemap.xml
+nuxt.config.ts
+wrangler.toml
 ```
 
 ---
 
-## ⚠️ 数据口径与红线
+## Data rules & red lines
 
-改代码前请先读完这几条，它们对应「订阅者日历会不会被搞乱」：
+Read these before touching code - each one maps to "will subscribers' calendars break":
 
-1. **UID 生成算法锁定**：`UID:${mission.correlationId || mission.id}@spacexcalendar.local`。改动会让所有订阅者的日历客户端瞬间涌入重复日程。
-2. **`.ics` 响应头锁定**：见上文「订阅源」一节。
-3. **序列化必须转义**：所有 ICS 字段经 `escapeIcsText`。
-4. **直播任务保活**：`isLive === true` 的任务即使 `launchAt` 已过去，仍保留在 upcoming 与 `.ics` 中。
-5. **时间是绝对 ISO**：`start` / `end` 由服务端 `toISOString()` 输出，客户端按本地时区分桶；标题按 `locale` 查询参数在 `titleZh` / `titleEn` 之间选。
-6. **WTT 裁剪是破坏性变更**：被裁掉的比赛会从所有订阅者日历中消失，调整轮次口径前先评估影响；**不能用前端筛选代替服务端裁剪**（日历客户端只读 `.ics`）。
-7. **农历表是 1900–2100 完整表**：不要改回单年手写对照表，跨年即错；输入输出都是 `yyyy-MM-dd` 字符串，超出区间返回空串。
-8. **保持轻量**：跑在边缘节点，新增依赖前先看 `.output/server` 体积。
-9. **前端新文案必须同步词条**：至少更新 `i18n/locales/zh-CN.json` 与 `en.json`，其余语言跑翻译脚本。
+1. **UID algorithm is locked**: `UID:${mission.correlationId || mission.id}@spacexcalendar.local`. Changing it floods every subscriber's client with duplicates.
+2. **`.ics` response headers are locked**: see the "Feeds" section above.
+3. **Serialization must escape**: every ICS field through `escapeIcsText`.
+4. **Live-mission preservation**: missions with `isLive === true` stay in upcoming and `.ics` even after `launchAt` passes.
+5. **Time is absolute ISO**: `start` / `end` leave the server via `toISOString()`; clients bucket by local timezone; titles switch between `titleZh` / `titleEn` by the `locale` query param.
+6. **WTT pruning is destructive**: pruned matches disappear from all subscribers' calendars - assess round-coverage changes before shipping; **never substitute client-side filtering for server-side pruning** (calendar clients only read `.ics`).
+7. **The lunar table is the full 1900-2100 set**: never revert to a single-year lookup - it breaks across New Year; input and output are `yyyy-MM-dd` strings, out-of-range returns empty string.
+8. **Stay lightweight**: this runs on the edge - check `.output/server` size before adding a dependency.
+9. **New UI copy needs locale entries**: update at least `i18n/locales/zh-CN.json` and `en.json`; sync the rest with the translation script.
 
 ---
 
-## 🚀 本地开发
+## Local development
 
 ```bash
 bun install
 bun run dev          # http://localhost:3000
 ```
 
-要换端口用环境变量，**不要**写 `--host --port 3111`——listhen 会把 `--port` 当成 host 值而报 `Invalid hostname`。
+To change ports, use env vars - **do not** write `--host --port 3111`: listen treats `--port` as the hostname value and throws `Invalid hostname`.
 
-常用调试端点：
+Handy debug endpoints:
 
-| 端点 | 说明 |
+| Endpoint | What it returns |
 | --- | --- |
-| `/api/calendars` | 界面图层（4 个） |
-| `/api/topics` | 全部主题与 ICS 路径（7 个） |
-| `/api/events?start=…&end=…&locale=zh-CN` | 聚合事件（模板契约，区间上限 90 天） |
-| `/api/launches`、`/api/history-launches` | 即将发射 / 历史发射 |
-| `/api/calendar/f1`、`/api/calendar/wtt`、`/api/calendar/dota2` | 主题原始数据 |
-| `/spacex.ics`、`/ics/wtt.ics` | 订阅源 |
+| `/api/calendars` | UI layers (4) |
+| `/api/topics` | All topics with ICS paths (7) |
+| `/api/events?start=...&end=...&locale=zh-CN` | Aggregated events (template contract, 90-day cap) |
+| `/api/launches`, `/api/history-launches` | Upcoming / past launches |
+| `/api/calendar/f1`, `/api/calendar/wtt`, `/api/calendar/dota2` | Raw per-topic data |
+| `/spacex.ics`, `/ics/wtt.ics` | Feeds |
 
-真实请求核对（比读代码可靠）：
+Verify against real requests (more reliable than reading code):
 
 ```bash
 curl -s localhost:3000/api/calendars
-curl -sD - -o /dev/null localhost:3000/spacex.ics          # 响应头红线
+curl -sD - -o /dev/null localhost:3000/spacex.ics          # header red line
 curl -s "localhost:3000/api/events?start=2026-09-01T00:00:00&end=2026-09-30T00:00:00&locale=zh-CN"
-curl -s -H "Accept-Language: zh-CN" localhost:3000/month/2026-09-07 | grep -o 白露   # 农历只在 zh-CN 出现
+# Lunar / solar-term text is only rendered under zh-CN:
+curl -s -H "Accept-Language: zh-CN" localhost:3000/month/2026-09-07 | grep -o $'\xe7\x99\xbd\xe9\x9c\xb2'
 ```
 
-### 常见坑
+(The last `grep` pattern is the UTF-8 bytes for "Bai Lu" / White Dew, one of the solar terms.)
 
-- **`/api/*` 全都返回 200 + Nuxt 欢迎页**：本地 dev server 带着旧模块图 / `.nuxt` 缓存跑的症状，不代表代码坏了。从 `.nuxt/nuxt.lock` 取 PID → kill → `rm -rf .nuxt .output` → 重启。
-- **`Another Nuxt dev is already running (PID x)`**：锁文件里就是这个 PID。
-- 仓库文件是 CRLF，`patch` 的 `old_string` 若非逐字节一致会被模糊匹配、可能悄悄改坏缩进——遇到就整段重写。
+### Gotchas
+
+- **Every `/api/*` returns 200 + the Nuxt welcome page**: the local dev server is running with a stale module graph / `.nuxt` cache, not broken code. Grab the PID from `.nuxt/nuxt.lock` -> kill -> `rm -rf .nuxt .output` -> restart.
+- **`Another Nuxt dev is already running (PID x)`**: that PID is the one in the lock file.
+- The repo uses CRLF, so a `patch` whose `old_string` isn't byte-identical can fuzzy-match and silently mangle indentation - rewrite the whole block when that happens.
 
 ---
 
-## 🧪 测试与检查
+## Tests & checks
 
 ```bash
-bun test                 # 56 项 / 3 个文件：SpaceX 双源合并与降级、F1、
-                         # WTT 层级与轮次口径、Contender 决赛裁剪、ICS 转义、
-                         # SWR、直播保活、主题 ICS 路由、图层呈现映射、
-                         # 主题色持久化（localStorage key / 首帧脚本 / 生成 CSS 一致性）
+bun test                 # 59 cases / 3 files: SpaceX dual-source merge & fallback, F1,
+                         # WTT tiers & round coverage, Contender final-only pruning, ICS escaping,
+                         # SWR, live preservation, topic ICS routes, layer presentation mapping,
+                         # theme-color persistence (localStorage key / first-paint script / generated CSS)
 node --check server/utils/calendars.js
 node --check server/utils/spacex.js
 node --check server/utils/kv.js
@@ -217,45 +216,45 @@ bun run build
 git diff --check
 ```
 
-新增功能必须补测试，尤其涉及外部数据源解析的部分。
+New features need new tests, especially anything that parses external sources.
 
 ---
 
-## 🌍 多语言词条更新
+## Updating locale files
 
-改完 `i18n/locales/en.json` 与 `zh-CN.json` 后，其余 5 种语言用内置脚本一键同步：
+After editing `i18n/locales/en.json` and `zh-CN.json`, sync the other 5 locales with the built-in script:
 
 ```bash
 export OPENAI_API_KEY="your-key"
 bun run translate:locales -- --locales=ja,ko,es,fr,de
 ```
 
-主题色的 `app/assets/css/theme-colors.css` 是生成产物：
+`app/assets/css/theme-colors.css` is generated:
 
 ```bash
 bun run generate:theme-colors
 ```
 
-改过可选色清单却忘了重跑生成，`bun test` 里的主题色用例会直接失败。
+Forgetting to regenerate after changing the palette list fails the theme-color tests in `bun test`.
 
 ---
 
-## ☁️ 部署
+## Deployment
 
-部署形态是 **Cloudflare Workers Module Worker**：前端静态资源走 Workers Assets，SSR / API / ICS 路由由 Nitro Worker 处理。
+The deploy target is a **Cloudflare Workers Module Worker**: static frontend assets via Workers Assets, SSR / API / ICS routes via the Nitro Worker.
 
 ```bash
-bun run deploy:worker    # 构建 + wrangler deploy
-bun run preview:worker   # 本地起 Workers 运行时预览
+bun run deploy:worker    # build + wrangler deploy
+bun run preview:worker   # preview on the local Workers runtime
 ```
 
-`wrangler.toml` 里要注意的三件事：
+Three things to watch in `wrangler.toml`:
 
-- `[triggers] crons = ["7 * * * *"]`：与 `nuxt.config.ts` 的 `scheduledTasks` 一起驱动 `calendar:sync`。
-- `[[kv_namespaces]]`：`SPACEX_KV`（以及别名 `KV`）绑定，ID 必须属于当前 Cloudflare 账户。
-- `[[routes]]`：`calendarhub.mou7s.com` 走 Worker Custom Domain。
+- `[triggers] crons = ["7 * * * *"]`: together with `scheduledTasks` in `nuxt.config.ts`, drives `calendar:sync`.
+- `[[kv_namespaces]]`: the `SPACEX_KV` (plus `KV` alias) binding - the ID must belong to the current Cloudflare account.
+- `[[routes]]`: `calendarhub.mou7s.com` via a Worker Custom Domain.
 
-部署后验证响应头：
+Verify headers after deploy:
 
 ```bash
 curl -I https://calendarhub.mou7s.com/spacex.ics
@@ -264,17 +263,17 @@ curl -I https://calendarhub.mou7s.com/ics/wtt.ics
 
 ---
 
-## 📝 数据来源与免责
+## Data sources & disclaimer
 
-- **SpaceX**：官网前端暴露的 API（GraphQL Page Tiles + TIMING JSON），不受 v4 历史 API 停维护影响。
-- **F1**：2026 赛季赛程（内置，含各场地对 UTC 的偏移）。
-- **WTT**：<https://www.worldtabletennis.com/events_calendar>，只同步已公布对阵与开赛时间的比赛。
-- **Dota 2**：[Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use)，必须携带合规 `User-Agent`（`DOTA2_MATCHES_USER_AGENT`），结果缓存 30 分钟；解析的是渲染后 HTML，上游改版会静默失配，改解析逻辑前先用真实页面数据验证。
-- **tech-events / games / holidays**：内置静态数据，随代码更新。
-- 日期时间由日历客户端按本地时区换算，无需手动调整；本站只做只读聚合与展示。
+- **SpaceX**: APIs exposed by the official site frontend (GraphQL Page Tiles + TIMING JSON), unaffected by the unmaintained v4 history API.
+- **F1**: 2026 season schedule (built in, with per-venue UTC offsets).
+- **WTT**: <https://www.worldtabletennis.com/events_calendar> - only matches with published fixtures and start times are synced.
+- **Dota 2**: [Liquipedia MediaWiki API](https://liquipedia.net/api-terms-of-use) with a compliant `User-Agent` (`DOTA2_MATCHES_USER_AGENT`); results cached for 30 minutes; rendered HTML is parsed, so an upstream redesign can silently break matching - validate parsing against real page data before changing it.
+- **tech-events / games / holidays**: built-in static data, updated with the code.
+- Times are converted to local time by the calendar client - no manual adjustment needed; this site only aggregates and displays read-only data.
 
 ---
 
-## 📄 License
+## License
 
-MIT。仓库基底为官方模板 [`nuxt-ui-templates/calendar`](https://github.com/nuxt-ui-templates/calendar)，见 `LICENSE`。
+MIT. The repo is based on the official template [`nuxt-ui-templates/calendar`](https://github.com/nuxt-ui-templates/calendar), see `LICENSE`.
