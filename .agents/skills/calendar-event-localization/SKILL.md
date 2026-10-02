@@ -27,3 +27,5 @@ Use this skill when event titles look localized but event details, venue, winner
 - Translating `titleEn`/`titleZh` alone leaves bilingual phase, venue, or winner fields visible in the popover.
 - Medal symbols can be accidentally duplicated when they remain in the category lookup key and are appended again after localization.
 - Broad substring tests produce false positives for valid cognates and Japanese kanji; test actual source-string leakage and locale-specific expected output instead.
+
+- Month-view chunk caches must be filtered by the current locale when merging events. A locale-aware cache key alone does not prevent old-language chunks from overwriting the current response by event ID. Watch locale changes to reload the visible virtualized chunks; verify switching Chinese to English and back without scrolling.

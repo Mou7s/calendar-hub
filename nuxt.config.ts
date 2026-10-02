@@ -1,3 +1,4 @@
+import { streamingServerCompat, streamingCookieCompat } from './build/ssr-streaming-compat'
 import { themeColorsBootstrapScript } from './app/utils/theme-colors'
 
 // 模板 nuxt-ui-templates/calendar 基底 + 本站能力合并：
@@ -24,6 +25,7 @@ export default defineNuxtConfig({
 
   experimental: {
     viewTransition: true,
+    watcher: 'builder',
     ssrStreaming: true,
     // Current i18n/fonts plugins still rely on Vite config/server hooks.
     // Keep their supported pipeline while retaining other Nuxt 5 defaults.
@@ -95,6 +97,7 @@ export default defineNuxtConfig({
   // Nitro 服务器引擎：以 Cloudflare Workers Module Worker 形式部署
   nitro: {
     preset: 'cloudflare_module',
+    rollupConfig: { plugins: [streamingServerCompat()] },
     experimental: {
       tasks: true
     },
@@ -124,6 +127,7 @@ export default defineNuxtConfig({
   // Vite 构建与优化配置
   vite: {
     plugins: [
+      streamingCookieCompat(),
       {
         name: 'fix-absolute-url-middleware',
         configureServer(server) {

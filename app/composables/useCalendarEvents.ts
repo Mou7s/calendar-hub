@@ -39,7 +39,11 @@ const _useCalendarEvents = () => {
     getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
   })
 
-  const hiddenCalendars = useCookie<string[]>('hidden-calendars', { default: () => [] })
+  // SSR only reads preferences; initializing the default must not emit a
+  // cookie after the streaming response has started. Client changes persist.
+  const hiddenCalendars = import.meta.server
+    ? ref(useCookie<string[]>('hidden-calendars', { default: () => [], readonly: true }).value)
+    : useCookie<string[]>('hidden-calendars', { default: () => [] })
 
   function toggleCalendar(id: string) {
     hiddenCalendars.value = hiddenCalendars.value.includes(id)
@@ -145,7 +149,9 @@ const _useCalendarEvents = () => {
   const events = computed<CalendarEvent[]>(() => {
     const merged = new Map<string, CalendarEvent>(fetchedEvents.value.map(event => [event.id, event]))
 
-    for (const chunk of Object.values(chunks.value)) {
+    for (const [key, chunk] of Object.entries(chunks.value)) {
+      // Other locales stay cached, but must never overwrite current titles.
+      if (!key.startsWith(`events-${locale.value}-`)) continue
       for (const event of chunk) {
         merged.set(event.id, event)
       }

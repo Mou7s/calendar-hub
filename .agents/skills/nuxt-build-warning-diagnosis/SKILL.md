@@ -26,3 +26,11 @@ Scope Rolldown chunk groups to the client in vite:extendConfig. Use Windows-comp
 Follow AGENTS.md's complete tests, syntax checks, typecheck, build, and diff check. Also make real requests to the dev server and test the production Workers bundle locally. Confirm all seven language changes, font resource loading, search and subscription first-open/reopen, date views, and invalid-route status. Keep ICS headers, UIDs, escaping, and read-only behavior stable.
 
 Check all usages before deleting legacy draft/drag helpers. Some constants still support event display even when editing has been removed. Never raise the chunk warning threshold just to hide it. Report remaining plugin timing or upstream annotation warnings separately from failed builds.
+
+## SSR streaming compatibility
+
+For Nuxt 4.5.2, inspect the actual callback before attributing E8001 to i18n: i18n's payload injection is conditional on experimental.preload, while Nuxt's dev-server-logs plugin also appends JSON using render:html. Streamed body additions belong in render:html:close; retain render:html for buffered crawler responses.
+
+The repository's build/ssr-streaming-compat.js adapts build inputs without editing installed packages. It moves development logs to the close hook, places framework-owned HTML headers before the renderer's diagnostic snapshot, and flushes plugin-created cookies at app:created while retaining final-cookie and late-mutation checks. server/plugins/streaming-response.js establishes the default OK reason phrase before rendering. Component-only preferences such as hidden-calendars are read-only on the server and persist changes on the client.
+
+Re-evaluate these adapters on Nuxt upgrades; source-shape guards and test/ssr-streaming-compat.test.js deliberately fail when the relevant upstream implementation changes. Do not disable E8001/E8002 diagnostics. Validate fresh requests without cookies and with locale cookies, all date views, invalid-route 404, crawler buffered delivery, development log payloads, Set-Cookie headers, browser language switching, and the production Workers bundle. Restart dev after adding a Nitro plugin so discovery is refreshed.

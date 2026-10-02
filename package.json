@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "bun@1.4.0",
   "scripts": {
-    "dev": "node node_modules/nuxt/bin/nuxt.mjs dev --host",
+    "dev": "bun --bun node_modules/nuxt/bin/nuxt.mjs dev --host",
     "build": "bun install && nuxt build",
     "preview:worker": "bun run build && bunx wrangler dev --config .output/server/wrangler.json",
     "deploy:worker": "bun run build && bunx wrangler deploy --config .output/server/wrangler.json",
@@ -30,6 +30,7 @@
     "@iconify-json/lucide": "^1.2.136",
     "@iconify-json/simple-icons": "^1.2.97",
     "jsdom": "^29.1.1",
+    "magic-string": "^1.4.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.11",

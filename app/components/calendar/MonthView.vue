@@ -97,6 +97,9 @@ function loadVisibleChunks() {
   }
 }
 
+// Locale changes do not scroll the virtualizer, so reload its current chunks.
+watch(locale, loadVisibleChunks, { flush: 'post' })
+
 // Jumps dock the week containing the 1st at the top, so the target month's
 // label lands in the header like Apple Calendar
 function scrollToMonth(target: CalendarDate, options?: { smooth?: boolean }) {
