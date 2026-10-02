@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const { isSearchOpen, isSidebarOpen } = useCalendar()
-const { draft } = useEventDraft()
+const { isSearchOpen, isSubscribeOpen, isSidebarOpen } = useCalendar()
+const { t } = useI18n()
 
 const route = useRoute()
 
@@ -10,7 +10,7 @@ const isMobile = useMediaQuery('(max-width: 1023px)')
 
 // Everything the menu offers takes over the screen on a phone, so it steps
 // out of the way once one of them is on its way in
-watch([() => route.fullPath, () => !!draft.value, isSearchOpen], () => {
+watch([() => route.fullPath, isSearchOpen, isSubscribeOpen], () => {
   if (isMobile.value) {
     isSidebarOpen.value = false
   }
@@ -33,33 +33,43 @@ watch([() => route.fullPath, () => !!draft.value, isSearchOpen], () => {
     <template #header="{ close }">
       <NuxtLink
         to="/"
-        aria-label="Home"
+        :aria-label="t('calendar.sidebar.home')"
         class="flex items-end gap-0.5 text-highlighted outline-primary/25 focus-visible:outline-3 rounded-md"
       >
         <AppLogo class="h-8 w-auto shrink-0" />
         <span class="text-xl font-bold text-highlighted">Calendar</span>
       </NuxtLink>
 
-      <div class="ms-auto flex items-center gap-1.5">
-        <NewEventMenu />
+      <UTheme :props="{ button: { size: 'sm', class: 'rounded-full!' } }">
+        <div class="ms-auto flex items-center gap-1.5">
+          <UTooltip
+            :text="t('subscribe.buttonLabel')"
+            :kbds="['n']"
+          >
+            <UButton
+              icon="i-lucide-rss"
+              :aria-label="t('subscribe.buttonLabel')"
+              @click="isSubscribeOpen = true"
+            />
+          </UTooltip>
 
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="soft"
-          size="sm"
-          aria-label="Close menu"
-          class="lg:hidden rounded-full"
-          @click="close"
-        />
-      </div>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="soft"
+            :aria-label="t('calendar.sidebar.closeMenu')"
+            class="lg:hidden rounded-full"
+            @click="close"
+          />
+        </div>
+      </UTheme>
     </template>
 
     <UButton
       icon="i-lucide-search"
       color="neutral"
       variant="soft"
-      label="Search"
+      :label="t('calendar.sidebar.search')"
       @click="isSearchOpen = true"
     >
       <template #trailing>
@@ -83,7 +93,7 @@ watch([() => route.fullPath, () => !!draft.value, isSearchOpen], () => {
     <CalendarMini />
 
     <template #footer>
-      <UserMenu />
+      <SettingsMenu />
     </template>
   </USidebar>
 </template>

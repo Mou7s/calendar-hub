@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { parseDate, type CalendarDate } from '@internationalized/date'
 
-const { view, date, pathFor } = useCalendar()
+const { view, date, pathFor, isThreeDayView } = useCalendar()
 const { warmRange } = useCalendarEvents()
 
 const model = computed({
@@ -21,7 +21,7 @@ function onPointerover(event: PointerEvent) {
   }
 
   try {
-    warmRange(rangeFor(view.value, parseDate(value)))
+    warmRange(rangeFor(view.value, parseDate(value), isThreeDayView.value ? 3 : 7))
   } catch {
     // Not a day cell
   }

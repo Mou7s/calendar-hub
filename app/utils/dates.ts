@@ -1,3 +1,4 @@
+import type { CalendarView, DateRange } from '#shared/types'
 import { CalendarDate, getLocalTimeZone, parseDate, Time, toCalendarDateTime, today } from '@internationalized/date'
 import { addDays, lightFormat, startOfMonth, startOfWeek } from 'date-fns'
 
@@ -94,12 +95,12 @@ export function monthFetchRange(date: CalendarDate): DateRange {
   return { start, end: addDays(start, MONTH_FETCH_WEEKS * 7) }
 }
 
-export function rangeFor(view: CalendarView, date: CalendarDate): DateRange {
+export function rangeFor(view: CalendarView, date: CalendarDate, weekDays = 7): DateRange {
   if (view === 'month') {
     return monthFetchRange(date)
   }
 
-  return weekRange(date, view === 'day' ? 1 : 7)
+  return weekRange(date, view === 'day' ? 1 : weekDays)
 }
 
 export function eachDay({ start, end }: DateRange): Date[] {
@@ -111,42 +112,73 @@ export function eachDay({ start, end }: DateRange): Date[] {
   return days
 }
 
-// Constructing a formatter costs far more than formatting with it, and these
-// run once per event chip and per day cell of every rendered week
-const timeFormat = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-const dayFormat = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric' })
-const fullDateFormat = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-const weekdayFormat = new Intl.DateTimeFormat('en-US', { weekday: 'short' })
-const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'long' })
-const shortMonthFormat = new Intl.DateTimeFormat('en-US', { month: 'short' })
-const shortMonthYearFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
+// app 的 i18n locale → Intl 的 BCP-47 标签。这里原来硬编码 en-US，中文界面里的
+// 月份、星期、日期也就全是英文
+const INTL_LOCALES: Record<string, string> = {
+  'zh-CN': 'zh-CN',
+  en: 'en-US',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE'
+}
 
-export function formatTime(date: Date): string {
-  return timeFormat.format(date)
+const FORMATTER_OPTIONS = {
+  time: { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
+  day: { weekday: 'short', day: 'numeric' },
+  fullDate: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' },
+  weekday: { weekday: 'short' },
+  month: { month: 'long' },
+  shortMonth: { month: 'short' },
+  shortMonthYear: { month: 'short', year: 'numeric' }
+} satisfies Record<string, Intl.DateTimeFormatOptions>
+
+type FormatterKind = keyof typeof FORMATTER_OPTIONS
+
+// Constructing a formatter costs far more than formatting with it, and these run
+// once per event chip and per day cell of every rendered week — so they are built
+// once per (locale, kind) and reused across the whole app
+const formatters = new Map<string, Intl.DateTimeFormat>()
+
+function formatter(kind: FormatterKind, locale: string): Intl.DateTimeFormat {
+  const key = `${locale}:${kind}`
+
+  let cached = formatters.get(key)
+  if (!cached) {
+    cached = new Intl.DateTimeFormat(INTL_LOCALES[locale] ?? locale, FORMATTER_OPTIONS[kind])
+    formatters.set(key, cached)
+  }
+
+  return cached
+}
+
+export function formatTime(date: Date, locale: string): string {
+  return formatter('time', locale).format(date)
 }
 
 export function formatHour(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`
 }
 
-export function formatDay(date: Date): string {
-  return dayFormat.format(date)
+export function formatDay(date: Date, locale: string): string {
+  return formatter('day', locale).format(date)
 }
 
-export function formatFullDate(date: Date): string {
-  return fullDateFormat.format(date)
+export function formatFullDate(date: Date, locale: string): string {
+  return formatter('fullDate', locale).format(date)
 }
 
-export function formatWeekday(date: Date): string {
-  return weekdayFormat.format(date)
+export function formatWeekday(date: Date, locale: string): string {
+  return formatter('weekday', locale).format(date)
 }
 
-export function formatMonth(date: Date): string {
-  return monthFormat.format(date)
+export function formatMonth(date: Date, locale: string): string {
+  return formatter('month', locale).format(date)
 }
 
-export function formatShortMonth(date: Date): string {
-  return shortMonthFormat.format(date)
+export function formatShortMonth(date: Date, locale: string): string {
+  return formatter('shortMonth', locale).format(date)
 }
 
 export interface RangeTitle {
@@ -154,16 +186,16 @@ export interface RangeTitle {
   year: string
 }
 
-export function formatRangeTitle({ start, end }: DateRange): RangeTitle {
+export function formatRangeTitle({ start, end }: DateRange, locale: string): RangeTitle {
   const last = addDays(end, -1)
   const year = String(last.getFullYear())
 
   if (start.getMonth() === last.getMonth()) {
-    return { months: monthFormat.format(start), year }
+    return { months: formatter('month', locale).format(start), year }
   }
 
-  const startMonth = (start.getFullYear() !== last.getFullYear() ? shortMonthYearFormat : shortMonthFormat).format(start)
-  const endMonth = shortMonthFormat.format(last)
+  const startMonth = formatter(start.getFullYear() !== last.getFullYear() ? 'shortMonthYear' : 'shortMonth', locale).format(start)
+  const endMonth = formatter('shortMonth', locale).format(last)
 
   return { months: `${startMonth} – ${endMonth}`, year }
 }

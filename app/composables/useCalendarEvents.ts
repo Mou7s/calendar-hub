@@ -1,5 +1,8 @@
+import type { CalendarEvent, DateRange, Calendar } from '#shared/types'
 import { addDays, startOfDay } from 'date-fns'
 import { FetchError } from 'ofetch'
+
+import { CALENDAR_LAYER_COLORS_KEY, isCalendarLayerColor, resolveCalendarLayerColor } from '~/utils/calendar-colors'
 
 interface EventOverlay {
   created: Record<string, CalendarEvent>
@@ -16,26 +19,31 @@ interface QueuedRequest {
 // Keyed and queried by floating local strings so server and client agree: an
 // epoch key differs by the timezone offset between them, so hydration would
 // miss the payload cache and refetch, flashing the events out and back in
-function eventsKey({ start, end }: DateRange): string {
-  return `events-${toLocalISO(start)}-${toLocalISO(end)}`
+function eventsKey({ start, end }: DateRange, locale: string): string {
+  return `events-${locale}-${toLocalISO(start)}-${toLocalISO(end)}`
 }
 
-function eventsQuery({ start, end }: DateRange) {
-  return { start: toLocalISO(start), end: toLocalISO(end) }
+function eventsQuery({ start, end }: DateRange, locale: string) {
+  return { start: toLocalISO(start), end: toLocalISO(end), locale }
 }
 
 const _useCalendarEvents = () => {
-  const { view, range, prevDate, nextDate } = useCalendar()
+  const { view, range, isThreeDayView, prevDate, nextDate } = useCalendar()
+  const { locale } = useI18n()
   const nuxtApp = useNuxtApp()
   const toast = useToast()
 
-  const { data: calendars } = useFetch<Calendar[]>('/api/calendars', {
+  const { data: calendarsData } = useFetch<Calendar[]>('/api/calendars', {
     key: 'calendars',
     default: () => [],
     getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
   })
 
-  const hiddenCalendars = useCookie<string[]>('hidden-calendars', { default: () => [] })
+  // SSR only reads preferences; initializing the default must not emit a
+  // cookie after the streaming response has started. Client changes persist.
+  const hiddenCalendars = import.meta.server
+    ? ref(useCookie<string[]>('hidden-calendars', { default: () => [], readonly: true }).value)
+    : useCookie<string[]>('hidden-calendars', { default: () => [] })
 
   function toggleCalendar(id: string) {
     hiddenCalendars.value = hiddenCalendars.value.includes(id)
@@ -43,11 +51,32 @@ const _useCalendarEvents = () => {
       : [...hiddenCalendars.value, id]
   }
 
+  // 图层颜色：服务端下发的是默认值，用户在侧边栏另选的颜色存 localStorage，
+  // 这里合并后返回——所有读 `calendars` 的地方（事件块、搜索面板、图层列表）
+  // 自动拿到覆盖后的颜色，无需逐处改
+  const calendarColorOverrides = useLocalStorage<Record<string, Calendar['color']>>(CALENDAR_LAYER_COLORS_KEY, {})
+
+  const calendars = computed<Calendar[]>(() =>
+    (calendarsData.value ?? []).map(calendar => ({
+      ...calendar,
+      name: calendar.name,
+      color: resolveCalendarLayerColor(calendar.color, calendarColorOverrides.value[calendar.id])
+    }))
+  )
+
+  function setCalendarColor(id: string, color: Calendar['color']) {
+    if (!isCalendarLayerColor(color)) {
+      return
+    }
+
+    calendarColorOverrides.value = { ...calendarColorOverrides.value, [id]: color }
+  }
+
   // One cached fetch per visible range: revisiting a range renders instantly
   // from the payload cache instead of requesting again
   const { data: fetchedEvents, status } = useFetch<CalendarEvent[]>('/api/events', {
-    key: () => eventsKey(range.value),
-    query: computed(() => eventsQuery(range.value)),
+    key: () => eventsKey(range.value, locale.value),
+    query: computed(() => eventsQuery(range.value, locale.value)),
     default: () => [],
     getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
   })
@@ -55,13 +84,13 @@ const _useCalendarEvents = () => {
   // Warm the payload cache for the adjacent ranges so prev/next navigation
   // never waits on the network
   async function warmRange(range: DateRange) {
-    const key = eventsKey(range)
+    const key = eventsKey(range, locale.value)
     if (key in nuxtApp.payload.data) {
       return
     }
 
     try {
-      nuxtApp.payload.data[key] = await $fetch<CalendarEvent[]>('/api/events', { query: eventsQuery(range) })
+      nuxtApp.payload.data[key] = await $fetch<CalendarEvent[]>('/api/events', { query: eventsQuery(range, locale.value) })
     } catch {
       // Warming is best-effort, navigation will fetch normally
     }
@@ -74,8 +103,9 @@ const _useCalendarEvents = () => {
         return
       }
 
-      warmRange(rangeFor(view.value, prevDate.value))
-      warmRange(rangeFor(view.value, nextDate.value))
+      const windowDays = isThreeDayView.value ? 3 : 7
+      warmRange(rangeFor(view.value, prevDate.value, windowDays))
+      warmRange(rangeFor(view.value, nextDate.value, windowDays))
     }, { immediate: true })
   })
 
@@ -90,7 +120,7 @@ const _useCalendarEvents = () => {
   const pendingRanges = ref<Record<string, DateRange>>({})
 
   async function loadRange(range: DateRange) {
-    const key = eventsKey(range)
+    const key = eventsKey(range, locale.value)
     if (chunks.value[key]) {
       return
     }
@@ -100,7 +130,7 @@ const _useCalendarEvents = () => {
     pendingRanges.value = { ...pendingRanges.value, [key]: range }
 
     try {
-      chunks.value[key] = nuxtApp.payload.data[key] ?? await $fetch<CalendarEvent[]>('/api/events', { query: eventsQuery(range) })
+      chunks.value[key] = nuxtApp.payload.data[key] ?? await $fetch<CalendarEvent[]>('/api/events', { query: eventsQuery(range, locale.value) })
     } catch {
       const { [key]: _failed, ...rest } = chunks.value
       chunks.value = rest
@@ -119,7 +149,9 @@ const _useCalendarEvents = () => {
   const events = computed<CalendarEvent[]>(() => {
     const merged = new Map<string, CalendarEvent>(fetchedEvents.value.map(event => [event.id, event]))
 
-    for (const chunk of Object.values(chunks.value)) {
+    for (const [key, chunk] of Object.entries(chunks.value)) {
+      // Other locales stay cached, but must never overwrite current titles.
+      if (!key.startsWith(`events-${locale.value}-`)) continue
       for (const event of chunk) {
         merged.set(event.id, event)
       }
@@ -168,7 +200,12 @@ const _useCalendarEvents = () => {
     return buckets
   })
 
+  // UTC SSR and the viewer timezone must not hydrate different event geometry.
+  // Keep prefetched data, but first paint event buckets after client mount.
+  const ready = useMounted()
+
   function eventsForDay(day: Date): CalendarEvent[] {
+    if (!ready.value) return []
     return eventsByDay.value.get(dayKey(day)) ?? []
   }
 
@@ -350,7 +387,9 @@ const _useCalendarEvents = () => {
     calendars,
     hiddenCalendars,
     toggleCalendar,
+    setCalendarColor,
     events,
+    ready,
     eventsForDay,
     eventsForDays,
     status,

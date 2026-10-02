@@ -1,9 +1,0 @@
-allowBuilds:
-  '@parcel/watcher': false
-  '@tailwindcss/oxide': false
-  esbuild: false
-  unrs-resolver: false
-  vue-demi: false
-
-minimumReleaseAgeExclude:
-  - gpu-time@0.3.0

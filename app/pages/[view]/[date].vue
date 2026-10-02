@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CalendarView } from '#shared/types'
 import { parseDate } from '@internationalized/date'
 import type { TabsItem } from '@nuxt/ui'
 
@@ -27,14 +28,16 @@ definePageMeta({
   }]
 })
 
-const { view, date, title, monthLabelsVisible, prevDate, nextDate, pathFor, setDirection, isSidebarOpen } = useCalendar()
+const { view, isThreeDayView, date, title, monthLabelsVisible, prevDate, nextDate, pathFor, setDirection, isSidebarOpen } = useCalendar()
 const { online, queue } = useCalendarEvents()
 
-const views = [
-  { label: 'Day', value: 'day' },
-  { label: 'Week', value: 'week' },
-  { label: 'Month', value: 'month' }
-] satisfies TabsItem[]
+const { t } = useI18n()
+
+const views = computed(() => [
+  { label: t('calendar.viewDay'), value: 'day' },
+  { label: isThreeDayView.value ? t('calendar.viewThreeDay') : t('calendar.viewWeek'), value: 'week' },
+  { label: t('calendar.viewMonth'), value: 'month' }
+] satisfies TabsItem[])
 
 function onViewChange(value: string | number) {
   navigateTo(pathFor(date.value, value as CalendarView))
@@ -67,7 +70,7 @@ function onViewChange(value: string | number) {
           color="neutral"
           variant="soft"
           size="sm"
-          aria-label="Open menu"
+          :aria-label="t('calendar.sidebar.openMenu')"
           class="lg:hidden shrink-0 rounded-full"
           @click="isSidebarOpen = true"
         />
@@ -98,12 +101,13 @@ function onViewChange(value: string | number) {
         :model-value="view"
         color="neutral"
         size="sm"
-        class="mx-auto w-20 sm:w-42 lg:w-48"
+        class="mx-auto sm:w-42 lg:w-48"
+        :class="isThreeDayView ? 'w-32' : 'w-20'"
         :ui="{ trigger: 'p-1 lg:p-1.5' }"
         @update:model-value="onViewChange"
       >
         <template #default="{ item }">
-          <span class="sm:hidden">{{ item.label.charAt(0) }}</span>
+          <span class="sm:hidden">{{ isThreeDayView && item.value === 'week' ? item.label : item.label.charAt(0) }}</span>
           <span class="hidden sm:inline">{{ item.label }}</span>
         </template>
       </UTabs>
@@ -113,47 +117,47 @@ function onViewChange(value: string | number) {
       <div class="flex items-center gap-2 md:flex-1 justify-end">
         <UTooltip
           v-if="!online"
-          text="Changes are kept locally and sync when you reconnect"
+          :text="t('calendar.offline.hint')"
         >
           <UBadge
             icon="i-lucide-cloud-off"
             color="warning"
             variant="soft"
-            :label="queue.length ? `Offline (${queue.length})` : 'Offline'"
+            :label="queue.length ? t('calendar.offline.badgeWithCount', { count: queue.length }) : t('calendar.offline.badge')"
           />
         </UTooltip>
 
         <UTheme :props="{ button: { color: 'neutral', variant: 'soft', size: 'sm', class: 'rounded-full' } }">
           <div class="flex items-center gap-1">
             <UTooltip
-              text="Previous"
+              :text="t('calendar.previous')"
               :kbds="['arrowleft']"
             >
               <UButton
                 icon="i-lucide-chevron-left"
-                aria-label="Previous"
+                :aria-label="t('calendar.previous')"
                 prefetch-on="interaction"
                 :to="pathFor(prevDate)"
                 @click="setDirection('left')"
               />
             </UTooltip>
             <UTooltip
-              text="Today"
+              :text="t('calendar.today')"
               :kbds="['t']"
             >
               <UButton
-                label="Today"
+                :label="t('calendar.today')"
                 class="hidden sm:inline-flex rounded-full"
                 :to="pathFor(todayDate())"
               />
             </UTooltip>
             <UTooltip
-              text="Next"
+              :text="t('calendar.next')"
               :kbds="['arrowright']"
             >
               <UButton
                 icon="i-lucide-chevron-right"
-                aria-label="Next"
+                :aria-label="t('calendar.next')"
                 prefetch-on="interaction"
                 :to="pathFor(nextDate)"
                 @click="setDirection('right')"

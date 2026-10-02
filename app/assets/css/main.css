@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* 用户在设置里选的主题色（生成的，见 scripts/generate-theme-colors.js）。
+   放在这里而不是组件里，是因为它必须对整站生效，而且必须无 layer 才能压过
+   Nuxt UI colors 插件所在的 `@layer theme` */
+@import "./theme-colors.css";
+
 @theme static {
   --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
 

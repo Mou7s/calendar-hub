@@ -38,16 +38,8 @@ export default defineAppConfig({
     },
     checkbox: {
       slots: {
-        base: 'rounded-xs'
-      },
-      // The hairline only when not highlighted, so a checkbox in a form error
-      // keeps its colored ring
-      compoundVariants: [{
-        highlight: false,
-        class: {
-          base: ring
-        }
-      }]
+        base: ['rounded-xs', ring]
+      }
     },
     chip: {
       slots: {

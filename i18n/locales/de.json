@@ -1,0 +1,154 @@
+{
+  "common": {
+    "close": "Schließen"
+  },
+  "meta": {
+    "title": "Calendar Hub | Kalender per Webcal abonnieren",
+    "description": "Abonniere Kalender für Starts, Rennen und andere Ereignisse über Webcal- oder ICS-Links."
+  },
+  "header": {
+    "themeToggleAria": "Dunkel-/Hellmodus umschalten"
+  },
+  "subscribe": {
+    "eyebrow": "ICS-Abonnement",
+    "title": "Online-Kalender abonnieren",
+    "copy": "Verwende die folgenden Links, um diesen Kalender auf deinem Gerät zu abonnieren. Dein Kalender-Client bleibt automatisch synchronisiert.",
+    "subscribeLink": "Kalender abonnieren",
+    "copied": "Kopiert",
+    "copyBtn": "Kopieren",
+    "buttonLabel": "Kalender abonnieren",
+    "buttonShort": "Abonnieren"
+  },
+  "settings": {
+    "label": "Einstellungen",
+    "language": "Sprache",
+    "theme": "Design",
+    "appearance": "Darstellung",
+    "system": "Gerät folgen",
+    "primary": "Primär",
+    "neutral": "Neutral",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "hero": {
+    "eyebrow": "Live-Kalenderfeed",
+    "meta": {
+      "nextLaunch": "Nächster Start",
+      "countdown": "Countdown"
+    }
+  },
+  "overview": {
+    "cadenceEyebrow": "Terminübersicht",
+    "cadenceTitle": "Kommende Termine",
+    "statusEyebrow": "Status",
+    "statusTitle": "Ereignis-Tracker",
+    "noLaunchWindows": "Noch keine Ereigniszeiten verfügbar.",
+    "launches": "Ereignisse",
+    "tracker": {
+      "missionsLoaded": "Geladene Ereignisse",
+      "timedWindows": "Ereignisse mit Zeit",
+      "liveNow": "Jetzt live",
+      "viewerTimezone": "Zeitzone"
+    }
+  },
+  "calendar": {
+    "sidebar": {
+      "home": "Startseite",
+      "search": "Suchen",
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schließen",
+      "calendars": "Kalender",
+      "subscriptions": "Abonnements",
+      "language": "Sprache",
+      "layerColor": "Ebenenfarbe von {name} ändern"
+    },
+    "title": "Kalender und Ereignisse nach Monat durchsuchen",
+    "viewDay": "Tag",
+    "viewThreeDay": "3 Tage",
+    "viewWeek": "Woche",
+    "viewMonth": "Monat",
+    "today": "Heute",
+    "allDay": "Ganztägig",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "offline": {
+      "hint": "Änderungen bleiben lokal gespeichert und werden bei Verbindung synchronisiert",
+      "badge": "Offline",
+      "badgeWithCount": "Offline ({count})"
+    },
+    "search": {
+      "placeholder": "Ereignisse suchen, Ansicht wechseln...",
+      "goToToday": "Zu heute",
+      "views": "Ansichten",
+      "events": "Ereignisse"
+    },
+    "timezone": "Zeitzone",
+    "filterF1": "F1",
+    "f1": {
+      "vehicle": "Rennwagen",
+      "track": "Rennstrecke"
+    },
+    "filterWTT": "WTT Tischtennis",
+    "filterDota2": "Dota 2",
+    "dota2": {
+      "format": "Format",
+      "venue": "Austragungsort",
+      "scoreboard": "Spielstandsanzeige",
+      "finished": "Offizielles Ergebnis",
+      "finalScore": "Endergebnis",
+      "score": "Ergebnis",
+      "winner": "Sieger",
+      "games": "Satzergebnisse"
+    },
+    "wtt": {
+      "match": "Disziplin",
+      "venue": "Austragungsort",
+      "scoreboard": "Spielstandsanzeige",
+      "finished": "Offizielles Ergebnis",
+      "finalScore": "Endergebnis",
+      "score": "Ergebnis",
+      "winner": "Sieger",
+      "games": "Satzergebnisse"
+    },
+    "noEventsToday": "Für diesen Tag sind keine Ereignisse geplant.",
+    "noEventsThisMonth": "Für diesen Monat sind keine datierten Ereignisse verfügbar.",
+    "dataLoadError": "Kalenderdaten konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "refreshing": "Aktualisierung...",
+    "untimed": "Zeit offen",
+    "moreEvents": "+{count} mehr..."
+  },
+  "mission": {
+    "vehicle": "Träger",
+    "launchSite": "Startplatz",
+    "returnSite": "Bergungsort",
+    "watchLive": "Live ansehen",
+    "live": "Live",
+    "unspecified": "Nicht angegeben",
+    "tbd": "Offen",
+    "types": {
+      "starlink": "Starlink",
+      "nssl": "Nationaler Sicherheitsstart",
+      "starship": "Starship"
+    },
+    "detailsHeading": "Missionsübersicht",
+    "preLaunchTimeline": "Countdown vor dem Start",
+    "postLaunchTimeline": "Startsequenz",
+    "infographicLink": "Infografik",
+    "selectionEyebrow": "Missionsdetails",
+    "selectionTitle": "Wählen Sie eine Mission im Kalender aus",
+    "selectionCopy": "Wählen Sie einen Start aus der Kalenderliste aus, um SpaceX-Missionsdetails, Webcast-Links und Startzeitpläne hier anzuzeigen.",
+    "detailsLoading": "Missionsdetails werden geladen...",
+    "infographicTitle": "Missions-Infografik",
+    "clickToViewInfographic": "Klicken, um die vollständige Infografik anzuzeigen",
+    "clickToShrink": "Klicken zum Verkleinern",
+    "clickToZoom": "Klicken zum Vergrößern",
+    "viewOriginal": "Original anzeigen",
+    "viewOfficialDetails": "Offizielle Details anzeigen"
+  },
+  "status": {
+    "upcoming": "Bevorstehend",
+    "live": "Live",
+    "liveNow": "LIVE JETZT"
+  }
+}

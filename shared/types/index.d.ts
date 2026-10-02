@@ -19,4 +19,14 @@ export interface CalendarEvent {
   start: string
   end: string
   allDay?: boolean
+  // 只读订阅源扩展（全部可选，不破坏模板 contract）
+  live?: boolean
+  location?: string
+  vehicle?: string
+  url?: string
+  scores?: string
+  winner?: string
+  gameScores?: string[]
+  competitor1?: string
+  competitor2?: string
 }

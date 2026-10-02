@@ -1,27 +1,15 @@
 <script setup lang="ts">
-import type { ContextMenuItem } from '@nuxt/ui'
-
-// An event running past midnight draws in every day it touches, and only the
-// segment holding its start owns the form, the way a draft ghost spanning two
-// month rows does. Defaulted rather than left off: Vue reads an absent boolean
-// prop as `false`, which would leave every call site that does not draw an
-// event twice unable to open one at all
+import type { CalendarEvent } from '#shared/types'
+// 只读订阅源：popover 只展示任务详情（MissionDetail），无编辑表单、
+// 无右键菜单。保留模板的延迟挂载优化：几百个事件同时在屏时，
+// popover 首次可达（hover/focus）前不挂载。
 const props = withDefaults(defineProps<{
   event: CalendarEvent
-  disabled?: boolean
   anchored?: boolean
 }>(), { anchored: true })
 
 const { formSide } = useCalendar()
-const { removeEvent, updateEvent } = useCalendarEvents()
-const { editingId, openEvent, closeEvent } = useEventEditor()
 
-// A popover and a context menu each are what an event costs to render, and the
-// month view puts a few hundred of them on screen at once. Neither is worth
-// anything until an event is actually pointed at, so they mount on the first
-// interaction that could reach them, all of which come before it can open one.
-// Starting out unarmed also keeps their generated ids off the server render,
-// where they are not stable across the boundary
 const armed = ref(false)
 
 const root = useTemplateRef('root')
@@ -40,39 +28,11 @@ function arm(event: Event) {
   }
 }
 
-// Held app-wide, so editing a date walks the chip to another day without
-// taking the form down with it. A chip that renders already holding it is
-// armed from the start, there is nothing left to wait for
-const open = computed(() => props.anchored && editingId.value === props.event.id)
-const active = computed(() => armed.value || open.value)
+const open = ref(false)
 
 function onUpdateOpen(value: boolean) {
-  if (props.disabled) {
-    return
-  }
-
-  if (value) {
-    openEvent(props.event.id)
-  } else {
-    closeEvent(props.event.id)
-  }
+  open.value = value
 }
-
-function onRemove() {
-  closeEvent(props.event.id)
-  removeEvent(props.event.id)
-}
-
-const items = computed<ContextMenuItem[]>(() => [{
-  label: 'Edit',
-  icon: 'i-lucide-pencil',
-  onSelect: () => openEvent(props.event.id)
-}, {
-  label: 'Delete',
-  icon: 'i-lucide-trash-2',
-  color: 'error',
-  onSelect: onRemove
-}])
 </script>
 
 <template>
@@ -83,45 +43,28 @@ const items = computed<ContextMenuItem[]>(() => [{
     class="contents"
     @pointerover="arm"
     @focusin="arm"
-    @contextmenu="arm"
   >
     <slot
-      v-if="!active"
+      v-if="!armed"
       :open="false"
     />
 
-    <!-- `as-child` drops its handlers on a component that renders a fragment,
-      so the two triggers need a real element between them, and the trigger
-      stays the event itself -->
-    <UContextMenu
+    <!-- The content only mounts while it is open, which re-seeds it every time -->
+    <UPopover
       v-else
-      :items="items"
-      :disabled="disabled"
-      size="sm"
+      :open="open"
+      :ui="{ content: 'p-1 w-80' }"
+      :content="{ side: formSide }"
+      @update:open="onUpdateOpen"
     >
-      <div class="contents">
-        <!-- The event opens straight into the form the draft uses, so there is
-          no read-only step between pointing at an event and changing it. The
-          content only mounts while it is open, which re-seeds it every time -->
-        <UPopover
-          :open="open"
-          :ui="{ content: 'p-2 w-74' }"
-          :content="{ side: formSide }"
-          @update:open="onUpdateOpen"
-        >
-          <slot :open="open" />
+      <slot :open="open" />
 
-          <template #content>
-            <CalendarEventForm
-              :event="event"
-              @save="updateEvent"
-              @remove="onRemove"
-              @submit="closeEvent(event.id)"
-              @escape="closeEvent(event.id)"
-            />
-          </template>
-        </UPopover>
-      </div>
-    </UContextMenu>
+      <template #content>
+        <CalendarMissionDetail
+          :event="event"
+          @close="open = false"
+        />
+      </template>
+    </UPopover>
   </div>
 </template>

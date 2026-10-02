@@ -31,18 +31,14 @@ const DOCK_TOP = HEADER_PADDING + (HEADER_HEIGHT - HEADER_BORDER - LABEL_HEIGHT)
 const GRID_TOP = CHROME_HEIGHT - DOCK_TOP
 
 const { date, pathFor, visibleMonth, monthLabelsVisible } = useCalendar()
+const { locale } = useI18n()
 const { loadRange } = useCalendarEvents()
-const { draft, pendingScroll, registerHost } = useEventDraft()
-
-// A grid the `+` button can draw on, so it knows it does not have to navigate
-// somewhere else first
-registerHost()
 
 const scrollElement = shallowRef<Element | null>(null)
 
 const firstWeek = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), -WEEKS_AROUND)
 const weeks = Array.from({ length: WEEKS_AROUND * 2 + 1 }, (_, index) => addWeeks(firstWeek, index))
-const weekdays = Array.from({ length: 7 }, (_, index) => formatWeekday(addDays(firstWeek, index)))
+const weekdays = computed(() => Array.from({ length: 7 }, (_, index) => formatWeekday(addDays(firstWeek, index), locale.value)))
 
 function indexOf(day: Date): number {
   return Math.min(weeks.length - 1, Math.max(0, differenceInCalendarWeeks(day, firstWeek, { weekStartsOn: 1 })))
@@ -101,16 +97,8 @@ function loadVisibleChunks() {
   }
 }
 
-// The `+` button can draw on a week the virtualizer has not mounted, and a
-// ghost that never renders cannot scroll itself into view
-watch(pendingScroll, (pending) => {
-  if (!pending || !draft.value) {
-    return
-  }
-
-  getVirtualizer()?.scrollToIndex(indexOf(draft.value.start), { align: 'center', behavior: 'smooth' })
-  loadVisibleChunks()
-})
+// Locale changes do not scroll the virtualizer, so reload its current chunks.
+watch(locale, loadVisibleChunks, { flush: 'post' })
 
 // Jumps dock the week containing the 1st at the top, so the target month's
 // label lands in the header like Apple Calendar
@@ -178,14 +166,16 @@ function labelOffset(month: CalendarDate): number {
   return offset
 }
 
-const labelTexts = new Map<number, { month: string, year: string }>()
+// Keyed by locale too: the cache holds the formatted text, so a language switch
+// must not keep serving the old one
+const labelTexts = new Map<string, { month: string, year: string }>()
 
 function labelText(month: CalendarDate): { month: string, year: string } {
-  const key = monthKey(month)
+  const key = `${monthKey(month)}:${locale.value}`
 
   let text = labelTexts.get(key)
   if (!text) {
-    text = { month: formatMonth(toDate(month)), year: String(month.year) }
+    text = { month: formatMonth(toDate(month), locale.value), year: String(month.year) }
     labelTexts.set(key, text)
   }
 
@@ -374,8 +364,6 @@ onUnmounted(() => {
         positions need the CSS one. Proximity, not mandatory: rows mount and
         unmount as the list virtualizes and a mandatory scroller re-snaps on
         every content change -->
-      <!-- `stable` holds the scrollbar's gutter whether or not the list overflows,
-        so the floating weekday bar reserves the exact same one for its columns -->
       <UScrollArea
         ref="scrollArea"
         :items="weeks"

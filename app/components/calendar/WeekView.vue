@@ -1,66 +1,41 @@
 <script setup lang="ts">
-import { breakpointsTailwind } from '@vueuse/core'
-import { differenceInCalendarDays, isSameDay, isToday } from 'date-fns'
+import { isToday } from 'date-fns'
 
-const { date, range } = useCalendar()
-const { eventsForDay, eventsForDays, status } = useCalendarEvents()
-const { draftEvent, onGridPointerdown, onGridDblclick, registerHost } = useEventDraft()
-const { movingId, preview } = useEventMove()
+const { range } = useCalendar()
+const { ready, eventsForDay, eventsForDays, status } = useCalendarEvents()
 
-// A grid the `+` button can draw on, so it knows it does not have to navigate
-// somewhere else first
-registerHost()
+// 农历/节气标签只在简体中文下显示
+const { t, locale } = useI18n()
+const { getLunarText } = useLunar()
+const showLunar = computed(() => locale.value === 'zh-CN')
 
-const isSmallScreen = useBreakpoints(breakpointsTailwind).smaller('lg')
-// Only narrow after mount: the server always renders the full week, so the
-// hydrated DOM must match it
 const mounted = useMounted()
 
-// Small screens show a 3-day window around the anchor date, clamped so it
-// stays inside the fetched week
-const days = computed(() => {
-  const week = eachDay(range.value)
-  if (week.length <= 3 || !mounted.value || !isSmallScreen.value) {
-    return week
-  }
-
-  const start = Math.min(Math.max(differenceInCalendarDays(toDate(date.value), range.value.start), 0), week.length - 3)
-
-  return week.slice(start, start + 3)
-})
+// useCalendar supplies a full-week range on wide screens and a rolling 3-day
+// range on small screens, so navigation, fetching, title and columns agree.
+const days = computed(() => eachDay(range.value))
 
 const gridStyle = computed(() => ({
   gridTemplateColumns: `3.5rem repeat(${days.value.length}, minmax(0, 1fr))`
 }))
 
-// The draft joins the events it is being drawn among, so the layout gives it
-// a real slot and the day reflows around it the way it would for a real one
+// Read-only: timed events render as-is, no draft ghost slot
 const timedEvents = computed(() => {
-  const drafted = draftEvent.value && !draftEvent.value.allDay ? draftEvent.value : null
-
   return days.value.map(day => layoutDay(
-    [
-      ...eventsForDay(day).filter(event => !event.allDay),
-      ...(drafted && isSameDay(new Date(drafted.start), day) ? [drafted] : [])
-    ],
+    eventsForDay(day).filter(event => !event.allDay),
     day
   ))
 })
 
-// A bar being moved is dropped from where it was and drawn where it would
-// land, the same way the month rows show it
+// Read-only: all-day bars render as-is, no draft/move previews
 const allDayEvents = computed(() => layoutAllDay(
-  [
-    ...eventsForDays(days.value).filter(event => event.allDay && event.id !== movingId.value),
-    ...(draftEvent.value?.allDay ? [draftEvent.value] : []),
-    ...(preview.value?.allDay ? [preview.value] : [])
-  ],
+  eventsForDays(days.value).filter(event => event.allDay),
   days.value
 ))
 
 // A pending fetch keeps serving the previous range, so the placeholders wait
 // until the visible days have nothing of their own to show
-const loading = computed(() => status.value === 'pending'
+const loading = computed(() => !ready.value || status.value === 'pending'
   && !allDayEvents.value.length
   && timedEvents.value.every(day => !day.length))
 
@@ -183,13 +158,20 @@ onMounted(async () => {
           class="flex items-center justify-center gap-1 py-2 text-sm border-s border-default"
         >
           <span class="text-muted">
-            {{ formatWeekday(day) }}
+            {{ formatWeekday(day, locale) }}
           </span>
           <span
             class="flex items-center justify-center size-6 font-semibold rounded-full"
             :class="isToday(day) ? 'bg-primary text-inverted' : 'text-highlighted'"
           >
             {{ day.getDate() }}
+          </span>
+          <!-- 农历/节气（仅 zh-CN）：同一行内联，不改变表头高度 -->
+          <span
+            v-if="showLunar"
+            class="max-lg:hidden text-[10px] text-dimmed truncate max-w-14"
+          >
+            {{ getLunarText(isoDate(day)) }}
           </span>
         </div>
       </div>
@@ -202,39 +184,25 @@ onMounted(async () => {
         :style="{ ...gridStyle, gridTemplateRows: `repeat(${allDayLanes}, ${ALL_DAY_LANE_HEIGHT}px)` }"
       >
         <span class="row-span-full self-center text-[10px] text-dimmed text-end pe-2">
-          all-day
+          {{ t('calendar.allDay') }}
         </span>
 
-        <!-- The day the gesture started on, behind the bars so they keep
-          their own pointers -->
+        <!-- Read-only: day cells carry no draw/drag gestures -->
         <div
           v-for="(day, index) in days"
           :key="`all-day-${day.getTime()}`"
           :data-date="isoDate(day)"
           class="row-span-full border-s border-default"
           :style="{ gridColumn: index + 2 }"
-          @pointerdown="onGridPointerdown($event, { kind: 'allDay', day })"
-          @dblclick="onGridDblclick($event, { kind: 'allDay', day })"
         />
 
-        <template
+        <CalendarEventChip
           v-for="{ event, colStart, colSpan, lane } in allDayEvents"
           :key="event.id"
-        >
-          <CalendarEventDraft
-            v-if="event.id === DRAFT_EVENT_ID"
-            variant="chip"
-            anchored
-            class="mx-1 mt-1 h-5"
-            :style="{ gridColumn: `${colStart + 2} / span ${colSpan}`, gridRow: lane + 1 }"
-          />
-          <CalendarEventChip
-            v-else
-            :event="event"
-            class="mx-1 mt-1 h-5"
-            :style="{ gridColumn: `${colStart + 2} / span ${colSpan}`, gridRow: lane + 1 }"
-          />
-        </template>
+          :event="event"
+          class="mx-1 mt-1 h-5"
+          :style="{ gridColumn: `${colStart + 2} / span ${colSpan}`, gridRow: lane + 1 }"
+        />
       </div>
     </div>
   </div>

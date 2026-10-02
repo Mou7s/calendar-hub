@@ -15,9 +15,12 @@ const props = defineProps<{
 }>()
 
 const { pathFor } = useCalendar()
-const { eventsForDay, eventsForDays, pendingRanges } = useCalendarEvents()
-const { draftEvent, onGridPointerdown, onGridDblclick } = useEventDraft()
-const { movingId, preview } = useEventMove()
+const { ready, eventsForDay, eventsForDays, pendingRanges } = useCalendarEvents()
+
+// 农历/节气标签只在简体中文下显示（与旧版 landing 日历口径一致）
+const { locale } = useI18n()
+const { getLunarText } = useLunar()
+const showLunar = computed(() => locale.value === 'zh-CN')
 
 const days = computed(() => Array.from({ length: 7 }, (_, index) => addDays(props.weekStart, index)))
 const weekEnd = computed(() => addDays(props.weekStart, 7))
@@ -28,48 +31,12 @@ const gridStyle = {
   gridTemplateRows: ['auto', ...Array.from({ length: MAX_LANES }, () => `${SLOT_HEIGHT}px`), `minmax(${SLOT_HEIGHT}px, 1fr)`].join(' ')
 }
 
-// The virtualizer keeps a couple of dozen of these mounted, and a drag rewrites
-// the draft on every pointermove. Rows it cannot reach settle on `null` and
-// their layout never sees the change
-const weekDraft = computed(() => {
-  const event = draftEvent.value
-
-  return event && new Date(event.start) < weekEnd.value && new Date(event.end) > props.weekStart
-    ? event
-    : null
-})
-
-// A chip being moved is dropped from the row it came from and drawn where it
-// would land, which is the only way a move can cross rows. Same bail as the
-// draft, so a row the pointer never reaches keeps its layout
-const weekMoved = computed(() => {
-  const event = preview.value
-
-  return event && new Date(event.start) < weekEnd.value && new Date(event.end) > props.weekStart
-    ? event
-    : null
-})
-
-function others(events: CalendarEvent[]): CalendarEvent[] {
-  return movingId.value ? events.filter(event => event.id !== movingId.value) : events
-}
-
 const lanes = computed(() => layoutAllDay(
-  [
-    ...others(eventsForDays(days.value)).filter(event => event.allDay),
-    ...(weekDraft.value?.allDay ? [weekDraft.value] : []),
-    ...(weekMoved.value?.allDay ? [weekMoved.value] : [])
-  ],
+  eventsForDays(days.value).filter(event => event.allDay),
   days.value
 ))
 
-// The draft is the one bar that is never cut: it is what the pointer is on,
-// so past the last lane it takes that lane instead of disappearing
-const placed = computed(() => lanes.value.map(bar => bar.event.id === DRAFT_EVENT_ID
-  ? { ...bar, lane: Math.min(bar.lane, MAX_LANES - 1) }
-  : bar))
-
-const bars = computed(() => placed.value.filter(bar => bar.lane < MAX_LANES).map(bar => ({
+const bars = computed(() => lanes.value.filter(bar => bar.lane < MAX_LANES).map(bar => ({
   ...bar,
   continuesBefore: new Date(bar.event.start) < props.weekStart,
   continuesAfter: new Date(bar.event.end) > weekEnd.value
@@ -82,32 +49,20 @@ function covers(bar: AllDayPositionedEvent, index: number): boolean {
 // Timed events fill the slots the day's bars leave free, top first, and the
 // last free slot becomes the "+N more" button when they overflow
 const cells = computed(() => {
-  const drafted = weekDraft.value && !weekDraft.value.allDay ? weekDraft.value : null
-  const moved = weekMoved.value && !weekMoved.value.allDay ? weekMoved.value : null
-
   return days.value.map((day, index) => {
-    const timed = [
-      ...others(eventsForDay(day)).filter(event => !event.allDay),
-      ...(drafted && isSameDay(new Date(drafted.start), day) ? [drafted] : []),
-      ...(moved && isSameDay(new Date(moved.start), day) ? [moved] : [])
-    ].sort((a, b) => a.start.localeCompare(b.start))
+    const timed = eventsForDay(day).filter(event => !event.allDay)
+      .sort((a, b) => a.start.localeCompare(b.start))
 
     // One pass over the lanes: bars past the last lane never render, they only
     // count towards the overflow
-    const covering = placed.value.filter(bar => covers(bar, index))
+    const covering = lanes.value.filter(bar => covers(bar, index))
     const occupied = new Set(covering.filter(bar => bar.lane < MAX_LANES).map(bar => bar.lane))
     const dropped = covering.filter(bar => bar.lane >= MAX_LANES)
 
     const free = Array.from({ length: MAX_SLOTS }, (_, slot) => slot).filter(slot => !occupied.has(slot))
 
     const overflows = dropped.length > 0 || timed.length > free.length
-    let visible = timed.slice(0, overflows ? Math.max(free.length - 1, 0) : free.length)
-
-    // Same again for a timed draft: it takes the last visible slot rather
-    // than hiding behind the button, which would leave nothing to draw on
-    if (drafted && timed.includes(drafted) && !visible.includes(drafted)) {
-      visible = [...visible.slice(0, -1), drafted]
-    }
+    const visible = timed.slice(0, overflows ? Math.max(free.length - 1, 0) : free.length)
 
     const slot = free[visible.length]
 
@@ -135,7 +90,6 @@ const cells = computed(() => {
             slot,
             hidden: dropped.length + timed.length - visible.length,
             events: [...covering.map(bar => bar.event), ...timed]
-              .filter(event => event.id !== DRAFT_EVENT_ID)
               .map(event => ({ event, anchored: !shown.has(event.id) }))
           }
         : null
@@ -149,13 +103,13 @@ const SKELETONS: [number, number][] = [[0, 0], [1, 0], [1, 1], [3, 0], [4, 0], [
 
 // The range test first: it is the cheap one and the false one for almost
 // every row
-const loading = computed(() => Object.values(pendingRanges.value).some(range => props.weekStart >= range.start && props.weekStart < range.end)
+const loading = computed(() => !ready.value || Object.values(pendingRanges.value).some(range => props.weekStart >= range.start && props.weekStart < range.end)
   && !bars.value.length
   && cells.value.every(cell => !cell.events.length && !cell.more))
 
 function label(day: Date): string {
   if (day.getDate() === 1) {
-    return `${formatShortMonth(day)} 1`
+    return `${formatShortMonth(day, locale.value)} 1`
   }
 
   return String(day.getDate())
@@ -167,9 +121,7 @@ function label(day: Date): string {
     class="grid grid-cols-7 min-w-0 border-b border-default"
     :style="gridStyle"
   >
-    <!-- Column separators, behind everything so a gesture on empty space
-      anywhere in the day lands here. They carry the day a drag reads back off
-      them, which is what lets it run into the rows below -->
+    <!-- Column separators, behind everything. Read-only: no draw/drag gestures -->
     <div
       v-for="({ day }, index) in cells"
       :key="`day-${day.getTime()}`"
@@ -177,10 +129,12 @@ function label(day: Date): string {
       class="row-span-full border-default"
       :class="index !== 0 && 'border-s'"
       :style="{ gridColumn: index + 1 }"
-      @pointerdown="onGridPointerdown($event, { kind: 'month', day })"
-      @dblclick="onGridDblclick($event, { kind: 'month', day })"
     />
 
+    <!-- A `UButton` here would be the ghost and solid `xs` variants, but the
+      month view renders a hundred of these at once and resolving the theme
+      that many times is what made switching to it slow. It is a link, so it
+      renders as one -->
     <!-- A `UButton` here would be the ghost and solid `xs` variants, but the
       month view renders a hundred of these at once and resolving the theme
       that many times is what made switching to it slow. It is a link, so it
@@ -198,6 +152,19 @@ function label(day: Date): string {
       {{ label(day) }}
     </NuxtLink>
 
+    <!-- 农历/节气（仅 zh-CN）：与日号同一行、靠左，不新增行高，
+      窄屏（月格放不下）直接隐藏。非中文时整段不渲染 -->
+    <template v-if="showLunar">
+      <span
+        v-for="({ day }, index) in cells"
+        :key="`lunar-${day.getTime()}`"
+        class="row-start-1 justify-self-start self-center ms-1.5 pointer-events-none text-[10px] text-dimmed truncate max-w-[calc(100%-2.75rem)] max-lg:hidden"
+        :style="{ gridColumn: index + 1 }"
+      >
+        {{ getLunarText(isoDate(day)) }}
+      </span>
+    </template>
+
     <USkeleton
       v-for="[day, slot] in loading ? SKELETONS : []"
       :key="`skeleton-${day}-${slot}`"
@@ -209,19 +176,7 @@ function label(day: Date): string {
       v-for="{ event, colStart, colSpan, lane, continuesBefore, continuesAfter } in bars"
       :key="event.id"
     >
-      <!-- A draft spanning two rows draws in both, and the one holding its
-        start is the one the form hangs off -->
-      <CalendarEventDraft
-        v-if="event.id === DRAFT_EVENT_ID"
-        variant="chip"
-        :anchored="!continuesBefore"
-        :continues-before="continuesBefore"
-        :continues-after="continuesAfter"
-        class="self-start mx-0.5"
-        :style="{ gridColumn: `${colStart + 1} / span ${colSpan}`, gridRow: lane + 2 }"
-      />
       <CalendarEventChip
-        v-else
         :event="event"
         :anchored="!continuesBefore"
         class="self-start mx-0.5"
@@ -241,15 +196,7 @@ function label(day: Date): string {
         v-for="{ event, slot, anchored } in dayEvents"
         :key="event.id"
       >
-        <CalendarEventDraft
-          v-if="event.id === DRAFT_EVENT_ID"
-          variant="chip"
-          anchored
-          class="self-start mx-0.5"
-          :style="{ gridColumn: index + 1, gridRow: slot + 2 }"
-        />
         <CalendarEventChip
-          v-else
           :event="event"
           :anchored="anchored"
           show-time

@@ -1,33 +1,35 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 
-const { view, date, pathFor, isSearchOpen } = useCalendar()
-const { createAtAnchor } = useEventDraft()
+const { view, isThreeDayView, date, pathFor, isSearchOpen, isSubscribeOpen } = useCalendar()
 const { events, calendars, hiddenCalendars, toggleCalendar } = useCalendarEvents()
+const { t, locale } = useI18n()
 
-const views = [
-  { label: 'Day', value: 'day', icon: 'i-lucide-calendar-range', kbd: 'd' },
-  { label: 'Week', value: 'week', icon: 'i-lucide-calendar-days', kbd: 'w' },
-  { label: 'Month', value: 'month', icon: 'i-lucide-calendar', kbd: 'm' }
-] as const
+const views = computed(() => [
+  { label: t('calendar.viewDay'), value: 'day', icon: 'i-lucide-calendar-range', kbd: 'd' },
+  { label: isThreeDayView.value ? t('calendar.viewThreeDay') : t('calendar.viewWeek'), value: 'week', icon: 'i-lucide-calendar-days', kbd: 'w' },
+  { label: t('calendar.viewMonth'), value: 'month', icon: 'i-lucide-calendar', kbd: 'm' }
+] as const)
 
 const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
   id: 'actions',
   items: [{
-    label: 'New event',
-    icon: 'i-lucide-plus',
+    label: t('subscribe.buttonLabel'),
+    icon: 'i-lucide-rss',
     kbds: [{ value: 'n', variant: 'soft' }],
-    onSelect: () => createAtAnchor()
+    onSelect: () => {
+      isSubscribeOpen.value = true
+    }
   }, {
-    label: 'Go to today',
+    label: t('calendar.search.goToToday'),
     icon: 'i-lucide-calendar-check',
     kbds: [{ value: 't', variant: 'soft' }],
     to: pathFor(todayDate())
   }]
 }, {
   id: 'views',
-  label: 'Views',
-  items: views.map(item => ({
+  label: t('calendar.search.views'),
+  items: views.value.map(item => ({
     label: item.label,
     icon: item.icon,
     kbds: [{ value: item.kbd, variant: 'soft' }],
@@ -36,7 +38,7 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
   }))
 }, {
   id: 'calendars',
-  label: 'Calendars',
+  label: t('calendar.sidebar.calendars'),
   // The palette ticks whatever its listbox holds, and that selection is one
   // model shared by every group: `multiple` would tick the actions, the views
   // and the events along with these. They keep it open with `preventDefault`
@@ -54,10 +56,10 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
 }, {
   // Only the ranges already fetched, the views load more as you navigate
   id: 'events',
-  label: 'Events',
+  label: t('calendar.search.events'),
   items: events.value.map(event => ({
     label: event.title,
-    suffix: formatFullDate(new Date(event.start)),
+    suffix: formatFullDate(new Date(event.start), locale.value),
     chip: { color: calendars.value.find(calendar => calendar.id === event.calendarId)?.color },
     onSelect: () => navigateTo(pathFor(toCalendarDate(new Date(event.start))))
   }))
@@ -74,7 +76,7 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
     <template #content>
       <UCommandPalette
         :groups="groups"
-        placeholder="Search events, switch views..."
+        :placeholder="t('calendar.search.placeholder')"
         close
         class="h-full sm:h-96"
         @update:model-value="isSearchOpen = false"

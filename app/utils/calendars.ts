@@ -1,3 +1,4 @@
+import type { Calendar } from '#shared/types'
 // Static class maps so Tailwind sees the full class names at build time
 // `data-active` is the hover shade held: a chip wears it while its popover is
 // open and while it is being dragged. A variant rather than a second `bg-*`,

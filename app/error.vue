@@ -10,6 +10,12 @@ const props = defineProps<{
 // command palette read from it
 useCalendarEvents()
 
+const { isSearchOpen } = useCalendar()
+const hasOpenedSearch = ref(isSearchOpen.value)
+watch(isSearchOpen, (open) => {
+  if (open) hasOpenedSearch.value = true
+})
+
 const notFound = computed(() => props.error.statusCode === 404)
 
 useSeoMeta({
@@ -36,7 +42,7 @@ useHead({
         class="flex-1"
       />
 
-      <AppSearch />
+      <LazyAppSearch v-if="hasOpenedSearch" />
     </div>
   </UApp>
 </template>

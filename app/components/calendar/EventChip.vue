@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '#shared/types'
 defineOptions({ inheritAttrs: false })
 
-// `anchored` is the segment the form hangs off, for an event drawn across more
-// than one day. Defaulted, or an omitted boolean prop would read as `false`
+// 只读事件 chip：无拖拽。LIVE 显示红点，比分（如 WTT 完赛）
+// 显示在时间位置。
 const props = withDefaults(defineProps<{
   event: CalendarEvent
   showTime?: boolean
@@ -10,20 +11,27 @@ const props = withDefaults(defineProps<{
 }>(), { anchored: true })
 
 const { calendars } = useCalendarEvents()
-const { movingId, suppressed, onPointerdown } = useEventMove()
 
-const calendar = computed(() => calendars.value.find(calendar => calendar.id === props.event.calendarId))
+const calendar = computed(() => calendars.value.find(item => item.id === props.event.calendarId))
 const color = computed(() => calendar.value?.color ?? 'primary')
+const { locale } = useI18n()
 
-// Held open or in flight, the chip wears the shade the pointer gives it
-const moving = computed(() => movingId.value === props.event.id)
+const suffix = computed(() => {
+  if (props.event.scores) {
+    return props.event.scores
+  }
+  try {
+    return formatTime(new Date(props.event.start), locale.value)
+  } catch {
+    return ''
+  }
+})
 </script>
 
 <template>
   <CalendarEventPopover
     v-slot="{ open }"
     :event="event"
-    :disabled="suppressed"
     :anchored="anchored"
   >
     <button
@@ -37,10 +45,9 @@ const moving = computed(() => movingId.value === props.event.id)
           ? eventBlockClasses[color]
           : ['text-default hover:bg-(--control-bg) data-active:bg-(--control-bg)', eventChipCompactClasses[color]]
       ]"
-      :data-active="open || moving || undefined"
-      :aria-label="event.allDay ? event.title : `${event.title}, ${formatTime(new Date(event.start))}`"
+      :data-active="open || undefined"
+      :aria-label="event.allDay ? event.title : `${event.title}, ${suffix}`"
       @click.stop
-      @pointerdown="onPointerdown($event, event)"
     >
       <span
         v-if="event.allDay"
@@ -52,6 +59,10 @@ const moving = computed(() => movingId.value === props.event.id)
           class="size-2.5 shrink-0 text-inverted"
         />
       </span>
+      <span
+        v-else-if="event.live"
+        class="size-2 shrink-0 rounded-full bg-error animate-pulse"
+      />
       <span
         v-else
         class="max-lg:hidden size-2 shrink-0 rounded-full"
@@ -65,7 +76,7 @@ const moving = computed(() => movingId.value === props.event.id)
         data-time
         class="ms-auto shrink-0 text-muted tabular-nums text-[11px]"
       >
-        {{ formatTime(new Date(event.start)) }}
+        {{ suffix }}
       </span>
     </button>
   </CalendarEventPopover>
