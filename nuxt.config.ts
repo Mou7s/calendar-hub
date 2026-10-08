@@ -1,5 +1,5 @@
-import { streamingServerCompat, streamingCookieCompat } from './build/ssr-streaming-compat'
-import { themeColorsBootstrapScript } from './app/utils/theme-colors'
+import { streamingServerCompat, streamingCookieCompat } from './build/ssr-streaming-compat.js'
+import { themeColorsBootstrapScript } from './app/utils/theme-colors.js'
 
 // 模板 nuxt-ui-templates/calendar 基底 + 本站能力合并：
 // i18n（7 语言）、NuxtHub KV、Cloudflare Workers 预设、定时同步、PWA 头。
@@ -37,9 +37,8 @@ export default defineNuxtConfig({
     viewTransition: true,
     watcher: 'builder',
     ssrStreaming: true,
-    // Current i18n/fonts plugins still rely on Vite config/server hooks.
-    // Keep their supported pipeline while retaining other Nuxt 5 defaults.
-    viteEnvironmentApi: false
+    // Nuxt 4.6's renderer and manifest pipeline use Vite environments.
+    viteEnvironmentApi: true
   },
 
   compatibilityDate: '2026-06-30',
@@ -107,6 +106,9 @@ export default defineNuxtConfig({
   // Nitro 服务器引擎：以 Cloudflare Workers Module Worker 形式部署
   nitro: {
     preset: 'cloudflare_module',
+    // Nuxt 4.6 moved rendering into this package. Bundle it so Nitro resolves
+    // build artifacts and import.meta.dev instead of executing it as raw ESM.
+    externals: { inline: [/nuxt[\\/]dist[\\/]runtime[\\/]server[\\/]/] },
     rollupConfig: { plugins: [streamingServerCompat()] },
     experimental: {
       tasks: true
@@ -156,6 +158,10 @@ export default defineNuxtConfig({
       }
     ],
     optimizeDeps: {
+      // Runtime components import Nuxt virtual modules such as #components.
+      // They must pass through Nuxt's transforms, not dependency prebundling.
+      exclude: ['@nuxtjs/i18n'],
+      entries: ['!**/node_modules/@nuxtjs/i18n/dist/runtime/**'],
       include: ['@vue/devtools-core', '@vue/devtools-kit']
     }
   }

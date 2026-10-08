@@ -7,7 +7,8 @@ const _useCalendar = () => {
   const { locale } = useI18n()
 
   const view = computed<CalendarView>(() => {
-    return ['day', 'month'].includes(route.params.view as string) ? route.params.view as CalendarView : 'week'
+    const value = 'view' in route.params ? route.params.view : undefined
+    return value === 'day' || value === 'month' ? value : 'week'
   })
 
   const isSmallScreen = useBreakpoints(breakpointsTailwind).smaller('lg')
@@ -17,7 +18,7 @@ const _useCalendar = () => {
 
   const date = computed<CalendarDate>(() => {
     try {
-      return parseDate(route.params.date as string)
+      return parseDate('date' in route.params ? route.params.date : '')
     } catch {
       return todayDate()
     }

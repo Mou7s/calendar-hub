@@ -6,14 +6,14 @@ import type { TabsItem } from '@nuxt/ui'
 definePageMeta({
   // Date changes update the mounted view in place, the default key would
   // remount the page (and reset the month view scroll) on every URL sync
-  key: route => route.params.view as string,
+  key: route => 'view' in route.params ? route.params.view : '',
   validate(route) {
-    if (!['day', 'week', 'month'].includes(route.params.view as string)) {
+    if (!('view' in route.params) || !['day', 'week', 'month'].includes(route.params.view)) {
       return false
     }
 
     try {
-      parseDate(route.params.date as string)
+      parseDate('date' in route.params ? route.params.date : '')
       return true
     } catch {
       return false
@@ -22,7 +22,7 @@ definePageMeta({
   // The month view scrolls continuously and syncs the URL as it goes,
   // sliding view transitions would fight the scroll
   middleware: [(to, from) => {
-    if (to.params.view === 'month' && from?.params.view === 'month') {
+    if ('view' in to.params && to.params.view === 'month' && 'view' in from.params && from.params.view === 'month') {
       to.meta.viewTransition = false
     }
   }]

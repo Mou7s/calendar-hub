@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const now = useNow({ interval: 60_000 })
+const now = useNow({ scheduler: callback => useIntervalFn(callback, 60_000) })
 
 const top = computed(() => (now.value.getHours() * 60 + now.value.getMinutes()) * PX_PER_MINUTE)
 </script>

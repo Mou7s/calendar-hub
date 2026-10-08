@@ -1,4 +1,4 @@
-// Temporary compatibility adapters for Nuxt 4.5.2. Transform build inputs,
+// Temporary compatibility adapters for Nuxt 4.6. Transform build inputs,
 // never installed dependencies, and keep late-mutation diagnostics enabled.
 import MagicString from 'magic-string'
 
@@ -20,12 +20,21 @@ export function streamingServerCompat() {
         return mapped(code, code.slice(0, start) + callback + '\n\t};\n\tnitroApp.hooks.hook("render:html", (html, context) => { if (!context.streaming) appendLogs(html) });\n\tnitroApp.hooks.hook("render:html:close", appendLogs);' + code.slice(end + '\n\t});'.length), id)
       }
       if (path.endsWith('/@nuxt/nitro-server/dist/runtime/handlers/renderer.mjs')) {
+        // Nuxt 4.6 delegates rendering to nuxt/internal/renderer.
+        if (code.includes('createNuxtRenderer(rendererInstance)') && code.includes('renderer.fetch(toRequestEvent(event))')) return
         // Nuxt sets these headers itself after taking the diagnostic snapshot.
         // Set them before the snapshot instead, so real late writes remain visible.
         const headers = '\tsetResponseHeader(event, "content-type", "text/html;charset=utf-8");\n\tsetResponseHeader(event, "x-powered-by", "Nuxt");'
         const marker = '\tconst committedSnapshot = import.meta.dev ? {'
         if (!code.includes(marker) || !code.includes(headers)) throw new Error('Re-evaluate Nuxt streaming header adapter after upgrade')
         return mapped(code, code.replace(headers + '\n\treturn { body: outputStream };', '\treturn { body: outputStream };').replace(marker, headers + '\n' + marker), id)
+      }
+      if (path.endsWith('/nuxt/dist/runtime/server/renderer/index.js')) {
+        const headers = '\tevent.res.headers.set("content-type", "text/html;charset=utf-8");\n\tevent.res.headers.set("x-powered-by", "Nuxt");'
+        const marker = '\tconst committedSnapshot = import.meta.dev ? {'
+        const tail = headers + '\n\treturn { body: outputStream };'
+        if (!code.includes(marker) || !code.includes(tail)) throw new Error('Re-evaluate Nuxt streaming header adapter after upgrade')
+        return mapped(code, code.replace(tail, '\treturn { body: outputStream };').replace(marker, headers + '\n' + marker), id)
       }
     }
   }

@@ -25,12 +25,19 @@ test('streaming logs preserve both buffered and streamed delivery', () => {
 })
 
 test('streaming snapshot includes framework headers without disabling mutation checks', () => {
-  const path = 'node_modules/@nuxt/nitro-server/dist/runtime/handlers/renderer.mjs'
+  const path = 'node_modules/nuxt/dist/runtime/server/renderer/index.js'
   const result = streamingServerCompat().transform(readFileSync(path, 'utf8'), path)
   const snapshot = result.code.indexOf('const committedSnapshot')
-  assert.ok(result.code.lastIndexOf('setResponseHeader(event, "x-powered-by", "Nuxt")', snapshot) >= 0)
-  assert.match(result.code, /serverDiagnostics.NUXT_E8002/)
+  assert.ok(result.code.lastIndexOf('event.res.headers.set("x-powered-by", "Nuxt")', snapshot) >= 0)
+  assert.match(result.code, /rendererDiagnostics.NUXT_E8002/)
   assert.match(result.code, /currentHeaders !== committedSnapshot.headers/)
+  assert.equal(result.code.match(/event.res.headers.set\("x-powered-by", "Nuxt"\)/g).length, 1)
+})
+
+test('Nitro renderer delegates to the adapted Nuxt renderer', () => {
+  const path = 'node_modules/@nuxt/nitro-server/dist/runtime/handlers/renderer.mjs'
+  assert.equal(streamingServerCompat().transform(readFileSync(path, 'utf8'), path), undefined)
+  assert.throws(() => streamingServerCompat().transform('unknown renderer', path), /Re-evaluate/)
 })
 
 test('plugin cookies flush before rendering and retain final mutation checks', () => {
