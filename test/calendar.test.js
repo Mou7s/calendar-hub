@@ -17,6 +17,7 @@ import {
   loadDota2CalendarData,
   loadDota2TournamentVenues,
   loadWttCalendarData,
+  mergeWttResults,
   saveCachedDota2TournamentMeta,
   isWttContenderLevelEvent,
   isWttFinalRound,
@@ -1376,6 +1377,10 @@ test("WTT loader filters to the main series and includes completed official resu
       return new Response(JSON.stringify(events), { status: 200 });
     }
     if (value.includes("take_10_official_results.json")) {
+      // An unversioned request reproduces the CDN's stale, missing result.
+      if (new URL(value).searchParams.get("q") !== now.toISOString()) {
+        return new Response("[]", { status: 200 });
+      }
       return new Response(JSON.stringify(officialResults), { status: 200 });
     }
     const eventId = Number(value.split("/").pop());
@@ -1830,6 +1835,19 @@ test("F1 ICS route prefers the request pathname in a Cloudflare-style event", as
   assert.equal(headers["Content-Disposition"], 'inline; filename="f1.ics"');
 });
 
+test("WTT refresh retains recent official results and accepts score corrections", () => {
+  const now = new Date('2026-10-08T06:00:00Z');
+  const yesterday = { id: 'yesterday', launchAt: '2026-10-07T12:00:00Z', status: 'Finished', scores: '3-0' };
+  const corrected = { ...yesterday, scores: '3-1' };
+  const today = { id: 'today', launchAt: '2026-10-08T04:00:00Z', status: 'Finished', scores: '3-2' };
+  const cached = { missions: [yesterday, { ...yesterday, id: 'old', launchAt: '2026-08-01T12:00:00Z' }, { ...yesterday, id: 'scheduled', status: 'Scheduled' }] };
+  const first = mergeWttResults({ missions: [today] }, cached, now);
+  assert.deepEqual(first.missions.map(m => m.id), ['yesterday', 'today']);
+  const updated = mergeWttResults({ missions: [today, corrected] }, first, now);
+  assert.equal(updated.missions.length, 2);
+  assert.equal(updated.missions[0].scores, '3-1');
+});
+
 test("WTT ICS route serves the cached topic feed", async () => {
   const headers = {};
   const data = {
@@ -1847,7 +1865,7 @@ test("WTT ICS route serves the cached topic feed", async () => {
   };
   const kv = {
     async get(key) {
-      return key === "calendar_topic_wtt" ? data : null;
+      return key === "calendar_topic_wtt_v2" ? data : null;
     },
     async put() {},
   };

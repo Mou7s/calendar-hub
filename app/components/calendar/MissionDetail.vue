@@ -20,6 +20,13 @@ const calendar = computed(() => calendars.value.find(item => item.id === props.e
 
 const presentation = computed(() => getCalendarEventPresentation(props.event))
 
+const detailTitle = computed(() => {
+  const prefix = `[${props.event.scores}] `
+  return props.event.scores && props.event.title.startsWith(prefix)
+    ? props.event.title.slice(prefix.length)
+    : props.event.title
+})
+
 const timeLabel = computed(() => {
   try {
     return formatFullDate(new Date(props.event.start), locale.value)
@@ -59,40 +66,8 @@ const timeLabel = computed(() => {
         <span class="size-2 rounded-full bg-error animate-pulse" />
         <span>{{ t('status.liveNow') }}</span>
       </div>
-      <div
-        v-if="event.scores"
-        class="p-2.5 rounded-lg bg-default/5 border border-default/10 space-y-2 mb-2"
-      >
-        <div class="flex items-center justify-between text-xs gap-2">
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold font-mono text-[11px]">
-            {{ presentation.scoreLabelKey ? t(presentation.scoreLabelKey) : t('calendar.wtt.score') }}: {{ event.scores }}
-          </span>
-          <span
-            v-if="event.winner"
-            class="text-[11px] font-semibold text-primary truncate flex items-center gap-1"
-          >
-            <span>🏆</span>
-            <span>{{ presentation.winnerLabelKey ? t(presentation.winnerLabelKey) : t('calendar.wtt.winner') }}: {{ event.winner }}</span>
-          </span>
-        </div>
-        <div
-          v-if="event.gameScores && event.gameScores.length"
-          class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-default/10"
-        >
-          <span class="text-[10px] text-muted font-medium">
-            {{ presentation.gamesLabelKey ? t(presentation.gamesLabelKey) : t('calendar.wtt.games') }}:
-          </span>
-          <span
-            v-for="(game, idx) in event.gameScores"
-            :key="idx"
-            class="px-1.5 py-0.5 rounded bg-default/10 text-[10px] font-mono text-default font-semibold"
-          >
-            {{ game }}
-          </span>
-        </div>
-      </div>
       <h3 class="text-base font-bold text-highlighted leading-snug text-balance">
-        {{ event.title }}
+        {{ detailTitle }}
       </h3>
     </div>
 
@@ -103,6 +78,30 @@ const timeLabel = computed(() => {
           class="size-4 shrink-0"
         />
         <span class="font-medium text-default truncate">{{ timeLabel }}</span>
+      </div>
+
+      <div v-if="event.scores" class="flex items-start gap-2">
+        <UIcon name="i-lucide-tally-5" class="size-4 shrink-0" />
+        <span class="leading-relaxed">
+          {{ presentation.scoreLabelKey ? t(presentation.scoreLabelKey) : t('calendar.wtt.score') }}:
+          <strong class="text-default tabular-nums whitespace-nowrap">{{ event.scores }}</strong>
+        </span>
+      </div>
+
+      <div v-if="event.winner" class="flex items-start gap-2">
+        <UIcon name="i-lucide-award" class="size-4 shrink-0" />
+        <span class="min-w-0 leading-relaxed break-words">
+          {{ presentation.winnerLabelKey ? t(presentation.winnerLabelKey) : t('calendar.wtt.winner') }}:
+          <strong class="text-default">{{ event.winner }}</strong>
+        </span>
+      </div>
+
+      <div v-if="event.gameScores?.length" class="flex items-start gap-2">
+        <UIcon name="i-lucide-list-ordered" class="size-4 shrink-0" />
+        <span class="leading-relaxed">
+          {{ presentation.gamesLabelKey ? t(presentation.gamesLabelKey) : t('calendar.wtt.games') }}:
+          <span class="text-default tabular-nums">{{ event.gameScores.join(' · ') }}</span>
+        </span>
       </div>
 
       <div

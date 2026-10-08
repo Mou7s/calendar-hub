@@ -1,7 +1,7 @@
 import { defineEventHandler, setHeader, createError, getRouterParam } from 'h3'
 import { getCalendarFromKv } from '../../utils/calendar-sync.js'
 import { getCachedData, getKvStorage } from '../../utils/kv.js'
-import { getTopicCalendarData, buildTopicCalendarFeed, CALENDAR_TOPICS } from '../../utils/calendars.js'
+import { getTopicCalendarData, getTopicCalendarCacheKey, buildTopicCalendarFeed, CALENDAR_TOPICS } from '../../utils/calendars.js'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // 缓存加载 key 区分主题
-    const cacheKey = `calendar_topic_${topicConfig.id}`
+    const cacheKey = getTopicCalendarCacheKey(topicConfig.id)
     // Dota 2 锦标赛 Tier 元数据走 KV 长缓存：Worker 抓取抖动时仍能执行 Tier 1 过滤
     const kv = getKvStorage(event.context.cloudflare?.env || {})
     const loader = (fetchImpl) => getTopicCalendarData(topicConfig.id, fetchImpl, { kv })

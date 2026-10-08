@@ -692,7 +692,9 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
     })),
     Promise.allSettled(recentEvents.map(async event => {
       const staticUrl = `https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/${event.eventId}/${event.eventId}_take_10_official_results.json`
-      const response = await fetchImpl(staticUrl, { headers: WTT_REQUEST_HEADERS })
+      // The unversioned Azure CDN URL can keep returning yesterday's results.
+      // Match the event-list refresh token so each cache refresh gets current scores.
+      const response = await fetchImpl(`${staticUrl}?q=${encodeURIComponent(now.toISOString())}`, { headers: WTT_REQUEST_HEADERS })
       if (response.status === 204 || response.status === 404) return { event, results: [] }
       if (!response.ok) throw new Error(`WTT official results ${event.eventId}: ${response.status}`)
       const data = await response.json()
@@ -953,6 +955,20 @@ export function extractDota2VenueFromInfobox(pageHtml) {
 /**
  * 根据 Topic ID 获取主题日历数据（SpaceX、F1、WTT 或 Dota 2 数据源）
  */
+export function getTopicCalendarCacheKey(topicId) {
+  // Invalidate data fetched before the official-results CDN refresh fix.
+  return topicId === 'wtt' ? 'calendar_topic_wtt_v2' : `calendar_topic_${topicId}`
+}
+
+export function mergeWttResults(freshData, cachedData, now = new Date()) {
+  const cutoff = now.getTime() - 30 * 24 * 60 * 60 * 1000
+  const missions = new Map((cachedData?.missions || [])
+    .filter(mission => mission.status === 'Finished' && mission.scores && Date.parse(mission.launchAt) >= cutoff)
+    .map(mission => [mission.id, mission]))
+  for (const mission of freshData.missions || []) missions.set(mission.id, mission)
+  return buildTopicCalendarData('wtt', [...missions.values()])
+}
+
 export async function getTopicCalendarData(topicId, fetchImpl = fetch, options = {}) {
   if (topicId === 'spacex') {
     return await loadLaunchData(fetchImpl);
@@ -961,7 +977,19 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch, options =
   if (topicId === 'f1') return loadF1CalendarData(fetchImpl)
 
   if (topicId === 'wtt') {
-    return await loadWttCalendarData(fetchImpl);
+    const freshData = await loadWttCalendarData(fetchImpl)
+    if (!options.kv) return freshData
+    // The upstream feed holds only ten results. Keep recently observed official
+    // results so refreshing today's scores does not remove yesterday's matches.
+    let cachedData
+    try {
+      const current = await options.kv.get(getTopicCalendarCacheKey('wtt'))
+      const legacy = await options.kv.get('calendar_topic_wtt')
+      cachedData = { missions: [...(legacy?.missions || []), ...(current?.missions || [])] }
+    } catch {
+      return freshData
+    }
+    return mergeWttResults(freshData, cachedData)
   }
 
   if (topicId === 'dota2') {

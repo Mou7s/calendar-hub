@@ -3,7 +3,7 @@ import { getCalendarFromKv } from '../utils/calendar-sync.js'
 import { getCachedData, getKvStorage } from '../utils/kv.js'
 import { loadGlobalLaunches } from '../utils/launches.js'
 import { loadHistoryLaunchData } from '../utils/spacex.js'
-import { getTopicCalendarData } from '../utils/calendars.js'
+import { getTopicCalendarData, getTopicCalendarCacheKey } from '../utils/calendars.js'
 
 // 模板客户端按可见范围拉取（月视图 12 周 = 84 天），上限与模板一致 90 天
 const MAX_RANGE_MS = 90 * 24 * 60 * 60 * 1000
@@ -99,7 +99,7 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     getCalendarFromKv(event, 'spacex', loadGlobalLaunches),
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
     getCalendarFromKv(event, 'f1', (fetchImpl: typeof fetch) => getTopicCalendarData('f1', fetchImpl)),
-    getCachedData(event, 'calendar_topic_wtt', (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl)),
+    getCachedData(event, getTopicCalendarCacheKey('wtt'), (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl, { kv: dota2Kv })),
     getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
   ])
 

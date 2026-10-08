@@ -160,6 +160,9 @@ export async function getCachedData(
   // 任务详情变化很少，维持 24 小时缓存。
   const isDetailsKey = cacheKey.startsWith("spacex_mission_details_");
   let currentTTL = isDetailsKey ? 86400 : CACHE_TTL;
+  if (cacheKey === "calendar_topic_wtt_v2") {
+    currentTTL = 300;
+  }
   if (cacheKey === "calendar_topic_dota2") {
     currentTTL = 1800;
   }
