@@ -100,7 +100,7 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
     getCalendarFromKv(event, 'f1', (fetchImpl: typeof fetch) => getTopicCalendarData('f1', fetchImpl)),
     getCachedData(event, getTopicCalendarCacheKey('wtt'), (fetchImpl: typeof fetch) => getTopicCalendarData('wtt', fetchImpl, { kv: dota2Kv })),
-    getCachedData(event, 'calendar_topic_dota2', (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
+    getCachedData(event, getTopicCalendarCacheKey('dota2'), (fetchImpl: typeof fetch) => getTopicCalendarData('dota2', fetchImpl, { kv: dota2Kv }))
   ])
 
   const pools: Array<{ result: PromiseSettledResult<{ missions?: SourceMission[] }>, calendarId: string }> = [

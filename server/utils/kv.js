@@ -163,7 +163,7 @@ export async function getCachedData(
   if (cacheKey === "calendar_topic_wtt_v2") {
     currentTTL = 300;
   }
-  if (cacheKey === "calendar_topic_dota2") {
+  if (cacheKey === "calendar_topic_dota2_v2") {
     currentTTL = 1800;
   }
 

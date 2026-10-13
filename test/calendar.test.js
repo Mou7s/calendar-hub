@@ -13,6 +13,7 @@ import {
   buildTopicCalendarFeed,
   CALENDAR_TOPICS,
   getTopicCalendarData,
+  getTopicCalendarCacheKey,
   loadCachedDota2TournamentMeta,
   loadDota2CalendarData,
   loadDota2TournamentVenues,
@@ -1445,10 +1446,16 @@ const sampleDota2MatchHtml = `
   </div>
 `;
 
+const sampleDota2Tier1Meta = new Map([
+  ["/dota2/The_International/2026", { tier: "Tier 1" }],
+  ["/dota2/Old_Tournament", { tier: "Tier 1" }],
+]);
+
 test("Dota 2 parser keeps future Liquipedia matches with named opponents", () => {
   const matches = parseDota2Matches(
     sampleDota2MatchHtml,
     new Date("2026-08-20T00:00:00.000Z"),
+    sampleDota2Tier1Meta,
   );
 
   assert.equal(matches.length, 1);
@@ -1462,7 +1469,7 @@ test("Dota 2 parser keeps future Liquipedia matches with named opponents", () =>
 test("Dota 2 parser keeps finished matches for 48h with scores and winner", () => {
   // Past Team A 2:1 Past Team B 开赛于 1787000000 = 2026-08-17T20:53:20Z
   const now = new Date("2026-08-18T12:00:00.000Z"); // 完场后约 15 小时
-  const matches = parseDota2Matches(sampleDota2MatchHtml, now);
+  const matches = parseDota2Matches(sampleDota2MatchHtml, now, sampleDota2Tier1Meta);
 
   assert.equal(matches.length, 2);
   const finished = matches.find((m) => m.status === "Finished");
@@ -1477,6 +1484,7 @@ test("Dota 2 parser keeps finished matches for 48h with scores and winner", () =
   const later = parseDota2Matches(
     sampleDota2MatchHtml,
     new Date("2026-08-22T00:00:00.000Z"),
+    sampleDota2Tier1Meta,
   );
   assert.equal(later.length, 1);
   assert.equal(later[0].status, "Finished");
@@ -1534,7 +1542,7 @@ test("Dota 2 venue extraction falls back to Online when the tournament page has 
   assert.equal(data.missions[0].launchSite, "Online");
 });
 
-test("Dota 2 parser drops known Tier 3 tournaments but keeps unknown ones", () => {
+test("Dota 2 parser only keeps confirmed Tier 1 tournaments", () => {
   const now = new Date("2026-08-20T00:00:00.000Z");
   const venues = new Map([
     ["/dota2/The_International/2026", { venue: "Shanghai", tier: "Tier 1" }],
@@ -1544,14 +1552,18 @@ test("Dota 2 parser drops known Tier 3 tournaments but keeps unknown ones", () =
   assert.equal(matches.length, 1);
   assert.equal(matches[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
 
-  // 未知锦标赛（无元数据）放行：Worker 抓取失败时不误删未知赛事
+  // Missing metadata must not bypass the subscription filter.
   const unknownOnly = parseDota2Matches(
     sampleDota2MatchHtml,
     now,
     new Map([["/dota2/Some_Other_Cup", { venue: "Berlin", tier: "Tier 1" }]]),
   );
-  assert.equal(unknownOnly.length, 1);
-  assert.equal(unknownOnly[0].titleEn, "Liquid vs Falcons · TI 2026 - Main Event");
+  assert.equal(unknownOnly.length, 0);
+  for (const metadata of [undefined, "Shanghai", { venue: "Shanghai", tier: "" }, { tier: "Tier 2" }, { tier: "Tier 3" }, { tier: "Tier 10" }, { tier: "Not Tier 1" }]) {
+    const meta = new Map([["/dota2/The_International/2026", metadata]]);
+    assert.equal(parseDota2Matches(sampleDota2MatchHtml, now, meta).length, 0);
+  }
+  assert.equal(getTopicCalendarCacheKey('dota2'), 'calendar_topic_dota2_v2');
 });
 
 test("Dota 2 venue loader serves cached tournaments without refetching", async () => {

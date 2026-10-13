@@ -201,13 +201,11 @@ export function parseDota2Matches(html, now = new Date(), venuesByTournamentPath
       : `https://liquipedia.net/dota2/${encodeURIComponent(DOTA2_MATCHES_PAGE)}`
 
     // 举办地：优先用锦标赛页 infobox 的 Location，未抓到时回退 Online
-    // 只过滤已确认为非 Tier 1 的锦标赛；未知锦标赛（无元数据）放行。
-    // Worker 上锦标赛页抓取失败时旧的 size>0 判定会被静默绕过，导致全量 Tier3
-    // 泄漏到线上日历——配合 KV 缓存的元数据与逐项未知放行堵住这个缺口。
+    // Only confirmed Tier 1 tournaments belong in the feed; missing metadata fails closed.
     const venueLookupKey = decodeURIComponent(tournamentPath.split('#')[0])
     const metaRaw = venuesByTournamentPath.get(venueLookupKey)
     const metaObj = typeof metaRaw === 'string' ? { venue: metaRaw, tier: '' } : (metaRaw || null)
-    if (metaObj && !isDota2Tier1(metaObj.tier)) continue
+    if (!isDota2Tier1(metaObj?.tier)) continue
     const launchSite = metaObj?.venue || 'Online'
 
     const matchId = block.match(/(?:[?&]title=|title=)Match:([^&"\s]+)/i)?.[1]
@@ -802,7 +800,7 @@ const DOTA2_TIER1_RE = /^tier\s*1\b|^1$|^premier$/i
 
 function isDota2Tier1(tier) {
   const t = String(tier || '').toLowerCase().trim()
-  return DOTA2_TIER1_RE.test(t) || t.includes('tier 1')
+  return DOTA2_TIER1_RE.test(t)
 }
 
 export function extractDota2TierFromInfobox(pageHtml) {
@@ -956,6 +954,7 @@ export function extractDota2VenueFromInfobox(pageHtml) {
  * 根据 Topic ID 获取主题日历数据（SpaceX、F1、WTT 或 Dota 2 数据源）
  */
 export function getTopicCalendarCacheKey(topicId) {
+  if (topicId === 'dota2') return 'calendar_topic_dota2_v2'
   // Invalidate data fetched before the official-results CDN refresh fix.
   return topicId === 'wtt' ? 'calendar_topic_wtt_v2' : `calendar_topic_${topicId}`
 }
