@@ -74,12 +74,19 @@ const _useCalendarEvents = () => {
 
   // One cached fetch per visible range: revisiting a range renders instantly
   // from the payload cache instead of requesting again
-  const { data: fetchedEvents, status } = useFetch<CalendarEvent[]>('/api/events', {
+  const { data: fetchedEvents, status, refresh } = useFetch<CalendarEvent[]>('/api/events', {
     key: () => eventsKey(range.value, locale.value),
     query: computed(() => eventsQuery(range.value, locale.value)),
     default: () => [],
-    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+    getCachedData: (key, nuxtApp, context) => context.cause === 'refresh:manual' || context.cause === 'refresh:hook'
+      ? undefined
+      : nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
   })
+
+  // An open calendar must pick up starts and results without a page reload.
+  useIntervalFn(() => {
+    if (document.visibilityState === 'visible') void refresh()
+  }, 300000)
 
   // Warm the payload cache for the adjacent ranges so prev/next navigation
   // never waits on the network

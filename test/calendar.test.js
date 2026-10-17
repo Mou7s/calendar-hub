@@ -18,6 +18,7 @@ import {
   loadDota2CalendarData,
   loadDota2TournamentVenues,
   loadWttCalendarData,
+  getWttScheduleUnits,
   mergeWttResults,
   saveCachedDota2TournamentMeta,
   isWttContenderLevelEvent,
@@ -1299,6 +1300,107 @@ test("normalizeWttOfficialResult parses completed match, scores, winner, and gam
   assert.equal(parsed.vehicle, "Men's Singles");
 });
 
+test('WTT keeps started matches until completion and prefers authoritative duplicate statuses', () => {
+  const event = { eventId: 3249, eventName: 'China Smash', timeZoneId: 84 };
+  const unit = { Code: 'match-live', StartDate: '2026-10-09T13:15:00', EndDate: '2026-10-09T14:00:00', SubEvent: "Women's Singles", ScheduleStatus: 'Start List', StartList: { Start: [
+    { Competitor: { Description: { TeamName: 'HARIMOTO Miwa' } } },
+    { Competitor: { Description: { TeamName: 'WANG Yidi' } } },
+  ] } };
+  const now = new Date('2026-10-09T06:05:00Z');
+  const pending = normalizeWttScheduleUnit(event, unit, now);
+  assert.ok(pending); // Both planned start and end have passed, but no final result.
+  assert.equal(pending.isLive, false); // Do not infer live status from the clock.
+  const live = normalizeWttScheduleUnit(event, { ...unit, ScheduleStatus: 'In Progress' }, now);
+  assert.equal(live.isLive, true);
+  assert.equal(live.id, pending.id);
+  assert.equal(normalizeWttScheduleUnit(event, { ...unit, ScheduleStatus: 'Official' }, now), null);
+  assert.equal(normalizeWttScheduleUnit(event, { ...unit, ScheduleStatus: 'Cancelled' }, now), null);
+  const duplicates = getWttScheduleUnits([{ Competition: { Unit: [unit, { ...unit, ScheduleStatus: 'Official' }, { ...unit, ScheduleStatus: 'Scheduled' }] } }]);
+  assert.equal(duplicates.length, 1);
+  assert.equal(duplicates[0].ScheduleStatus, 'Official');
+  const finished = { ...pending, id: 'wtt-3249-match-live', status: 'Finished', scores: '4-2' };
+  const merged = mergeWttResults({ missions: [{ ...pending, id: 'wtt-3249-match-live--' }] }, { missions: [finished] }, now);
+  assert.equal(merged.missions.length, 1);
+  assert.equal(merged.missions[0].id, finished.id);
+  assert.equal(merged.missions[0].scores, '4-2');
+});
+
+test('WTT caches ended results and future schedules while refreshing active events', async () => {
+  const base = new Date('2026-10-09T06:00:00Z');
+  const storage = new Map();
+  const kv = { get: async key => storage.get(key), set: async (key, data) => storage.set(key, data) };
+  const events = [
+    { eventId: 1, event_Tier_name: 'WTT Series', startDateTime: '2026-10-01T00:00:00Z', endDateTime: '2026-10-08T00:00:00Z' },
+    { eventId: 2, event_Tier_name: 'WTT Series', startDateTime: '2026-10-01T00:00:00Z', endDateTime: '2026-10-09T06:10:00Z' },
+    { eventId: 3, event_Tier_name: 'WTT Series', startDateTime: '2026-11-01T00:00:00Z', endDateTime: '2026-11-05T00:00:00Z' },
+  ];
+  let calls = [];
+  let offline = false;
+  const upstream = async url => {
+    calls.push(String(url));
+    if (offline) throw new Error('offline');
+    return Response.json(String(url).includes('wtt_upcoming') ? events : []);
+  };
+  await loadWttCalendarData(upstream, base, { kv });
+  assert.equal(calls.length, 5);
+  calls = [];
+  await loadWttCalendarData(upstream, new Date(+base + 6 * 60000), { kv });
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(url => url.includes('/2/') || url.endsWith('/2')));
+  calls = [];
+  await loadWttCalendarData(upstream, new Date(+base + 11 * 60000), { kv });
+  assert.equal(calls.length, 1); // Final refresh immediately after the event ends.
+  assert.ok(calls[0].includes('/2/'));
+  calls = [];
+  await loadWttCalendarData(upstream, new Date(+base + 20 * 60000), { kv });
+  assert.equal(calls.length, 0);
+  calls = [];
+  offline = true;
+  await loadWttCalendarData(upstream, new Date(+base + 25 * 3600000), { kv });
+  assert.ok(calls.some(url => url.includes('/1/'))); // Daily correction check, fallback on failure.
+  assert.equal(storage.get('calendar:wtt:results:1:v1').checkedAt, base.toISOString());
+});
+
+test('WTT refresh budget prioritizes results and progresses through deferred schedules', async () => {
+  const storage = new Map();
+  const kv = { get: async key => storage.get(key), set: async (key, data) => storage.set(key, data) };
+  const events = Array.from({ length: 80 }, (_, i) => ({ eventId: i + 1, event_Tier_name: 'WTT Series', startDateTime: '2026-11-01T00:00:00Z', endDateTime: '2026-11-05T00:00:00Z' }));
+  events.push({ eventId: 3249, event_Tier_name: 'WTT Series', startDateTime: '2026-10-01T00:00:00Z', endDateTime: '2026-10-11T00:00:00Z' });
+  let calls = [];
+  const upstream = async url => { calls.push(String(url)); return Response.json(String(url).includes('wtt_upcoming') ? events : []); };
+  const now = new Date('2026-10-09T06:00:00Z');
+  await loadWttCalendarData(upstream, now, { kv });
+  assert.equal(calls.length, 40);
+  assert.ok(calls[1].includes('/3249/'));
+  const firstKeys = storage.size;
+  calls = [];
+  await loadWttCalendarData(upstream, now, { kv });
+  assert.equal(calls.length, 40);
+  assert.ok(storage.size > firstKeys);
+});
+
+test('WTT skips result requests for future tournaments within a Worker subrequest budget', async () => {
+  const now = new Date('2026-10-09T06:00:00Z');
+  const events = Array.from({ length: 30 }, (_, index) => ({
+    eventId: index + 1,
+    event_Tier_name: 'WTT Series',
+    startDateTime: '2026-11-01T00:00:00Z',
+    endDateTime: '2026-11-05T00:00:00Z',
+  }));
+  events.push({ eventId: 3249, event_Tier_name: 'WTT Series', startDateTime: '2026-10-01T00:00:00Z', endDateTime: '2026-10-11T00:00:00Z' });
+  const resultCalls = [];
+  let calls = 0;
+  await loadWttCalendarData(async (url) => {
+    if (++calls > 50) throw new Error('Too many subrequests');
+    if (String(url).includes('wtt_upcoming_only_events_list.json')) return Response.json(events);
+    if (String(url).includes('take_10_official_results.json')) resultCalls.push(String(url));
+    return Response.json([]);
+  }, now);
+  assert.equal(calls, 33);
+  assert.equal(resultCalls.length, 1);
+  assert.ok(resultCalls[0].includes('/3249/'));
+});
+
 test("WTT loader filters to the main series and includes completed official results and future schedules", async () => {
   const now = new Date("2026-08-14T00:00:00.000Z");
   const scheduleCalls = [];
@@ -1307,7 +1409,7 @@ test("WTT loader filters to the main series and includes completed official resu
       eventId: 9001,
       eventName: "WTT Main Event 2026",
       event_Tier_name: "WTT Series",
-      startDateTime: "2026-08-15T00:00:00",
+      startDateTime: "2026-08-13T00:00:00",
       endDateTime: "2026-08-20T00:00:00",
       venueName: "Main Arena",
       timeZoneId: 53,
@@ -1877,7 +1979,7 @@ test("WTT ICS route serves the cached topic feed", async () => {
   };
   const kv = {
     async get(key) {
-      return key === "calendar_topic_wtt_v2" ? data : null;
+      return key === "calendar_topic_wtt_v5" ? data : null;
     },
     async put() {},
   };

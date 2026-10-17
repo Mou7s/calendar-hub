@@ -583,7 +583,13 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
   const timeZoneId = event?.timeZoneId
   const launchAt = normalizeWttDate(unit?.StartDate, timeZoneId)
   const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
-  if (!launchAt || Number.isNaN(nowMs) || Date.parse(launchAt) < nowMs) return null
+  const scheduleStatus = String(unit?.ScheduleStatus || '').trim().toLowerCase()
+  const isLive = /^(in progress|inprogress|running|live|ongoing)$/.test(scheduleStatus)
+  const isFinished = /^(official|finished|completed|cancelled|canceled)$/.test(scheduleStatus)
+  if (!launchAt || Number.isNaN(nowMs) || isFinished) return null
+  // A scheduled start passing does not mean the match is finished. Keep the
+  // current day's unresolved matches until official results replace them.
+  if (!isLive && Date.parse(launchAt) < nowMs - 24 * 3600000) return null
 
   const starts = Array.isArray(unit?.StartList?.Start)
     ? [...unit.StartList.Start].sort((a, b) => (a?.StartOrder || 0) - (b?.StartOrder || 0))
@@ -623,15 +629,15 @@ export function normalizeWttScheduleUnit(event, unit, now = new Date()) {
     missionUrl: `https://www.worldtabletennis.com/eventInfo?eventId=${encodeURIComponent(event.eventId)}`,
     launchAt,
     launchWindow,
-    isLive: false,
-    status: 'Scheduled',
+    isLive,
+    status: isLive ? 'Live' : 'Scheduled',
     calendarGroup: 'upcoming'
   }
 }
 
 export function getWttScheduleUnits(schedule) {
   const entries = Array.isArray(schedule) ? schedule : [schedule]
-  return entries.flatMap(entry => {
+  const units = entries.flatMap(entry => {
     const competitions = Array.isArray(entry?.Competition)
       ? entry.Competition
       : entry?.Competition
@@ -642,6 +648,18 @@ export function getWttScheduleUnits(schedule) {
       Array.isArray(competition?.Unit) ? competition.Unit : []
     ))
   })
+  const priority = unit => {
+    const status = String(unit.ScheduleStatus || '').trim().toLowerCase()
+    if (/^(official|finished|completed|cancelled|canceled)$/.test(status)) return 3
+    if (/^(in progress|inprogress|running|live|ongoing)$/.test(status)) return 2
+    return status === 'start list' ? 1 : 0
+  }
+  const matches = new Map()
+  for (const unit of units) {
+    const previous = matches.get(unit.Code)
+    if (!previous || priority(unit) > priority(previous)) matches.set(unit.Code, unit)
+  }
+  return [...matches.values()]
 }
 
 const getWttFutureMainSeriesEvents = (events, now) => {
@@ -657,59 +675,109 @@ const getWttFutureMainSeriesEvents = (events, now) => {
     })
 }
 
-export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
-  const eventListUrl = `${WTT_EVENTS_SOURCE_URL}?q=${encodeURIComponent(now.toISOString())}`
-  const eventResponse = await fetchImpl(eventListUrl, { headers: WTT_REQUEST_HEADERS })
-  if (!eventResponse.ok) {
-    throw new Error(`Unable to load official WTT event list: ${eventResponse.status}`)
+export async function loadWttCalendarData(fetchImpl = fetch, now = new Date(), options = {}) {
+  const refreshMs = now.getTime()
+  // Leave room for the other sources in /api/events, redirects and discovery.
+  let remainingRequests = 40
+  const cachedRequest = async (key, ttlMs, loader, endedAt = null) => {
+    let cached
+    try { cached = await options.kv?.get(key) } catch (error) { console.warn('WTT cache read failed:', error) }
+    const checkedAt = Date.parse(cached?.checkedAt)
+    const needsFinalRefresh = endedAt !== null && checkedAt < endedAt
+    if (cached && !needsFinalRefresh && refreshMs - checkedAt < ttlMs) return cached.data
+    if (remainingRequests <= 0) {
+      if (cached) return cached.data
+      throw new Error('WTT refresh budget exhausted; deferred until next refresh')
+    }
+    remainingRequests--
+    try {
+      const data = await loader()
+      try { await options.kv?.set(key, { checkedAt: now.toISOString(), data }, { ttl: 60 * 86400 }) }
+      catch (error) { console.warn('WTT cache write failed:', error) }
+      return data
+    } catch (error) {
+      console.warn(`WTT upstream refresh failed for ${key}:`, error)
+      if (cached) return cached.data
+      throw error
+    }
   }
-
-  const rawEvents = await eventResponse.json()
+  const eventListUrl = `${WTT_EVENTS_SOURCE_URL}?q=${encodeURIComponent(now.toISOString())}`
+  const rawEvents = await cachedRequest('calendar:wtt:events:v1', 3600000, async () => {
+    const eventResponse = await fetchImpl(eventListUrl, { headers: WTT_REQUEST_HEADERS })
+    if (!eventResponse.ok) {
+      await eventResponse.body?.cancel()
+      throw new Error(`Unable to load official WTT event list: ${eventResponse.status}`)
+    }
+    return await eventResponse.json()
+  })
   const events = getWttFutureMainSeriesEvents(rawEvents, now)
 
   const nowMs = now instanceof Date ? now.getTime() : Date.parse(now)
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
   const recentEvents = (Array.isArray(rawEvents) ? rawEvents : [])
     .filter(event => event?.event_Tier_name === WTT_MAIN_SERIES_TIER)
+    // Future tournaments cannot have results. Fetching their empty files can
+    // exhaust the Worker's subrequest budget before active events are reached.
+    .filter(event => {
+      const startDate = normalizeWttDate(event.startDateTime, event.timeZoneId)
+      return startDate && Date.parse(startDate) <= nowMs
+    })
     .filter(event => {
       const endDate = normalizeWttDate(event.endDateTime || event.startDateTime, event.timeZoneId)
       const endMs = endDate ? Date.parse(endDate) : NaN
       return !Number.isNaN(endMs) && endMs >= (nowMs - THIRTY_DAYS_MS)
     })
 
-  const [scheduleResults, officialResults] = await Promise.all([
-    Promise.allSettled(events.map(async event => {
+  const startMs = event => Date.parse(normalizeWttDate(event.startDateTime, event.timeZoneId))
+  const endMs = event => Date.parse(normalizeWttDate(event.endDateTime || event.startDateTime, event.timeZoneId))
+  // Results of active tournaments get the budget before distant schedules.
+  recentEvents.sort((a, b) => Number(endMs(b) >= nowMs) - Number(endMs(a) >= nowMs) || endMs(b) - endMs(a))
+  events.sort((a, b) => startMs(a) - startMs(b))
+  const officialResults = await Promise.allSettled(recentEvents.map(async event => {
+    const ended = endMs(event) < nowMs
+    const results = await cachedRequest(`calendar:wtt:results:${event.eventId}:v1`, ended ? 86400000 : 300000, async () => {
+      const staticUrl = `https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/${event.eventId}/${event.eventId}_take_10_official_results.json`
+      const response = await fetchImpl(`${staticUrl}?q=${encodeURIComponent(now.toISOString())}`, { headers: WTT_REQUEST_HEADERS })
+      if (response.status === 204 || response.status === 404 || !response.ok) {
+        await response.body?.cancel()
+        if (response.status === 204 || response.status === 404) return []
+        throw new Error(`WTT official results ${event.eventId}: ${response.status}`)
+      }
+      const data = await response.json()
+      return Array.isArray(data) ? data : []
+    }, ended ? endMs(event) : null)
+    return { event, results }
+  }))
+  const scheduleResults = await Promise.allSettled(events.map(async event => {
+    const units = await cachedRequest(`calendar:wtt:schedule:${event.eventId}:v1`, startMs(event) <= nowMs ? 300000 : 21600000, async () => {
       const response = await fetchImpl(
         `${WTT_SCHEDULE_SOURCE_URL}/${encodeURIComponent(event.eventId)}`,
         { headers: WTT_REQUEST_HEADERS }
       )
 
-      if (response.status === 204) return { event, units: [] }
-      if (!response.ok) throw new Error(`WTT schedule ${event.eventId}: ${response.status}`)
-      return { event, units: getWttScheduleUnits(await response.json()) }
-    })),
-    Promise.allSettled(recentEvents.map(async event => {
-      const staticUrl = `https://wtt-web-frontdoor-cthahjeqhbh6aqe3.a01.azurefd.net/websitestaticapifiles/${event.eventId}/${event.eventId}_take_10_official_results.json`
-      // The unversioned Azure CDN URL can keep returning yesterday's results.
-      // Match the event-list refresh token so each cache refresh gets current scores.
-      const response = await fetchImpl(`${staticUrl}?q=${encodeURIComponent(now.toISOString())}`, { headers: WTT_REQUEST_HEADERS })
-      if (response.status === 204 || response.status === 404) return { event, results: [] }
-      if (!response.ok) throw new Error(`WTT official results ${event.eventId}: ${response.status}`)
-      const data = await response.json()
-      return { event, results: Array.isArray(data) ? data : [] }
-    }))
-  ])
+      if (response.status === 204 || !response.ok) {
+        await response.body?.cancel()
+        if (response.status === 204) return []
+        throw new Error(`WTT schedule ${event.eventId}: ${response.status}`)
+      }
+      return getWttScheduleUnits(await response.json())
+    })
+    return { event, units }
+  }))
 
   const items = []
   const seenIds = new Set()
 
   officialResults.forEach((result) => {
+    if (result.status === 'rejected') {
+      console.error('WTT official results fetch failed:', result.reason)
+    }
     if (result.status === 'fulfilled' && result.value?.results) {
       const { event, results } = result.value
       for (const resItem of results) {
         const item = normalizeWttOfficialResult(event, resItem)
-        if (item && !seenIds.has(item.id)) {
-          seenIds.add(item.id)
+        if (item && !seenIds.has(item.id.replace(/-+$/, ''))) {
+          seenIds.add(item.id.replace(/-+$/, ''))
           items.push(item)
         }
       }
@@ -717,18 +785,20 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date()) {
   })
 
   scheduleResults.forEach((result) => {
+    if (result.status === 'rejected') console.warn('WTT schedule fetch deferred or failed:', result.reason)
     if (result.status === 'fulfilled' && result.value?.units) {
       const { event, units } = result.value
-      for (const unit of units) {
+      for (const unit of getWttScheduleUnits({ Competition: { Unit: units } })) {
         const item = normalizeWttScheduleUnit(event, unit, now)
-        if (item && !seenIds.has(item.id)) {
-          seenIds.add(item.id)
+        if (item && !seenIds.has(item.id.replace(/-+$/, ''))) {
+          seenIds.add(item.id.replace(/-+$/, ''))
           items.push(item)
         }
       }
     }
   })
 
+  console.info(JSON.stringify({ event: 'wtt-refresh', upstreamRequests: 40 - remainingRequests, matches: items.length }))
   return buildTopicCalendarData('wtt', items)
 }
 
@@ -954,17 +1024,21 @@ export function extractDota2VenueFromInfobox(pageHtml) {
  * 根据 Topic ID 获取主题日历数据（SpaceX、F1、WTT 或 Dota 2 数据源）
  */
 export function getTopicCalendarCacheKey(topicId) {
+  // Invalidate partial payloads fetched before limiting result requests.
   if (topicId === 'dota2') return 'calendar_topic_dota2_v2'
-  // Invalidate data fetched before the official-results CDN refresh fix.
-  return topicId === 'wtt' ? 'calendar_topic_wtt_v2' : `calendar_topic_${topicId}`
+  return topicId === 'wtt' ? 'calendar_topic_wtt_v5' : `calendar_topic_${topicId}`
 }
 
 export function mergeWttResults(freshData, cachedData, now = new Date()) {
   const cutoff = now.getTime() - 30 * 24 * 60 * 60 * 1000
   const missions = new Map((cachedData?.missions || [])
     .filter(mission => mission.status === 'Finished' && mission.scores && Date.parse(mission.launchAt) >= cutoff)
-    .map(mission => [mission.id, mission]))
-  for (const mission of freshData.missions || []) missions.set(mission.id, mission)
+    .map(mission => [mission.id.replace(/-+$/, ''), mission]))
+  for (const mission of freshData.missions || []) {
+    const key = mission.id.replace(/-+$/, '')
+    if (missions.get(key)?.status === 'Finished' && mission.status !== 'Finished') continue
+    missions.set(key, mission)
+  }
   return buildTopicCalendarData('wtt', [...missions.values()])
 }
 
@@ -976,15 +1050,18 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch, options =
   if (topicId === 'f1') return loadF1CalendarData(fetchImpl)
 
   if (topicId === 'wtt') {
-    const freshData = await loadWttCalendarData(fetchImpl)
+    const freshData = await loadWttCalendarData(fetchImpl, new Date(), options)
     if (!options.kv) return freshData
     // The upstream feed holds only ten results. Keep recently observed official
     // results so refreshing today's scores does not remove yesterday's matches.
     let cachedData
     try {
       const current = await options.kv.get(getTopicCalendarCacheKey('wtt'))
+      const previousLive = await options.kv.get('calendar_topic_wtt_v3')
+      const previousPending = await options.kv.get('calendar_topic_wtt_v4')
+      const previous = await options.kv.get('calendar_topic_wtt_v2')
       const legacy = await options.kv.get('calendar_topic_wtt')
-      cachedData = { missions: [...(legacy?.missions || []), ...(current?.missions || [])] }
+      cachedData = { missions: [...(legacy?.missions || []), ...(previous?.missions || []), ...(previousLive?.missions || []), ...(previousPending?.missions || []), ...(current?.missions || [])] }
     } catch {
       return freshData
     }
