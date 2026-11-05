@@ -169,7 +169,7 @@ git diff --check
 
 前端静态资源通过 Workers Assets 提供，SSR、API 与 ICS 由 Nitro Worker 处理。
 
-部署前检查 `wrangler.toml`：自定义域名、当前账户的 KV namespace，以及每小时整点的 Cron 配置。`SPACEX_KV` 与 `KV` 使用同一个生产 namespace。
+部署前检查 `wrangler.toml`：自定义域名、当前账户的 KV namespace，以及每小时整点的 Cron 配置。生产 namespace 的显示名称为 `calendarhub`；`SPACEX_KV` 与 `KV` 是指向该空间的代码绑定别名。
 
 ```bash
 bun run preview:worker   # 构建并在本地 Workers 运行时预览

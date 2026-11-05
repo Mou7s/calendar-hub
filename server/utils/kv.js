@@ -1,3 +1,4 @@
+import { createWttStorage, singleFlight } from './wtt-cache.js'
 import { loadMissionDetails, M2M100_LANG_MAP, translateMissionDetails } from './spacex.js'
 
 const CACHE_TTL = 1800; // 30 minutes for calendar data to avoid frequent KV refresh writes
@@ -144,7 +145,8 @@ export async function getCachedData(
   const env = cloudflare.env || {};
   const ctx = cloudflare.context; // waitUntil is inside the ExecutionContext
 
-  const kv = getKvStorage(env);
+  const baseKv = getKvStorage(env);
+  const kv = cacheKey === "calendar_topic_wtt_v5" ? createWttStorage(baseKv) : baseKv;
   let cached = null;
   if (kv) {
     try {
@@ -189,76 +191,38 @@ export async function getCachedData(
     }
   }
 
+  const refresh = () => singleFlight(env.SPACEX_KV || env, cacheKey, async () => {
+    let freshData = await loader(fetch);
+    if (cacheKey === "spacex_launches_data") {
+      freshData = await enrichWithStableVersions(env, freshData);
+    }
+    if (kv) {
+      try { await kv.set(cacheKey, freshData, { ttl: 604800 }); }
+      catch (error) { console.error("KV write error:", error); }
+    }
+    if (cached && typeof ctx?.waitUntil === "function" && cacheKey === "spacex_launches_data" && env.AI && freshData.missions && freshData.hasChanges) {
+      await preTranslateUpcomingMissions(event, env, freshData.missions);
+    }
+    return freshData;
+  });
+
   if (cached) {
     const refreshedAtMs = cached.refreshedAt ? Date.parse(cached.refreshedAt) : 0;
     const age = Number.isNaN(refreshedAtMs) ? Infinity : nowMs - refreshedAtMs;
-
-    if (age < currentTTL * 1000) {
-      // Fresh: Return immediately
-      return cached;
-    }
-
-    // Stale: SWR or Sync Fallback
+    if (age < currentTTL * 1000) return cached;
     if (ctx && typeof ctx.waitUntil === "function") {
-      // 1. Stale-While-Revalidate (SWR): Return stale data immediately, update in background
-      const revalidatePromise = (async () => {
-        try {
-          let freshData = await loader(fetch);
-          if (cacheKey === "spacex_launches_data") {
-            freshData = await enrichWithStableVersions(env, freshData);
-            if (kv) {
-              await kv.set(cacheKey, freshData, { ttl: 604800 });
-            }
-            
-            // 后台静默预翻译触发，缓存即将发射任务的多语言详情，保障客户端 0ms 秒回
-            // 优化：仅在发射任务元数据发生变更时，才触发 35 次的 KV 读取检测，日常大幅减少 KV 读写消耗！
-            if (env.AI && freshData.missions && freshData.hasChanges) {
-              await preTranslateUpcomingMissions(event, env, freshData.missions);
-            }
-          } else {
-            if (kv) {
-              await kv.set(cacheKey, freshData, { ttl: 604800 });
-            }
-          }
-        } catch (e) {
-          console.error(`Background revalidation failed for ${cacheKey}:`, e);
-        }
-      })();
-      ctx.waitUntil(revalidatePromise);
+      ctx.waitUntil(refresh().catch(error => {
+        console.error(`Background revalidation failed for ${cacheKey}:`, error);
+      }));
       return cached;
-    } else {
-      // 2. No ctx.waitUntil available: Sync fetch with disaster recovery fallback
-      try {
-        let freshData = await loader(fetch);
-        if (cacheKey === "spacex_launches_data") {
-          freshData = await enrichWithStableVersions(env, freshData);
-        }
-        if (kv) {
-          await kv.set(cacheKey, freshData, { ttl: 604800 });
-        }
-        return freshData;
-      } catch (e) {
-        console.warn(`Synchronous revalidation failed for ${cacheKey}. Falling back to stale cache:`, e);
-        return cached;
-      }
+    }
+    try { return await refresh(); }
+    catch (error) {
+      console.warn(`Synchronous revalidation failed for ${cacheKey}. Falling back to stale cache:`, error);
+      return cached;
     }
   }
-
-  // No cache: Sync fetch is required
-  let freshData = await loader(fetch);
-  if (cacheKey === "spacex_launches_data") {
-    freshData = await enrichWithStableVersions(env, freshData);
-  }
-
-  if (kv) {
-    try {
-      await kv.set(cacheKey, freshData, { ttl: 604800 });
-    } catch (e) {
-      console.error("KV write error:", e);
-    }
-  }
-
-  return freshData;
+  return await refresh();
 }
 
 /**

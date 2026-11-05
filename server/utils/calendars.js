@@ -1,3 +1,4 @@
+import { createWttStorage, singleFlight } from './wtt-cache.js'
 /**
  * Calendar Hub - 多主题在线日历注册与数据生成中心
  * 本模块负责管理全站各种主题日历（SpaceX、F1 赛车、WTT 乒乓球和 Dota 2 比赛）
@@ -676,12 +677,13 @@ const getWttFutureMainSeriesEvents = (events, now) => {
 }
 
 export async function loadWttCalendarData(fetchImpl = fetch, now = new Date(), options = {}) {
+  const kv = createWttStorage(options.kv, options.cache)
   const refreshMs = now.getTime()
   // Leave room for the other sources in /api/events, redirects and discovery.
   let remainingRequests = 40
   const cachedRequest = async (key, ttlMs, loader, endedAt = null) => {
     let cached
-    try { cached = await options.kv?.get(key) } catch (error) { console.warn('WTT cache read failed:', error) }
+    try { cached = await kv?.get(key) } catch (error) { console.warn('WTT cache read failed:', error) }
     const checkedAt = Date.parse(cached?.checkedAt)
     const needsFinalRefresh = endedAt !== null && checkedAt < endedAt
     if (cached && !needsFinalRefresh && refreshMs - checkedAt < ttlMs) return cached.data
@@ -691,9 +693,12 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date(), o
     }
     remainingRequests--
     try {
-      const data = await loader()
-      try { await options.kv?.set(key, { checkedAt: now.toISOString(), data }, { ttl: 60 * 86400 }) }
-      catch (error) { console.warn('WTT cache write failed:', error) }
+      const data = await singleFlight(options.kv || kv, key, async () => {
+        const result = await loader()
+        try { await kv?.set(key, { checkedAt: now.toISOString(), data: result }, { ttl: 60 * 86400 }) }
+        catch (error) { console.warn('WTT cache write failed:', error) }
+        return result
+      })
       return data
     } catch (error) {
       console.warn(`WTT upstream refresh failed for ${key}:`, error)
@@ -749,7 +754,7 @@ export async function loadWttCalendarData(fetchImpl = fetch, now = new Date(), o
     return { event, results }
   }))
   const scheduleResults = await Promise.allSettled(events.map(async event => {
-    const units = await cachedRequest(`calendar:wtt:schedule:${event.eventId}:v1`, startMs(event) <= nowMs ? 300000 : 21600000, async () => {
+    const units = await cachedRequest(`calendar:wtt:schedule:${event.eventId}:v1`, startMs(event) <= nowMs ? 300000 : (startMs(event) - nowMs <= 3 * 86400000 ? 21600000 : 86400000), async () => {
       const response = await fetchImpl(
         `${WTT_SCHEDULE_SOURCE_URL}/${encodeURIComponent(event.eventId)}`,
         { headers: WTT_REQUEST_HEADERS }

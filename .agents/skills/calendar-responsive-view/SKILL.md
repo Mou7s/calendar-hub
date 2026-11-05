@@ -1,3 +1,8 @@
+---
+name: calendar-responsive-view
+description: Adapt calendar day, week, and month views to screen width, keeping visible day columns, route navigation, view labels, and event fetching in sync.
+---
+
 # Calendar Responsive View
 
 Use this skill when changing how the calendar adapts its day, week, or month views to screen width, including visible day columns, route navigation, view labels, and event fetching.
