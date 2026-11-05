@@ -28,7 +28,9 @@ export default defineNuxtConfig({
     watcher: 'builder',
     ssrStreaming: true,
     // Nuxt 4.6's renderer and manifest pipeline use Vite environments.
-    viteEnvironmentApi: true
+    viteEnvironmentApi: true,
+    // @nuxtjs/i18n runtime still imports useRuntimeConfig from #imports in Nitro.
+    nitroAutoImports: true
   },
 
   compatibilityDate: '2026-06-30',
