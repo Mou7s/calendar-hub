@@ -8,21 +8,11 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@nuxthub/core',
-    '@nuxtjs/i18n',
-    '@nuxt/eslint'
+    '@nuxtjs/i18n'
   ],
 
   devtools: {
     enabled: true
-  },
-
-  eslint: {
-    config: {
-      // The root config is maintained here; avoid find-up 8's invalid
-      // unicorn-magic import in the optional config creation path.
-      autoInit: false,
-      configFile: '.nuxt/eslint.config.mjs'
-    }
   },
 
   css: ['~/assets/css/main.css'],

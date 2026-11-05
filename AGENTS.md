@@ -125,7 +125,6 @@ node --check server/utils/calendars.js
 node --check server/utils/spacex.js
 node --check server/utils/kv.js
 node --check server/routes/spacex.ics.js
-bun run typecheck                            # vue-tsc：漏改只读化残留符号会在这里第一时间暴露
 bun run build
 git diff --check
 ```

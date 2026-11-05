@@ -10,8 +10,6 @@
     "preview:worker": "bun run build && bunx wrangler dev --config .output/server/wrangler.json",
     "deploy:worker": "bun run build && bunx wrangler deploy --config .output/server/wrangler.json",
     "test": "bun test",
-    "typecheck": "nuxt typecheck",
-    "lint": "nuxt prepare && eslint .",
     "translate:locales": "bun scripts/translate-locales.js",
     "generate:theme-colors": "node scripts/generate-theme-colors.js"
   },
@@ -30,14 +28,9 @@
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/lucide": "^1.2.143",
     "@iconify-json/simple-icons": "^1.2.100",
-    "@nuxt/eslint": "^1.17.0",
-    "eslint": "^10.12.0",
-    "eslint-plugin-better-tailwindcss": "^4.9.0",
     "jsdom": "^30.1.2",
     "magic-string": "^1.4.3",
     "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2",
-    "vue-tsc": "^3.3.13",
     "wrangler": "^4.149.0"
   }
 }
