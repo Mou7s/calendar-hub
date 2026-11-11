@@ -93,10 +93,28 @@ export async function getCalendarFromKv(event, topic, fallbackLoader) {
   const env = event.context.cloudflare?.env || {}
   const kv = getKvStorage(env)
   const key = CALENDAR_KEYS[topic]
+  const edgeCache = env.SPACEX_KV ? globalThis.caches?.default : null
+  const edgeReq = edgeCache && key
+    ? new Request(`https://calendarhub.mou7s.com/__internal-cache/topic-sync-v1/${encodeURIComponent(key)}`)
+    : null
+
+  if (edgeCache && edgeReq) {
+    try {
+      const hit = await edgeCache.match(edgeReq)
+      if (hit) return await hit.json()
+    } catch {}
+  }
 
   if (kv && key) {
     const stored = await kv.get(key)
-    if (stored) return stored
+    if (stored) {
+      if (edgeCache && edgeReq) {
+        try {
+          await edgeCache.put(edgeReq, Response.json(stored, { headers: { 'Cache-Control': 'public, max-age=60' } }))
+        } catch {}
+      }
+      return stored
+    }
 
     if (topic === 'spacex') {
       const legacy = await kv.get('spacex_launches_data')

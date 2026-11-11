@@ -124,3 +124,21 @@ test('far-future WTT schedules refresh daily and accelerate within three days', 
   await loadWttCalendarData(upstream, new Date(+base + 32 * 3600000), f)
   expect(schedules).toBe(3)
 })
+
+test('cold edge PoP populates Cache API on first KV read to prevent repeated KV misses', async () => {
+  let kvReads = 0
+  const durable = new Map([['calendar:wtt:schedule:3557:v1', { checkedAt: '2026-11-11T00:00:00Z', data: [] }]])
+  const edge = new Map()
+  const kv = {
+    get: async key => { kvReads++; return durable.get(key) },
+    set: async (key, value) => { durable.set(key, structuredClone(value)) }
+  }
+  const cache = {
+    match: async request => edge.get(request.url)?.clone(),
+    put: async (request, response) => { edge.set(request.url, response.clone()) }
+  }
+  const storage = createWttStorage(kv, cache)
+  expect((await storage.get('calendar:wtt:schedule:3557:v1')).checkedAt).toBe('2026-11-11T00:00:00Z')
+  expect((await storage.get('calendar:wtt:schedule:3557:v1')).checkedAt).toBe('2026-11-11T00:00:00Z')
+  expect(kvReads).toBe(1)
+})

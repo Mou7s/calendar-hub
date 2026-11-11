@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     const icsContent = buildCalendarFeed(data);
     
     setHeader(event, "Content-Type", "text/calendar; charset=utf-8");
-    setHeader(event, "Cache-Control", "public, max-age=300");
+    setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=3600");
     setHeader(event, "Content-Disposition", 'inline; filename="spacex-launches.ics"');
     setHeader(event, "X-Robots-Tag", "noindex");
     

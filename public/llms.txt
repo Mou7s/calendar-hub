@@ -1,0 +1,16 @@
+# Calendar Hub
+
+> Read-only online calendar hub aggregating SpaceX rocket launches, Formula 1 Grand Prix sessions, WTT Main Series table tennis matches, and Dota 2 Tier 1 tournaments into live RFC 5545 `.ics` subscription feeds and a multilingual web calendar (English, 简体中文, 日本語, 한국어, Español, Français, Deutsch).
+
+## Canonical Entry
+- Web Calendar: https://calendarhub.mou7s.com/
+
+## Direct ICS Subscription Feeds (RFC 5545)
+Subscribe in Apple Calendar, Google Calendar, Outlook, or any `webcal://` / `.ics` client:
+- **SpaceX Launches** (Falcon 9, Falcon Heavy, Starship upcoming launches & live webcasts): https://calendarhub.mou7s.com/spacex.ics
+- **Formula 1 Grand Prix Schedule** (Practice, Sprint, Qualifying, and Race sessions): https://calendarhub.mou7s.com/ics/f1.ics
+- **WTT Table Tennis Main Series** (Confirmed matchups and recent scores): https://calendarhub.mou7s.com/ics/wtt.ics
+- **Dota 2 Tier 1 Tournaments** (Premier tournament schedules and results): https://calendarhub.mou7s.com/ics/dota2.ics
+
+## Guidance for Crawlers & AI Agents
+- Individual `/day/YYYY-MM-DD` and `/week/YYYY-MM-DD` URLs are interactive UI views over the same underlying event feeds; prefer `/` and the `.ics` feeds above instead of paginating date URLs.

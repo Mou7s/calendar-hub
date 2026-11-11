@@ -146,7 +146,7 @@ export async function getCachedData(
   const ctx = cloudflare.context; // waitUntil is inside the ExecutionContext
 
   const baseKv = getKvStorage(env);
-  const kv = cacheKey === "calendar_topic_wtt_v5" ? createWttStorage(baseKv) : baseKv;
+  const kv = baseKv ? createWttStorage(baseKv) : null;
   let cached = null;
   if (kv) {
     try {

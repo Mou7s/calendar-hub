@@ -16,7 +16,13 @@ export function createWttStorage(durableStorage, cache = globalThis.caches?.defa
         const hit = await cache.match(request(key))
         if (hit) return await hit.json()
       } catch (error) { console.warn('WTT edge cache read failed:', error) }
-      return await durableStorage?.get(key)
+      const stored = await durableStorage?.get(key)
+      if (stored !== null && stored !== undefined) {
+        try {
+          await cache.put(request(key), Response.json(stored, { headers: { 'Cache-Control': 'public, max-age=604800' } }))
+        } catch (error) { console.warn('WTT edge cache populate failed:', error) }
+      }
+      return stored
     },
     async set(key, value, options) {
       let stored

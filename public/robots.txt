@@ -1,4 +1,41 @@
+# Welcome legitimate search engines & AI search assistants on canonical entry points,
+# while steering them away from infinite daily/weekly calendar pagination traps.
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: DuckDuckBot
+User-agent: Baiduspider
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: ClaudeBot
+User-agent: facebookexternalhit
+User-agent: Twitterbot
+User-agent: TelegramBot
+Allow: /
+Allow: /llms.txt
+Allow: /spacex.ics
+Allow: /ics/
+Disallow: /day/
+Disallow: /week/
+Disallow: /api/
+
+# Disallow non-search bulk scrapers & SEO backlink crawlers with high SSR cost
+User-agent: ElevenlabsCrawler
+User-agent: Bytespider
+User-agent: SemrushBot
+User-agent: SERankingBacklinksBot
+User-agent: AhrefsBot
+User-agent: MJ12bot
+User-agent: DotBot
+Disallow: /
+
+# Default rule for all other polite crawlers
 User-agent: *
 Allow: /
+Allow: /llms.txt
+Disallow: /day/
+Disallow: /week/
+Disallow: /api/
 
 Sitemap: https://calendarhub.mou7s.com/sitemap.xml

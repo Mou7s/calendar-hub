@@ -92,9 +92,28 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     throw createError({ statusCode: 400, statusMessage: 'Bad Request', message: 'Invalid start/end range (max 90 days).' })
   }
 
+  const cfEnv = event.context?.cloudflare?.env || {}
+  const edgeCache = cfEnv.SPACEX_KV ? (globalThis as { caches?: { default?: Cache } }).caches?.default : undefined
+  const edgeCacheReq = edgeCache
+    ? new Request(`https://calendarhub.mou7s.com/__internal-cache/api-events-v1?start=${start}&end=${end}&locale=${encodeURIComponent(locale)}`)
+    : null
+
+  if (edgeCache && edgeCacheReq) {
+    try {
+      const hit = await edgeCache.match(edgeCacheReq)
+      if (hit) {
+        setHeader(event, 'Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600')
+        setHeader(event, 'Content-Type', 'application/json; charset=utf-8')
+        return await hit.json() as CalendarEvent[]
+      }
+    } catch {
+      // Fall through to normal assembly on Cache API failure
+    }
+  }
+
   // 各源独立降级：单个源失败不拖累其它图层
   // Dota 2 锦标赛 Tier 元数据走 KV 长缓存：Worker 抓取抖动时仍能执行 Tier 1 过滤
-  const dota2Kv = getKvStorage(event.context?.cloudflare?.env || {})
+  const dota2Kv = getKvStorage(cfEnv)
   const settled = await Promise.allSettled([
     getCalendarFromKv(event, 'spacex', loadGlobalLaunches),
     getCachedData(event, 'spacex_history_launches_data', loadHistoryLaunchData),
@@ -145,7 +164,15 @@ export default defineEventHandler(async (event): Promise<CalendarEvent[]> => {
     }
   }
 
-  setHeader(event, 'Cache-Control', 'public, max-age=300')
+  if (edgeCache && edgeCacheReq) {
+    try {
+      await edgeCache.put(edgeCacheReq, Response.json(events, { headers: { 'Cache-Control': 'public, max-age=120' } }))
+    } catch {
+      // Non-fatal
+    }
+  }
+
+  setHeader(event, 'Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600')
   setHeader(event, 'Content-Type', 'application/json; charset=utf-8')
 
   return events

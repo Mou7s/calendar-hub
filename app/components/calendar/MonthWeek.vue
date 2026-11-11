@@ -143,6 +143,7 @@ function label(day: Date): string {
       v-for="({ day }, index) in cells"
       :key="`number-${day.getTime()}`"
       :to="pathFor(toCalendarDate(day), 'day')"
+      rel="nofollow"
       class="select-none row-start-1 justify-self-end inline-flex items-center justify-center h-6 min-w-6 m-0.5 px-1 py-1 text-xs font-semibold rounded-full transition-colors focus-visible:outline-3"
       :class="isToday(day)
         ? 'text-inverted bg-primary active:bg-primary/75 outline-primary/25'

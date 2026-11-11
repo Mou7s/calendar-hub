@@ -836,7 +836,7 @@ export async function loadDota2CalendarData(fetchImpl = fetch, now = new Date(),
   // 失败的比赛回退 'Online'，不影响主数据。
   // 锦标赛元数据走 KV 长缓存：抓取抖动时仍能按缓存执行 Tier 1 过滤；
   // 全失败则回退到缓存（而非空 map，避免 Tier 口径被静默绕过）。
-  const kv = options?.kv || null
+  const kv = options?.kv ? createWttStorage(options.kv, options.cache) : null
   let cachedMeta = new Map()
   if (kv) {
     try {
@@ -1061,12 +1061,17 @@ export async function getTopicCalendarData(topicId, fetchImpl = fetch, options =
     // results so refreshing today's scores does not remove yesterday's matches.
     let cachedData
     try {
-      const current = await options.kv.get(getTopicCalendarCacheKey('wtt'))
-      const previousLive = await options.kv.get('calendar_topic_wtt_v3')
-      const previousPending = await options.kv.get('calendar_topic_wtt_v4')
-      const previous = await options.kv.get('calendar_topic_wtt_v2')
-      const legacy = await options.kv.get('calendar_topic_wtt')
-      cachedData = { missions: [...(legacy?.missions || []), ...(previous?.missions || []), ...(previousLive?.missions || []), ...(previousPending?.missions || []), ...(current?.missions || [])] }
+      const wttKv = createWttStorage(options.kv, options.cache)
+      const current = await wttKv.get(getTopicCalendarCacheKey('wtt'))
+      if (current?.missions?.length) {
+        cachedData = current
+      } else {
+        const previousLive = await options.kv.get('calendar_topic_wtt_v3')
+        const previousPending = await options.kv.get('calendar_topic_wtt_v4')
+        const previous = await options.kv.get('calendar_topic_wtt_v2')
+        const legacy = await options.kv.get('calendar_topic_wtt')
+        cachedData = { missions: [...(legacy?.missions || []), ...(previous?.missions || []), ...(previousLive?.missions || []), ...(previousPending?.missions || []), ...(current?.missions || [])] }
+      }
     } catch {
       return freshData
     }

@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     const icsContent = buildTopicCalendarFeed(topicConfig.id, data)
 
     setHeader(event, "Content-Type", "text/calendar; charset=utf-8")
-    setHeader(event, "Cache-Control", "public, max-age=300")
+    setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=3600")
     setHeader(event, "Content-Disposition", `inline; filename="${topicConfig.id}.ics"`)
     setHeader(event, "X-Robots-Tag", "noindex")
 

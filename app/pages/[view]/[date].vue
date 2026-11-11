@@ -42,6 +42,22 @@ const views = computed(() => [
 function onViewChange(value: string | number) {
   navigateTo(pathFor(date.value, value as CalendarView))
 }
+
+// Guide benign crawlers: consolidate PageRank onto `/` and prevent indexing infinite daily/weekly or distant-year permutations
+const shouldNoIndex = computed(() => {
+  if (view.value !== 'month') return true
+  const currentYear = todayDate().year
+  return Math.abs(date.value.year - currentYear) > 1
+})
+
+useHead(() => ({
+  link: [
+    { key: 'canonical', rel: 'canonical', href: 'https://calendarhub.mou7s.com/' }
+  ],
+  meta: shouldNoIndex.value
+    ? [{ key: 'robots', name: 'robots', content: 'noindex, nofollow' }]
+    : []
+}))
 </script>
 
 <template>
@@ -137,6 +153,7 @@ function onViewChange(value: string | number) {
                 icon="i-lucide-chevron-left"
                 :aria-label="t('calendar.previous')"
                 prefetch-on="interaction"
+                rel="nofollow"
                 :to="pathFor(prevDate)"
                 @click="setDirection('left')"
               />
@@ -148,6 +165,7 @@ function onViewChange(value: string | number) {
               <UButton
                 :label="t('calendar.today')"
                 class="hidden sm:inline-flex rounded-full"
+                rel="nofollow"
                 :to="pathFor(todayDate())"
               />
             </UTooltip>
@@ -159,6 +177,7 @@ function onViewChange(value: string | number) {
                 icon="i-lucide-chevron-right"
                 :aria-label="t('calendar.next')"
                 prefetch-on="interaction"
+                rel="nofollow"
                 :to="pathFor(nextDate)"
                 @click="setDirection('right')"
               />
