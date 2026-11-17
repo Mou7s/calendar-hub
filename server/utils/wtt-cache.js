@@ -28,18 +28,17 @@ export function createWttStorage(durableStorage, cache = globalThis.caches?.defa
       let stored
       try { stored = await durableStorage?.get(key) } catch (error) { console.warn('WTT durable cache read failed:', error) }
       const now = Date.now()
-      const persistedAt = Date.parse(stored?.persistedAt || stored?.checkedAt || stored?.refreshedAt)
+      const persistedTs = stored?.persistedAt || (typeof stored?.checkedAt === 'string' ? stored.checkedAt : null) || stored?.refreshedAt
+      const persistedAt = Date.parse(persistedTs)
       const changed = !stored || content(stored) !== content(value)
       const renew = !Number.isFinite(persistedAt) || now - persistedAt >= RENEW_MS
       const snapshot = { ...value, persistedAt: changed || renew ? new Date(now).toISOString() : new Date(persistedAt).toISOString() }
-      // A failed edge-cache write must not leave an old durable timestamp causing
-      // repeated refreshes: persist the successful check in that case as well.
-      let edgeWritten = false
+      // Update edge Cache API with fresh check timestamps; never burn KV write quota
+      // for unchanged snapshots within the renewal window if Cache API fails.
       try {
         await cache.put(request(key), Response.json(snapshot, { headers: { 'Cache-Control': 'public, max-age=604800' } }))
-        edgeWritten = true
       } catch (error) { console.warn('WTT edge cache write failed:', error) }
-      if (changed || renew || !edgeWritten) await durableStorage?.set(key, snapshot, options)
+      if (changed || renew) await durableStorage?.set(key, snapshot, options)
     }
   }
 }

@@ -29,16 +29,18 @@ test('WTT unchanged checks advance edge freshness without KV writes; corrections
   expect((await f.storage.get(key)).missions[0].scores).toBe('1-1')
 })
 
-test('WTT renews unchanged durable snapshots daily and falls back if Cache API fails', async () => {
+test('WTT renews unchanged durable snapshots daily and skips KV writes for unchanged Cache API failures', async () => {
   const f = fixture()
   f.durable.set('raw', { checkedAt: '2026-10-01T00:00:00Z', data: [] })
   await f.storage.set('raw', { checkedAt: new Date().toISOString(), data: [] })
   expect(f.writes.length).toBe(1)
   f.cache.put = async () => { throw new Error('edge unavailable') }
-  await f.storage.set('raw', { checkedAt: '2026-10-28T01:00:00Z', data: [] })
+  await f.storage.set('raw', { checkedAt: new Date().toISOString(), data: [] })
+  expect(f.writes.length).toBe(1)
+  await f.storage.set('raw', { checkedAt: new Date().toISOString(), data: ['updated'] })
   expect(f.writes.length).toBe(2)
   f.edge.clear()
-  expect((await f.storage.get('raw')).checkedAt).toBe('2026-10-28T01:00:00Z')
+  expect((await f.storage.get('raw')).data).toEqual(['updated'])
 })
 
 test('single-flight merges concurrent refreshes, isolates tenants and retries failures', async () => {
@@ -92,15 +94,15 @@ test('active WTT continues five-minute polling without repeatedly persisting emp
   }
   await loadWttCalendarData(upstream, base, f)
   expect(calls).toBe(3)
-  expect(f.writes.length).toBe(3)
+  expect(f.writes.length).toBe(1)
   await loadWttCalendarData(upstream, new Date(+base + 6 * 60000), f)
   expect(calls).toBe(5)
-  expect(f.writes.length).toBe(3)
+  expect(f.writes.length).toBe(1)
   await loadWttCalendarData(upstream, new Date(+base + 7 * 60000), f)
   expect(calls).toBe(5)
   offline = true
   await loadWttCalendarData(upstream, new Date(+base + 12 * 60000), f)
-  expect(f.writes.length).toBe(3)
+  expect(f.writes.length).toBe(1)
   offline = false
   await loadWttCalendarData(upstream, new Date(+base + 13 * 60000), f)
   expect(calls).toBe(9) // Failed checks must not advance successful freshness.
@@ -125,6 +127,24 @@ test('far-future WTT schedules refresh daily and accelerate within three days', 
   expect(schedules).toBe(3)
 })
 
+test('distant WTT schedules more than 30 days away refresh weekly', async () => {
+  const f = fixture()
+  const base = new Date('2026-10-28T00:00:00Z')
+  const events = [{ eventId: 9, event_Tier_name: 'WTT Series', startDateTime: '2027-03-01T00:00:00Z', endDateTime: '2027-03-05T00:00:00Z' }]
+  let schedules = 0
+  const upstream = async url => {
+    if (String(url).includes('wtt_upcoming')) return Response.json(events)
+    schedules++
+    return Response.json([])
+  }
+  await loadWttCalendarData(upstream, base, f)
+  expect(schedules).toBe(1)
+  await loadWttCalendarData(upstream, new Date(+base + 2 * 86400000), f)
+  expect(schedules).toBe(1)
+  await loadWttCalendarData(upstream, new Date(+base + 8 * 86400000), f)
+  expect(schedules).toBe(2)
+})
+
 test('cold edge PoP populates Cache API on first KV read to prevent repeated KV misses', async () => {
   let kvReads = 0
   const durable = new Map([['calendar:wtt:schedule:3557:v1', { checkedAt: '2026-11-11T00:00:00Z', data: [] }]])
@@ -141,4 +161,58 @@ test('cold edge PoP populates Cache API on first KV read to prevent repeated KV 
   expect((await storage.get('calendar:wtt:schedule:3557:v1')).checkedAt).toBe('2026-11-11T00:00:00Z')
   expect((await storage.get('calendar:wtt:schedule:3557:v1')).checkedAt).toBe('2026-11-11T00:00:00Z')
   expect(kvReads).toBe(1)
+})
+
+test('consolidated WTT state keeps total subrequests (Cache API + fetch) well below 50 with 35 tournaments', async () => {
+  const f = fixture()
+  let subrequests = 0
+  const trackedCache = {
+    match: async req => {
+      if (++subrequests > 50) throw new Error('Too many subrequests')
+      return f.cache.match(req)
+    },
+    put: async (req, res) => {
+      if (++subrequests > 50) throw new Error('Too many subrequests')
+      return f.cache.put(req, res)
+    }
+  }
+  const base = new Date('2026-11-17T00:00:00Z')
+  const events = Array.from({ length: 35 }, (_, i) => ({
+    eventId: 3500 + i,
+    eventName: `WTT Future ${i}`,
+    event_Tier_name: 'WTT Series',
+    startDateTime: '2027-02-01T00:00:00Z',
+    endDateTime: '2027-02-05T00:00:00Z',
+    timeZoneId: 84,
+    venueName: 'Arena'
+  }))
+  events.push({
+    eventId: 3256,
+    eventName: 'WTT Active',
+    event_Tier_name: 'WTT Series',
+    startDateTime: '2026-11-16T00:00:00Z',
+    endDateTime: '2026-11-21T00:00:00Z',
+    timeZoneId: 67,
+    venueName: 'Muscat'
+  })
+  const upstream = async url => {
+    if (++subrequests > 50) throw new Error('Too many subrequests')
+    return Response.json(String(url).includes('wtt_upcoming') ? events : [])
+  }
+
+  await loadWttCalendarData(upstream, base, { kv: f.kv, cache: trackedCache })
+  expect(subrequests).toBeLessThan(15)
+  expect(f.writes.length).toBe(1)
+
+  for (let i = 0; i < 4; i++) {
+    subrequests = 0
+    await loadWttCalendarData(upstream, base, { kv: f.kv, cache: trackedCache })
+    expect(subrequests).toBeLessThan(15)
+  }
+  const warmedWrites = f.writes.length
+
+  subrequests = 0
+  await loadWttCalendarData(upstream, new Date(+base + 6 * 60000), { kv: f.kv, cache: trackedCache })
+  expect(subrequests).toBeLessThan(6)
+  expect(f.writes.length).toBe(warmedWrites)
 })

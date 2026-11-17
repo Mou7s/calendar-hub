@@ -1358,7 +1358,7 @@ test('WTT caches ended results and future schedules while refreshing active even
   offline = true;
   await loadWttCalendarData(upstream, new Date(+base + 25 * 3600000), { kv });
   assert.ok(calls.some(url => url.includes('/1/'))); // Daily correction check, fallback on failure.
-  assert.equal(storage.get('calendar:wtt:results:1:v1').checkedAt, base.toISOString());
+  assert.equal(storage.get('calendar:wtt:state:v1').checkedAt.results['1'], base.toISOString());
 });
 
 test('WTT refresh budget prioritizes results and progresses through deferred schedules', async () => {
@@ -1370,13 +1370,13 @@ test('WTT refresh budget prioritizes results and progresses through deferred sch
   const upstream = async url => { calls.push(String(url)); return Response.json(String(url).includes('wtt_upcoming') ? events : []); };
   const now = new Date('2026-10-09T06:00:00Z');
   await loadWttCalendarData(upstream, now, { kv });
-  assert.equal(calls.length, 40);
+  assert.equal(calls.length, 10);
   assert.ok(calls[1].includes('/3249/'));
-  const firstKeys = storage.size;
+  const firstSchedules = Object.keys(storage.get('calendar:wtt:state:v1').schedules).length;
   calls = [];
   await loadWttCalendarData(upstream, now, { kv });
-  assert.equal(calls.length, 40);
-  assert.ok(storage.size > firstKeys);
+  assert.equal(calls.length, 10);
+  assert.ok(Object.keys(storage.get('calendar:wtt:state:v1').schedules).length > firstSchedules);
 });
 
 test('WTT skips result requests for future tournaments within a Worker subrequest budget', async () => {
@@ -1396,7 +1396,7 @@ test('WTT skips result requests for future tournaments within a Worker subreques
     if (String(url).includes('take_10_official_results.json')) resultCalls.push(String(url));
     return Response.json([]);
   }, now);
-  assert.equal(calls, 33);
+  assert.equal(calls, 10);
   assert.equal(resultCalls.length, 1);
   assert.ok(resultCalls[0].includes('/3249/'));
 });
@@ -1843,6 +1843,7 @@ test("official F1 start times are parsed into correctly ordered session dates", 
 test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async () => {
   const values = new Map();
   const calendarWrites = [];
+  let statusWrites = 0;
   const kv = {
     async get(key, type) {
       const value = values.get(key);
@@ -1852,6 +1853,7 @@ test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async 
       const parsed = typeof value === "string" ? JSON.parse(value) : value;
       values.set(key, parsed);
       if (Object.values(CALENDAR_KEYS).includes(key)) calendarWrites.push(key);
+      if (key === "calendar:sync:status") statusWrites++;
     },
   };
   const fetchStub = async (url) => {
@@ -1872,14 +1874,19 @@ test("hourly calendar sync writes only changed SpaceX and F1 data to KV", async 
   assert.equal(first.calendars.spacex.changed, true);
   assert.equal(first.calendars.f1.changed, true);
   assert.deepEqual(calendarWrites.sort(), Object.values(CALENDAR_KEYS).sort());
+  assert.equal(statusWrites, 1);
 
   calendarWrites.length = 0;
-  const second = await syncCalendars(env, fetchStub, now);
+  const second = await syncCalendars(env, fetchStub, new Date("2026-01-01T01:00:00.000Z"));
   assert.equal(second.calendars.spacex.changed, false);
   assert.equal(second.calendars.f1.changed, false);
   assert.deepEqual(calendarWrites, []);
+  assert.equal(statusWrites, 1);
   assert.equal(values.get("calendar:sync:status").calendars.f1.ok, true);
   assert.ok(values.get("calendar:sync:status").calendars.f1.lastSuccessfulAt);
+
+  await syncCalendars(env, fetchStub, new Date("2026-01-02T01:00:00.000Z"));
+  assert.equal(statusWrites, 2);
 });
 
 test("removed static topics return 404 without reading cached data", async () => {

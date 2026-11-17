@@ -29,6 +29,19 @@ async function updateCalendar(kv, key, freshData) {
   return { changed, count: freshData.missions?.length || 0 }
 }
 
+const SYNC_STATUS_HEARTBEAT_MS = 24 * 60 * 60 * 1000
+
+function shouldPersistSyncStatus(previous, status, nowMs) {
+  if (!previous?.completedAt) return true
+  for (const topic of ['spacex', 'f1']) {
+    const curr = status.calendars[topic]
+    const prev = previous.calendars?.[topic]
+    if (!curr?.ok || curr.changed || prev?.ok !== curr.ok) return true
+  }
+  const previousSyncMs = Date.parse(previous.attemptedAt || previous.completedAt)
+  return !Number.isFinite(previousSyncMs) || nowMs - previousSyncMs >= SYNC_STATUS_HEARTBEAT_MS
+}
+
 export async function syncCalendars(env, fetchImpl = fetch, now = new Date()) {
   const kv = getKvStorage(env)
   if (!kv) {
@@ -66,7 +79,9 @@ export async function syncCalendars(env, fetchImpl = fetch, now = new Date()) {
     status.calendars[topic].lastSuccessfulAt = status.calendars[topic].ok
       ? status.completedAt : previous?.calendars?.[topic]?.lastSuccessfulAt || null
   }
-  await kv.set('calendar:sync:status', status)
+  if (shouldPersistSyncStatus(previous, status, now.getTime())) {
+    await kv.set('calendar:sync:status', status)
+  }
   console.log(JSON.stringify({ event: 'calendar-sync', ...status }))
 
   if (results.every(result => result.status === 'rejected')) {
